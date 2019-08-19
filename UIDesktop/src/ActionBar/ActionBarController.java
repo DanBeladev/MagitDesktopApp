@@ -27,7 +27,6 @@ import java.util.Optional;
 
 public class ActionBarController {
 
-
     @FXML
     private Button switchRepoBtn;
 
