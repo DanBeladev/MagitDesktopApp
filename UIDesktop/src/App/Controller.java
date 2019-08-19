@@ -1,21 +1,18 @@
 package App;
 
 import ActionBar.ActionBarController;
-import Lib.Repository;
+import Lib.BranchDetails;
 import Lib.RepositoryManager;
 import MagitExceptions.RepositoryDoesnotExistException;
 import MagitExceptions.RepositorySameToCurrentRepositoryException;
 import RepositoryInformation.RepoInfoController;
+import DumbComponents.BranchDetailsView;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -146,5 +143,20 @@ public class Controller {
             }
         }
         borderPane.setCenter(gridPane);
+    }
+
+    public void showBranchesList(List<BranchDetails> branchDetailsList) {
+        BorderPane borderPane=(BorderPane)primaryStage.getScene().lookup("#root");
+        AnchorPane anchorPane = new AnchorPane();
+        anchorPane.setPrefHeight(200);
+        anchorPane.setPrefWidth(200);
+        Accordion accordion = new Accordion();
+        accordion.setPrefHeight(167);
+        accordion.setPrefHeight(444);
+        for(BranchDetails branchDetails : branchDetailsList){
+            accordion.getPanes().add(BranchDetailsView.render(branchDetails.getName(),branchDetails.getCommitSh1().getSh1(),branchDetails.getMessage()));
+        }
+        anchorPane.getChildren().add(accordion);
+        borderPane.setCenter(anchorPane);
     }
 }

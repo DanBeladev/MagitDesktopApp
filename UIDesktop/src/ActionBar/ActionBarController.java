@@ -2,7 +2,9 @@ package ActionBar;
 
 
 import App.Controller;
+import Lib.BranchDetails;
 import Lib.User;
+import MagitExceptions.BranchNameIsAllreadyExistException;
 import MagitExceptions.CommitException;
 import MagitExceptions.RepositoryDoesnotExistException;
 import MagitExceptions.RepositorySameToCurrentRepositoryException;
@@ -74,8 +76,9 @@ public class ActionBarController {
 
 
     @FXML
-    public void initialize(){
+    public void initialize() {
     }
+
     public void setMainController(Controller controller) {
         this.mainController = controller;
         commitBtn.disableProperty().bind(mainController.getIsIsRepoLoadedProperty().not());
@@ -120,7 +123,7 @@ public class ActionBarController {
 
     public void initRepoClick() {
         String result = GUIUtils.getTextInput("Repository name", "Enter repository name:", "Name:", mainController.getRepositoryManager().GetUser().getName());
-        if(result!=null) {
+        if (result != null) {
             File selectedFile = GUIUtils.getFolderByDirectoryChooser("choose folder", primaryStage);
             if (selectedFile != null) {
                 try {
@@ -137,29 +140,46 @@ public class ActionBarController {
 
     public void switchUserClick() {
         String userName = GUIUtils.getTextInput("Change user", "Enter user name", "Name:", "");
-        if(userName!=null) {
+        if (userName != null) {
             User newUser = new User(userName);
             mainController.getRepositoryManager().ChangeUser(newUser);
             mainController.getUserNameProperty().set(newUser.getName());
         }
     }
-    public void commitClick(){
-        String commitMsg=GUIUtils.getTextInput("Commit","Enter commit message","Message:","");
-        if(commitMsg!=null) {
+
+    public void commitClick() {
+        String commitMsg = GUIUtils.getTextInput("Commit", "Enter commit message", "Message:", "");
+        if (commitMsg != null) {
             try {
                 mainController.getRepositoryManager().MakeCommit(commitMsg);
                 GUIUtils.popUpMessage("Commit added successfully", Alert.AlertType.CONFIRMATION);
-            } catch (IOException | ParseException | RepositoryDoesnotExistException |CommitException  e ) {
+            } catch (IOException | ParseException | RepositoryDoesnotExistException | CommitException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
             }
         }
     }
-    public void showStatusClick(){
+
+    public void showStatusClick() {
         try {
-            List<List<String>> lst=mainController.getRepositoryManager().ShowStatus();
+            List<List<String>> lst = mainController.getRepositoryManager().ShowStatus();
             mainController.showStatus(lst);
         } catch (IOException | ParseException | CommitException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
+    }
+
+    public void createNewBranchClick() {
+        try {
+        String name = GUIUtils.getTextInput("Create new branch", "Enter branch name:", "Name", "");
+            mainController.getRepositoryManager().CreateNewBranch(name);
+            GUIUtils.popUpMessage(name + " added successfully", Alert.AlertType.INFORMATION);
+        } catch (RepositoryDoesnotExistException| CommitException|IOException |BranchNameIsAllreadyExistException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void showBrancheListClick(){
+      List<BranchDetails> branchDetailsList = mainController.getRepositoryManager().ShowBranches();
+      mainController.showBranchesList(branchDetailsList);
     }
 }

@@ -284,7 +284,8 @@ public class RepositoryManager {
 
     }
 
-    public void CreateNewBranch(String name) throws BranchNameIsAllreadyExistException, IOException, CommitException {
+    public void CreateNewBranch(String name) throws BranchNameIsAllreadyExistException, IOException, CommitException, RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
         if (m_currentRepository.getCommitMap().isEmpty()) {
             throw new CommitException("you don't have any commits so you can't make new branch");
         }
@@ -602,7 +603,7 @@ public class RepositoryManager {
 
     public void IsCurrentRepositoryInitialize() throws RepositoryDoesnotExistException {
         if (m_currentRepository == null) {
-            throw new RepositoryDoesnotExistException("Error, not initialize \"current repository\"");
+            throw new RepositoryDoesnotExistException("Error: not initialize \"current repository\"");
         }
     }
 
@@ -610,10 +611,10 @@ public class RepositoryManager {
         try {
             IsCurrentRepositoryInitialize();
             if (m_currentRepository.getCommitMap().isEmpty()) {
-                throw new CommitException("Error, you don't have any commits in your current repository");
+                throw new CommitException("Error: you don't have any commits in your current repository");
             }
         } catch (RepositoryDoesnotExistException e) {
-            throw new CommitException("Error, not initialize repository.");
+            throw new CommitException(e.getMessage());
         }
 
     }
