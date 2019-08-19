@@ -34,7 +34,6 @@ public class Controller {
     private SimpleStringProperty repoPath;
 
     private SimpleStringProperty userName;
-
     public SimpleStringProperty repoNameProperty() {
         return repoName;
     }
