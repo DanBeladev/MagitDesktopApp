@@ -105,7 +105,6 @@ public class Controller {
     public void showStatus(List<List<String>> lst) throws IOException {
         BorderPane borderPane=(BorderPane)primaryStage.getScene().lookup("#root");
         GridPane gridPane=new GridPane();
-        gridPane.setGridLinesVisible(true);
         for(int i =0;i<4;i++) {
             if (i<3) {
                 ColumnConstraints columnConstraints = new ColumnConstraints();
@@ -125,22 +124,22 @@ public class Controller {
         for(List<String> list:lst){
             ListView<String> listView=new ListView<>();
             if(i==0){
-                listView.getItems().add("The new files are");
+                listView.getItems().add("Added:");
                 listView.setPrefHeight(100);
                 listView.setPrefWidth(100);
-                gridPane.add(listView,2,0,1,2);
+                gridPane.add(listView,2,0,1,4);
             }
             if(i==1){
-                listView.getItems().add("The changed files are");
+                listView.getItems().add("Changed:");
                 listView.setPrefHeight(100);
                 listView.setPrefWidth(100);
-                gridPane.add(listView,0,0,1,2);
+                gridPane.add(listView,0,0,1,4);
             }
             if(i==2){
-                listView.getItems().add("The deleted files are");
+                listView.getItems().add("Deleted:");
                 listView.setPrefHeight(100);
                 listView.setPrefWidth(100);
-                gridPane.add(listView,1,2,1,2);
+                gridPane.add(listView,1,0,1,4);
             }
             i++;
             for(String str:list){
