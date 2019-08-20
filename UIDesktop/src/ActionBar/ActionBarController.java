@@ -9,10 +9,14 @@ import MagitExceptions.CommitException;
 import MagitExceptions.RepositoryDoesnotExistException;
 import MagitExceptions.RepositorySameToCurrentRepositoryException;
 import Utils.GUIUtils;
+import javafx.beans.property.BooleanProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextInputDialog;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -23,6 +27,7 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.security.Guard;
+import java.sql.Array;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
@@ -81,7 +86,7 @@ public class ActionBarController {
 
     public void setMainController(Controller controller) {
         this.mainController = controller;
-        commitBtn.disableProperty().bind(mainController.getIsIsRepoLoadedProperty().not());
+        bindNodeDisabledToBoolProperty(mainController.getIsIsRepoLoadedProperty(),commitBtn,branchesListBtn,commitsTreeBtn,commitContentBtn,deleteBranchBtn,newBranchBtn,mergeBtn,showStatusBtn,resetBranchbtn,checkoutBtn);
     }
 
 
@@ -130,6 +135,7 @@ public class ActionBarController {
                     mainController.getRepositoryManager().BonusInit(result, selectedFile.getAbsolutePath() + "\\" + result);
                     mainController.repoPathProperty().set(selectedFile.getAbsolutePath() + "\\" + result);
                     mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
+                    mainController.getIsIsRepoLoadedProperty().set(true);
                 } catch (IOException e) {
                     GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
                 }
@@ -171,8 +177,10 @@ public class ActionBarController {
     public void createNewBranchClick() {
         try {
         String name = GUIUtils.getTextInput("Create new branch", "Enter branch name:", "Name", "");
+        if(name!=null) {
             mainController.getRepositoryManager().CreateNewBranch(name);
             GUIUtils.popUpMessage(name + " added successfully", Alert.AlertType.INFORMATION);
+        }
         } catch (RepositoryDoesnotExistException| CommitException|IOException |BranchNameIsAllreadyExistException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -182,4 +190,20 @@ public class ActionBarController {
       List<BranchDetails> branchDetailsList = mainController.getRepositoryManager().ShowBranches();
       mainController.showBranchesList(branchDetailsList);
     }
+    public void deleteBranchClick(){
+        List<BranchDetails> branchesList=mainController.getRepositoryManager().ShowBranches();
+        mainController.deleteBranch(branchesList);
+    }
+
+    public void checkOutBtnClick(){
+        List<BranchDetails> branchesList=mainController.getRepositoryManager().ShowBranches();
+        mainController.checkOut(branchesList);
+    }
+
+    public void bindNodeDisabledToBoolProperty(BooleanProperty booleanProperty, Node... nodes ){
+        for(Node node: nodes) {
+            node.disableProperty().bind(booleanProperty.not());
+        }
+    }
+
 }
