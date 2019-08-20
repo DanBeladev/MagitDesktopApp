@@ -35,7 +35,7 @@
       <Button fx:id="branchesListBtn" mnemonicParsing="false" onAction="#showBrancheListClick" prefHeight="29.0" prefWidth="171.0" text="Branches list" />
       <Button fx:id="deleteBranchBtn" mnemonicParsing="false" onAction="#deleteBranchClick" prefHeight="29.0" prefWidth="171.0" text="Delete branch" />
       <Button fx:id="checkoutBtn" mnemonicParsing="false" onAction="#checkOutBtnClick" prefHeight="29.0" prefWidth="171.0" text="Checkout " />
-      <Button fx:id="resetBranchbtn" mnemonicParsing="false" prefHeight="29.0" prefWidth="171.0" text="Reset branch" />
+      <Button fx:id="resetBranchbtn" mnemonicParsing="false" onAction="#resetBranchClick" prefHeight="29.0" prefWidth="171.0" text="Reset branch" />
       <Button fx:id="mergeBtn" mnemonicParsing="false" prefHeight="29.0" prefWidth="171.0" text="Merge" />
    </children>
    <stylesheets>

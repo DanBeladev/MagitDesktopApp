@@ -25,6 +25,7 @@ import javafx.stage.Stage;
 
 import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.io.IOException;
+import java.security.Guard;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -192,15 +193,32 @@ public class Controller {
         ComboBox<String> comboBox=new ComboBox<>();
         comboBox.setPrefSize(150,10);
         comboBox.setItems(FXCollections.observableArrayList(branchesName));
+        comboBox.getSelectionModel().select(0);
         Label order=new Label("Choose branch to checkout");
         PopUpWindowWithBtn.popUpWindow(100,300,"Checkout",(v)-> {
             try {
                 repositoryManager.CheckOut(comboBox.getSelectionModel().getSelectedItem());
-                GUIUtils.popUpMessage("Successful heckout", Alert.AlertType.INFORMATION);
+                GUIUtils.popUpMessage("Successful checkout", Alert.AlertType.INFORMATION);
             } catch (BranchDoesNotExistException| IOException |ParseException | BranchIsAllReadyOnWCException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
             }
         },new Object(),order,comboBox);
+    }
 
+    public void resetBranch(List<SHA1> commitsSHA1) {
+        String commitsArray[]=commitsSHA1.stream().map(v->v.getSh1()).toArray(String[]::new);
+        ComboBox<String> comboBox=new ComboBox<>();
+        comboBox.setPrefSize(150,10);
+        comboBox.setItems(FXCollections.observableArrayList(commitsArray));
+        comboBox.getSelectionModel().select(0);
+        Label order=new Label("Choose commit SHA-1 for active branch");
+        PopUpWindowWithBtn.popUpWindow(100,300,"reset",(v)->{
+            try {
+                repositoryManager.ResetHeadBranch(new SHA1(comboBox.getSelectionModel().getSelectedItem()));
+                GUIUtils.popUpMessage("Successful reset", Alert.AlertType.INFORMATION);
+            } catch (CommitException | ParseException | IOException e) {
+                GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+            }
+        },new Object(),order,comboBox);
     }
 }

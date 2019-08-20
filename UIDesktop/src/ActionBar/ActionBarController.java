@@ -3,6 +3,7 @@ package ActionBar;
 
 import App.Controller;
 import Lib.BranchDetails;
+import Lib.SHA1;
 import Lib.User;
 import MagitExceptions.BranchNameIsAllreadyExistException;
 import MagitExceptions.CommitException;
@@ -199,6 +200,11 @@ public class ActionBarController {
         List<BranchDetails> branchesList=mainController.getRepositoryManager().ShowBranches();
         mainController.checkOut(branchesList);
     }
+     public void resetBranchClick(){
+         List<SHA1> commitsList=mainController.getRepositoryManager().getCurrentRepositoryAllCommitsSHA1();
+
+         mainController.resetBranch(commitsList);
+     }
 
     public void bindNodeDisabledToBoolProperty(BooleanProperty booleanProperty, Node... nodes ){
         for(Node node: nodes) {

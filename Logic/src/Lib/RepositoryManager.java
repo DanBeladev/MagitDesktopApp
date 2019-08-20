@@ -596,6 +596,9 @@ public class RepositoryManager {
     public void LoadXML() throws BranchIsAllReadyOnWCException, IOException, BranchDoesNotExistException, ParseException, RepositoryAllreadyExistException {
         changeMagitRepositoryToRepository(m_MagitRepository);
     }
+    public List<SHA1> getCurrentRepositoryAllCommitsSHA1(){
+        return m_currentRepository.getCommitMap().entrySet().stream().map((v)->v.getKey()).collect(Collectors.toList());
+    }
 
     public MagitRepository GetMagitRepository() {
         return m_MagitRepository;
