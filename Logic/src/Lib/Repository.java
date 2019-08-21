@@ -182,4 +182,8 @@ public class Repository {
     {
         return m_Name;
     }
+
+    public Commit getCommitFromCommitsMap(SHA1 sha1){
+        return m_CommitMap.get(sha1);
+    }
 }

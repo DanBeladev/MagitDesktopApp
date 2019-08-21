@@ -25,7 +25,7 @@
       <Button fx:id="commitBtn" mnemonicParsing="false" onAction="#commitClick" prefHeight="29.0" prefWidth="171.0" text="Commit" />
       <Button fx:id="showStatusBtn" mnemonicParsing="false" onAction="#showStatusClick" prefHeight="29.0" prefWidth="171.0" text="WC status" />
       <Button fx:id="commitContentBtn" mnemonicParsing="false" prefHeight="29.0" prefWidth="171.0" text="commit content" />
-      <Button fx:id="commitsTreeBtn" mnemonicParsing="false" prefHeight="29.0" prefWidth="171.0" text="Commits tree" />
+      <Button fx:id="commitsTreeBtn" mnemonicParsing="false" onAction="#commitsTreeClick" prefHeight="29.0" prefWidth="171.0" text="Commits tree" />
       <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" text="Branches">
          <font>
             <Font name="Microsoft YaHei" size="12.0" />

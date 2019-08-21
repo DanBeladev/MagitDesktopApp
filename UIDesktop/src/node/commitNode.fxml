@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.text.Font?>
+
+<GridPane hgap="5.0" maxHeight="60.0" maxWidth="1.7976931348623157E308" minHeight="44.0" minWidth="-Infinity" prefHeight="44.0" styleClass="single-commit-row-container" stylesheets="@commitNode.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="node.CommitNodeController">
+  <columnConstraints>
+    <ColumnConstraints hgrow="NEVER" minWidth="-Infinity" />
+      <ColumnConstraints hgrow="NEVER" maxWidth="270.0" minWidth="132.0" prefWidth="270.0" />
+      <ColumnConstraints hgrow="NEVER" maxWidth="190.0" minWidth="0.0" prefWidth="4.0" />
+      <ColumnConstraints hgrow="NEVER" maxWidth="300.0" minWidth="110.0" prefWidth="270.0" />
+      <ColumnConstraints hgrow="NEVER" maxWidth="20.0" minWidth="0.0" prefWidth="0.0" />
+      <ColumnConstraints hgrow="NEVER" maxWidth="200.0" minWidth="50.0" prefWidth="102.0" />
+      <ColumnConstraints hgrow="NEVER" />
+      <ColumnConstraints hgrow="ALWAYS" />
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints maxHeight="10.0" minHeight="10.0" prefHeight="10.0" vgrow="NEVER" />
+    <RowConstraints minHeight="-Infinity" vgrow="NEVER" />
+    <RowConstraints maxHeight="10.0" minHeight="10.0" prefHeight="10.0" vgrow="NEVER" />
+  </rowConstraints>
+   <children>
+      <Circle fx:id="CommitCircle" fill="#087fee" radius="10.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="2.0" GridPane.rowIndex="1">
+         <GridPane.margin>
+            <Insets left="5.0" right="10.0" />
+         </GridPane.margin>
+      </Circle>
+      <Label fx:id="commitTimeStampLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="timestamp-label" text="02.07.2019-22:36:57" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.hgrow="NEVER" GridPane.rowIndex="1" />
+      <Label fx:id="messageLabel" maxWidth="1.7976931348623157E308" styleClass="message-label" text="bbb" GridPane.columnIndex="7" GridPane.rowIndex="1" />
+      <Label fx:id="committerLabel" styleClass="committer-label" text="ccc" GridPane.columnIndex="5" GridPane.rowIndex="1" />
+      <Separator maxHeight="20.0" minHeight="20.0" orientation="VERTICAL" prefHeight="20.0" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+      <Separator maxHeight="20.0" minHeight="20.0" orientation="VERTICAL" prefHeight="20.0" GridPane.columnIndex="6" GridPane.rowIndex="1" />
+      <Separator maxHeight="20.0" minHeight="20.0" orientation="VERTICAL" prefHeight="20.0" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+      <Label fx:id="sha1Label" text="12sjrker940fmcfdoeritrew3were3212kjfrtio" GridPane.columnIndex="1" GridPane.rowIndex="1">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Label>
+   </children>
+</GridPane>

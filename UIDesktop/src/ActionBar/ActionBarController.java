@@ -101,6 +101,7 @@ public class ActionBarController {
             mainController.repoPathProperty().set(path);
             mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
             mainController.getIsIsRepoLoadedProperty().set(true);
+            mainController.createCommitsGraphForRepository();
 
         } catch
         (RepositorySameToCurrentRepositoryException | RepositoryDoesnotExistException | ParseException | IOException e) {
@@ -225,6 +226,9 @@ public class ActionBarController {
         List<SHA1> commitsList = mainController.getRepositoryManager().getCurrentRepositoryAllCommitsSHA1();
 
         mainController.resetBranch(commitsList);
+    }
+    public void commitsTreeClick(){
+        mainController.drawCommitsTree();
     }
 
     public void bindNodeDisabledToBoolProperty(BooleanProperty booleanProperty, Node... nodes) {

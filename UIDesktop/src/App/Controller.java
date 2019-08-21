@@ -5,12 +5,18 @@ import DumbComponents.GridPaneBuilder;
 import DumbComponents.ListViewBuilder;
 import DumbComponents.PopUpWindowWithBtn;
 import Lib.BranchDetails;
+import Lib.Commit;
 import Lib.RepositoryManager;
 import Lib.SHA1;
 import MagitExceptions.*;
 import RepositoryInformation.RepoInfoController;
 import DumbComponents.BranchDetailsView;
 import Utils.GUIUtils;
+import com.fxgraph.edges.Edge;
+import com.fxgraph.graph.Graph;
+import com.fxgraph.graph.ICell;
+import com.fxgraph.graph.Model;
+import com.fxgraph.graph.PannableCanvas;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -22,14 +28,14 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import layout.CommitTreeLayout;
+import node.CommitNode;
 
 import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.io.IOException;
 import java.security.Guard;
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Controller {
@@ -46,6 +52,7 @@ public class Controller {
     private SimpleStringProperty repoName;
     private SimpleBooleanProperty isRepoLoadedProperty;
     private RepositoryManager repositoryManager;
+    private Graph commitTree;
 
     public Controller(){
         repoPath=new SimpleStringProperty();
@@ -53,6 +60,8 @@ public class Controller {
         repoName=new SimpleStringProperty();
         repositoryManager=new RepositoryManager();
         isRepoLoadedProperty=new SimpleBooleanProperty();
+        commitTree=new Graph();
+
     }
 
     public SimpleStringProperty repoNameProperty() {
@@ -217,5 +226,41 @@ public class Controller {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
             }
         },new Object(),order,comboBox);
+    }
+
+
+    public void createCommitsGraphForRepository(){
+        commitTree=new Graph();
+        final Model model=commitTree.getModel();
+        commitTree.beginUpdate();
+        Map<String,ICell> nodesMap=new HashMap<>();
+        List<SHA1> commitsSha1=repositoryManager.getCurrentRepositoryAllCommitsSHA1();
+        for(SHA1 commitSha1: commitsSha1){
+            Commit commit=repositoryManager.getCommitFromCurrentRepositoryMapCommit(commitSha1);
+            ICell cell=new CommitNode(commitSha1.getSh1(),commit.getCreateTime().toString(),commit.getWhoUpdated().getName(),commit.getMessage());
+            model.addCell(cell);
+            nodesMap.put(commitSha1.getSh1(),cell);
+        }
+        for(SHA1 commitSha1: commitsSha1){
+            Commit commit=repositoryManager.getCommitFromCurrentRepositoryMapCommit(commitSha1);
+            List<SHA1> prevCommits=commit.getPrevCommits();
+            for(SHA1 sha1:prevCommits){
+                final Edge edge=new Edge(nodesMap.get(commitSha1.getSh1()),nodesMap.get(sha1.getSh1()));
+                model.addEdge(edge);
+            }
+        }
+        commitTree.endUpdate();
+        commitTree.layout(new CommitTreeLayout());
+
+    }
+
+    public void drawCommitsTree() {
+        PannableCanvas canvas = commitTree.getCanvas();
+        ScrollPane scrollPane=new ScrollPane();
+        scrollPane.setPrefHeight(300);
+        scrollPane.setPrefWidth(300);
+        scrollPane.setContent(canvas);
+        BorderPane borderPane=(BorderPane)primaryStage.getScene().lookup("#root");
+        borderPane.setCenter(canvas);
     }
 }

@@ -1,0 +1,27 @@
+.timestamp-label {
+    -fx-text-fill: black;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.message-label {
+    -fx-text-fill: deeppink;
+    -fx-font-size: 18px;
+}
+
+.committer-label {
+    -fx-text-fill: darkgreen;
+    -fx-font-size: 14px;
+}
+
+.single-commit-row-container:hover {
+    -fx-border-color: black;
+    -fx-background-color: beige;
+    -fx-background-radius: 3px;
+}
+
+/*override separator style*/
+.separator .line {
+    -fx-border-color: black;
+    -fx-border-width: 1;
+}
