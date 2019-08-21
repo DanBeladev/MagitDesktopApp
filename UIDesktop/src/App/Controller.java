@@ -41,20 +41,11 @@ public class Controller {
     RepoInfoController topInfoComponentController;
 
     private Stage primaryStage;
-
     private SimpleStringProperty repoPath;
-
     private SimpleStringProperty userName;
-    public SimpleStringProperty repoNameProperty() {
-        return repoName;
-    }
-
     private SimpleStringProperty repoName;
-
     private SimpleBooleanProperty isRepoLoadedProperty;
-
     private RepositoryManager repositoryManager;
-
 
     public Controller(){
         repoPath=new SimpleStringProperty();
@@ -64,6 +55,9 @@ public class Controller {
         isRepoLoadedProperty=new SimpleBooleanProperty();
     }
 
+    public SimpleStringProperty repoNameProperty() {
+        return repoName;
+    }
     @FXML
     public void initialize(){
         if(leftBtnsComponentController!=null && topInfoComponentController!=null){
@@ -77,8 +71,10 @@ public class Controller {
         userName.set(repositoryManager.GetUser().getName());
         isRepoLoadedProperty.set(false);
     }
+
     public void setPrimaryStage(Stage primaryStage){
         this.primaryStage=primaryStage;
+        leftBtnsComponentController.setPrimaryStage(primaryStage);
     }
 
     public String getRepoPath() {
@@ -88,6 +84,7 @@ public class Controller {
     public SimpleStringProperty repoPathProperty() {
         return repoPath;
     }
+
     public String getRepoName() {
         return repoName.get();
     }

@@ -2,31 +2,30 @@ package ActionBar;
 
 
 import App.Controller;
+import DumbComponents.ListViewBuilder;
 import Lib.BranchDetails;
 import Lib.SHA1;
 import Lib.User;
-import MagitExceptions.BranchNameIsAllreadyExistException;
-import MagitExceptions.CommitException;
-import MagitExceptions.RepositoryDoesnotExistException;
-import MagitExceptions.RepositorySameToCurrentRepositoryException;
+import MagitExceptions.*;
 import Utils.GUIUtils;
 import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 
+import javax.xml.bind.JAXBException;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Paths;
 import java.security.Guard;
 import java.sql.Array;
 import java.text.ParseException;
@@ -87,7 +86,7 @@ public class ActionBarController {
 
     public void setMainController(Controller controller) {
         this.mainController = controller;
-        bindNodeDisabledToBoolProperty(mainController.getIsIsRepoLoadedProperty(),commitBtn,branchesListBtn,commitsTreeBtn,commitContentBtn,deleteBranchBtn,newBranchBtn,mergeBtn,showStatusBtn,resetBranchbtn,checkoutBtn);
+        bindNodeDisabledToBoolProperty(mainController.getIsIsRepoLoadedProperty(), commitBtn, branchesListBtn, commitsTreeBtn, commitContentBtn, deleteBranchBtn, newBranchBtn, mergeBtn, showStatusBtn, resetBranchbtn, checkoutBtn);
     }
 
 
@@ -113,6 +112,7 @@ public class ActionBarController {
     public void setPrimaryStage(Stage primaryStage) {
         this.primaryStage = primaryStage;
 
+
     }
 
     public void loadXMLClick() {
@@ -121,7 +121,26 @@ public class ActionBarController {
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files", "*.xml"));
         File selectedFile = fileChooser.showOpenDialog(primaryStage);
         if (selectedFile != null) {
-            System.out.println(selectedFile.getPath());
+            try {
+                List<String> errors = mainController.getRepositoryManager().CheckXml(selectedFile.getAbsolutePath());
+                //todo:: what happens if the list not empty
+                if (errors.isEmpty()) {
+                    mainController.getRepositoryManager().LoadXML();
+                    mainController.getIsIsRepoLoadedProperty().set(true);
+                    mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
+                    mainController.repoPathProperty().set(mainController.getRepositoryManager().GetCurrentRepository().GetLocation());
+                }else {
+                    ListView<String> listView=ListViewBuilder.buildListView("Errors in Xml file",200,100);
+                    errors.forEach(v->listView.getItems().add(v));
+                    BorderPane bp=(BorderPane)primaryStage.getScene().lookup("#root");
+                    bp.setCenter(listView);
+                }
+
+            } catch (BranchDoesNotExistException | RepositoryAllreadyExistException | BranchIsAllReadyOnWCException | JAXBException | IllegalAccessException | XMLException | NoSuchMethodException e) {
+                GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+            } catch (ParseException | InvocationTargetException | IOException e) {
+                e.printStackTrace();
+            }
         }
 
     }
@@ -177,37 +196,39 @@ public class ActionBarController {
 
     public void createNewBranchClick() {
         try {
-        String name = GUIUtils.getTextInput("Create new branch", "Enter branch name:", "Name", "");
-        if(name!=null) {
-            mainController.getRepositoryManager().CreateNewBranch(name);
-            GUIUtils.popUpMessage(name + " added successfully", Alert.AlertType.INFORMATION);
-        }
-        } catch (RepositoryDoesnotExistException| CommitException|IOException |BranchNameIsAllreadyExistException e) {
+            String name = GUIUtils.getTextInput("Create new branch", "Enter branch name:", "Name", "");
+            if (name != null) {
+                mainController.getRepositoryManager().CreateNewBranch(name);
+                GUIUtils.popUpMessage(name + " added successfully", Alert.AlertType.INFORMATION);
+            }
+        } catch (RepositoryDoesnotExistException | CommitException | IOException | BranchNameIsAllreadyExistException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
-    public void showBrancheListClick(){
-      List<BranchDetails> branchDetailsList = mainController.getRepositoryManager().ShowBranches();
-      mainController.showBranchesList(branchDetailsList);
+    public void showBrancheListClick() {
+        List<BranchDetails> branchDetailsList = mainController.getRepositoryManager().ShowBranches();
+        mainController.showBranchesList(branchDetailsList);
     }
-    public void deleteBranchClick(){
-        List<BranchDetails> branchesList=mainController.getRepositoryManager().ShowBranches();
+
+    public void deleteBranchClick() {
+        List<BranchDetails> branchesList = mainController.getRepositoryManager().ShowBranches();
         mainController.deleteBranch(branchesList);
     }
 
-    public void checkOutBtnClick(){
-        List<BranchDetails> branchesList=mainController.getRepositoryManager().ShowBranches();
+    public void checkOutBtnClick() {
+        List<BranchDetails> branchesList = mainController.getRepositoryManager().ShowBranches();
         mainController.checkOut(branchesList);
     }
-     public void resetBranchClick(){
-         List<SHA1> commitsList=mainController.getRepositoryManager().getCurrentRepositoryAllCommitsSHA1();
 
-         mainController.resetBranch(commitsList);
-     }
+    public void resetBranchClick() {
+        List<SHA1> commitsList = mainController.getRepositoryManager().getCurrentRepositoryAllCommitsSHA1();
 
-    public void bindNodeDisabledToBoolProperty(BooleanProperty booleanProperty, Node... nodes ){
-        for(Node node: nodes) {
+        mainController.resetBranch(commitsList);
+    }
+
+    public void bindNodeDisabledToBoolProperty(BooleanProperty booleanProperty, Node... nodes) {
+        for (Node node : nodes) {
             node.disableProperty().bind(booleanProperty.not());
         }
     }
