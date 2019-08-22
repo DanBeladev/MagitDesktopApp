@@ -4,10 +4,7 @@ import ActionBar.ActionBarController;
 import DumbComponents.GridPaneBuilder;
 import DumbComponents.ListViewBuilder;
 import DumbComponents.PopUpWindowWithBtn;
-import Lib.BranchDetails;
-import Lib.Commit;
-import Lib.RepositoryManager;
-import Lib.SHA1;
+import Lib.*;
 import MagitExceptions.*;
 import RepositoryInformation.RepoInfoController;
 import DumbComponents.BranchDetailsView;
@@ -20,12 +17,18 @@ import com.fxgraph.graph.PannableCanvas;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import layout.CommitTreeLayout;
@@ -39,6 +42,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Controller {
+    final Image FOLDER_ICON=new Image(getClass().getResourceAsStream("/resources/folderIcon.png"));
+    final Image TEXT_ICON=new Image(getClass().getResourceAsStream("/resources/text-file-icon-5.jpg"));
+
 
     @FXML
     ActionBarController leftBtnsComponentController;
@@ -53,6 +59,7 @@ public class Controller {
     private SimpleBooleanProperty isRepoLoadedProperty;
     private RepositoryManager repositoryManager;
     private Graph commitTree;
+    private Map<SHA1,ICell> nodesMap=new HashMap<>();
 
     public Controller(){
         repoPath=new SimpleStringProperty();
@@ -79,6 +86,27 @@ public class Controller {
         topInfoComponentController.getReposNameLabel().textProperty().bind(repoName);
         userName.set(repositoryManager.GetUser().getName());
         isRepoLoadedProperty.set(false);
+
+        //todo::remove block
+       //===============================
+        String path = "C:\\try";
+        try {
+            this.setRepository(path);
+        } catch (RepositorySameToCurrentRepositoryException e) {
+            e.printStackTrace();
+        } catch (RepositoryDoesnotExistException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        repoPathProperty().set(path);
+        repoNameProperty().set(getRepositoryManager().GetCurrentRepository().getName());
+        getIsIsRepoLoadedProperty().set(true);
+        createCommitsGraphForRepository();
+
+        //==========================
     }
 
     public void setPrimaryStage(Stage primaryStage){
@@ -98,7 +126,7 @@ public class Controller {
         return repoName.get();
     }
 
-    public void setRepositoryManager(String path) throws RepositorySameToCurrentRepositoryException, RepositoryDoesnotExistException, ParseException, IOException {
+    public void setRepository(String path) throws RepositorySameToCurrentRepositoryException, RepositoryDoesnotExistException, ParseException, IOException {
         this.repositoryManager.ChangeRepository(path);
     }
 
@@ -164,7 +192,7 @@ public class Controller {
 
     public void deleteBranch(List<BranchDetails> branchesList) {
         BorderPane borderPane=(BorderPane)primaryStage.getScene().lookup("#root");
-        String branchesName[]=branchesList.stream().map(v->v.getName()).toArray(String[]::new);
+        String[] branchesName = branchesList.stream().map(BranchDetails::getName).toArray(String[]::new);
         final ComboBox<String> comboBox=new ComboBox<>();
         comboBox.setPrefSize(200,20);
         comboBox.getSelectionModel().select("choose branch to delete:");
@@ -195,7 +223,7 @@ public class Controller {
     }
 
     public void checkOut(List<BranchDetails> branchesList) {
-        String branchesName[]=branchesList.stream().map(v->v.getName()).toArray(String[]::new);
+        String[] branchesName = branchesList.stream().map(BranchDetails::getName).toArray(String[]::new);
         ComboBox<String> comboBox=new ComboBox<>();
         comboBox.setPrefSize(150,10);
         comboBox.setItems(FXCollections.observableArrayList(branchesName));
@@ -212,7 +240,7 @@ public class Controller {
     }
 
     public void resetBranch(List<SHA1> commitsSHA1) {
-        String commitsArray[]=commitsSHA1.stream().map(v->v.getSh1()).toArray(String[]::new);
+        String[] commitsArray = commitsSHA1.stream().map(SHA1::getSh1).toArray(String[]::new);
         ComboBox<String> comboBox=new ComboBox<>();
         comboBox.setPrefSize(150,10);
         comboBox.setItems(FXCollections.observableArrayList(commitsArray));
@@ -230,22 +258,22 @@ public class Controller {
 
 
     public void createCommitsGraphForRepository(){
-        commitTree=new Graph();
+        commitTree = new Graph();
         final Model model=commitTree.getModel();
         commitTree.beginUpdate();
-        Map<String,ICell> nodesMap=new HashMap<>();
+
         List<SHA1> commitsSha1=repositoryManager.getCurrentRepositoryAllCommitsSHA1();
         for(SHA1 commitSha1: commitsSha1){
             Commit commit=repositoryManager.getCommitFromCurrentRepositoryMapCommit(commitSha1);
-            ICell cell=new CommitNode(commitSha1.getSh1(),commit.getCreateTime().toString(),commit.getWhoUpdated().getName(),commit.getMessage());
+            ICell cell=new CommitNode(commit.getCreateTime().toString(),commit.getWhoUpdated().getName(),commit.getMessage(),commitSha1.getSh1());
             model.addCell(cell);
-            nodesMap.put(commitSha1.getSh1(),cell);
+            nodesMap.put(commitSha1,cell);
         }
         for(SHA1 commitSha1: commitsSha1){
             Commit commit=repositoryManager.getCommitFromCurrentRepositoryMapCommit(commitSha1);
             List<SHA1> prevCommits=commit.getPrevCommits();
             for(SHA1 sha1:prevCommits){
-                final Edge edge=new Edge(nodesMap.get(commitSha1.getSh1()),nodesMap.get(sha1.getSh1()));
+                final Edge edge=new Edge(nodesMap.get(commitSha1),nodesMap.get(sha1));
                 model.addEdge(edge);
             }
         }
@@ -257,10 +285,83 @@ public class Controller {
     public void drawCommitsTree() {
         PannableCanvas canvas = commitTree.getCanvas();
         ScrollPane scrollPane=new ScrollPane();
-        scrollPane.setPrefHeight(300);
-        scrollPane.setPrefWidth(300);
+        scrollPane.setPrefHeight(100);
+        scrollPane.setPrefWidth(100);
         scrollPane.setContent(canvas);
         BorderPane borderPane=(BorderPane)primaryStage.getScene().lookup("#root");
-        borderPane.setCenter(canvas);
+        borderPane.setCenter(scrollPane);
+        commitTree.getUseViewportGestures().set(false);
+        commitTree.getUseNodeGestures().set(false);
+    }
+
+    //todo:: show leaf content of tree view
+    public void commitFilesInformation(){
+        BorderPane borderPane=(BorderPane)primaryStage.getScene().lookup("#root");
+        String [] commitsArray=repositoryManager.getCurrentRepositoryAllCommitsSHA1().stream().map(SHA1::getSh1).toArray(String[]::new);
+        ComboBox<String> comboBox=new ComboBox<>();
+        comboBox.setPrefSize(300,10);
+        comboBox.setItems(FXCollections.observableArrayList(commitsArray));
+        comboBox.getSelectionModel().select(0);
+        GridPane gridPane=GridPaneBuilder.buildGridPane(6,3,20,50);
+        gridPane.add(comboBox,1,0,2,2);
+        borderPane.setCenter(gridPane);
+        comboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+            TreeView<String> tree=buildTreeViewOfCommitFiles(repositoryManager.getCommitFromCurrentRepositoryMapCommit(new SHA1(newValue)));
+            renderTreeView(tree,comboBox,borderPane);
+        });
+    }
+
+    private void renderTreeView(TreeView<String> treeView, ComboBox<String> comboBox,BorderPane borderPane){
+        treeView.setPrefHeight(300);
+        treeView.setMaxHeight(400);
+        GridPane gridPane=GridPaneBuilder.buildGridPane(6,3,20,50);
+        gridPane.add(comboBox,1,0,2,2);
+        gridPane.add(treeView,1,2,1,3);
+
+        borderPane.setCenter(gridPane);
+    }
+
+    public TreeView<String> buildTreeViewOfCommitFiles(Commit commit){
+        TreeView<String> treeView = new TreeView<>();
+        Folder mainFolder = getRepositoryManager().GetCurrentRepository().getFoldersMap().get(commit.getMainFolderSH1());
+        String nameMainFolder = repositoryManager.getMainFolderName();
+        TreeItem<String> root = new TreeItem<>(nameMainFolder);
+        buildTreeViewOfCommitFilesRec(mainFolder,root);
+        treeView.setRoot(root);
+        return treeView;
+    }
+
+    //todo:: fix icons
+    public void buildTreeViewOfCommitFilesRec(Folder folder, TreeItem<String> treeItem){
+        ImageView imageView=new ImageView();
+        imageView.setFitHeight(20);
+        imageView.setFitWidth(30);
+        imageView.setImage(FOLDER_ICON);
+        treeItem.setGraphic(imageView);
+        for(FileDetails fd: folder.getInnerFiles()){
+            TreeItem<String> subTreeItem=new TreeItem<>(fd.getName());
+            treeItem.getChildren().add(subTreeItem);
+            if(fd.getFileType()==FileType.FOLDER){
+                buildTreeViewOfCommitFilesRec(getRepositoryManager().GetCurrentRepository().getFoldersMap().get(fd.getSh1()),subTreeItem);
+            }
+            else{
+                imageView.setImage(TEXT_ICON);
+                treeItem.setGraphic(imageView);
+            }
+        }
+    }
+
+    public void updateGraph() {
+        Commit commitToAdd = repositoryManager.getCommitFromCurrentRepositoryMapCommit(repositoryManager.GetCurrentRepository().getActiveBranch().getCommitSH1());
+        ICell newCell = new CommitNode(commitToAdd.getCreateTime().toString(),commitToAdd.getWhoUpdated().getName(),commitToAdd.getMessage(),commitToAdd.MakeSH1().getSh1());
+        nodesMap.put(commitToAdd.MakeSH1(),newCell);
+        //commitTree.beginUpdate();
+        Model model = commitTree.getModel();
+        model.addCell(newCell);
+        for(SHA1 parentSh1 : commitToAdd.getPrevCommits()){
+            model.addEdge(newCell,nodesMap.get(parentSh1));
+        }
+        model.endUpdate();
+        commitTree.layout(new CommitTreeLayout());
     }
 }

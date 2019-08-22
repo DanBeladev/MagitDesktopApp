@@ -6,6 +6,7 @@ import com.fxgraph.layout.Layout;
 import node.CommitNode;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 // simple test for scattering commits in imaginary tree, where every 3rd node is in a new 'branch' (moved to the right)

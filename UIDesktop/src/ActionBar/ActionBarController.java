@@ -97,7 +97,7 @@ public class ActionBarController {
         }
         try {
             String path = selectedFile.getAbsolutePath();
-            mainController.setRepositoryManager(path);
+            mainController.setRepository(path);
             mainController.repoPathProperty().set(path);
             mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
             mainController.getIsIsRepoLoadedProperty().set(true);
@@ -124,7 +124,6 @@ public class ActionBarController {
         if (selectedFile != null) {
             try {
                 List<String> errors = mainController.getRepositoryManager().CheckXml(selectedFile.getAbsolutePath());
-                //todo:: what happens if the list not empty
                 if (errors.isEmpty()) {
                     mainController.getRepositoryManager().LoadXML();
                     mainController.getIsIsRepoLoadedProperty().set(true);
@@ -179,6 +178,7 @@ public class ActionBarController {
         if (commitMsg != null) {
             try {
                 mainController.getRepositoryManager().MakeCommit(commitMsg);
+                mainController.createCommitsGraphForRepository();
                 GUIUtils.popUpMessage("Commit added successfully", Alert.AlertType.CONFIRMATION);
             } catch (IOException | ParseException | RepositoryDoesnotExistException | CommitException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
@@ -235,6 +235,10 @@ public class ActionBarController {
         for (Node node : nodes) {
             node.disableProperty().bind(booleanProperty.not());
         }
+    }
+
+    public void  commitFilesInfoClick(){
+        mainController.commitFilesInformation();
     }
 
 }
