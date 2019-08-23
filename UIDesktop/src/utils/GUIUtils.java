@@ -1,6 +1,5 @@
-package Utils;
+package utils;
 
-import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextInputDialog;
 import javafx.stage.DirectoryChooser;

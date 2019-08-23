@@ -1,4 +1,4 @@
-package DumbComponents;
+package models;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

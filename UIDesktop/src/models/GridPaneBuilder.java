@@ -1,4 +1,4 @@
-package DumbComponents;
+package models;
 
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;

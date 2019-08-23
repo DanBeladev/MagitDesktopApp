@@ -1,4 +1,4 @@
-package node;
+package models;
 
 import com.fxgraph.cells.AbstractCell;
 import com.fxgraph.graph.Graph;
@@ -8,6 +8,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
+import controllers.CommitNodeController;
 
 import java.io.IOException;
 import java.net.URL;
@@ -31,9 +32,8 @@ public class CommitNode extends AbstractCell {
     public Region getGraphic(Graph graph) {
 
         try {
-
             FXMLLoader fxmlLoader = new FXMLLoader();
-            URL url = getClass().getResource("commitNode.fxml");
+            URL url = getClass().getResource("../views/node/commitNode.fxml");
             fxmlLoader.setLocation(url);
             GridPane root = fxmlLoader.load(url.openStream());
 

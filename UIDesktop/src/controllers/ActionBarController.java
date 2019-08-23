@@ -1,36 +1,27 @@
-package ActionBar;
+package controllers;
 
 
-import App.Controller;
-import DumbComponents.ListViewBuilder;
+import models.ListViewBuilder;
 import Lib.BranchDetails;
 import Lib.SHA1;
 import Lib.User;
 import MagitExceptions.*;
-import Utils.GUIUtils;
+import utils.GUIUtils;
 import javafx.beans.property.BooleanProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 
 import javax.xml.bind.JAXBException;
-import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Paths;
-import java.security.Guard;
-import java.sql.Array;
 import java.text.ParseException;
 import java.util.List;
-import java.util.Optional;
 
 public class ActionBarController {
 
@@ -77,14 +68,14 @@ public class ActionBarController {
     private Button mergeBtn;
 
     private Stage primaryStage;
-    private Controller mainController;
+    private AppController mainController;
 
 
     @FXML
     public void initialize() {
     }
 
-    public void setMainController(Controller controller) {
+    public void setMainController(AppController controller) {
         this.mainController = controller;
         bindNodeDisabledToBoolProperty(mainController.getIsIsRepoLoadedProperty(), commitBtn, branchesListBtn, commitsTreeBtn, commitContentBtn, deleteBranchBtn, newBranchBtn, mergeBtn, showStatusBtn, resetBranchbtn, checkoutBtn);
     }

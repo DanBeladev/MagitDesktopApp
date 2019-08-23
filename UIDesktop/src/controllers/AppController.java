@@ -1,14 +1,12 @@
-package App;
+package controllers;
 
-import ActionBar.ActionBarController;
-import DumbComponents.GridPaneBuilder;
-import DumbComponents.ListViewBuilder;
-import DumbComponents.PopUpWindowWithBtn;
+import models.GridPaneBuilder;
+import models.ListViewBuilder;
+import models.PopUpWindowWithBtn;
 import Lib.*;
 import MagitExceptions.*;
-import RepositoryInformation.RepoInfoController;
-import DumbComponents.BranchDetailsView;
-import Utils.GUIUtils;
+import models.BranchDetailsView;
+import utils.GUIUtils;
 import com.fxgraph.edges.Edge;
 import com.fxgraph.graph.Graph;
 import com.fxgraph.graph.ICell;
@@ -16,32 +14,22 @@ import com.fxgraph.graph.Model;
 import com.fxgraph.graph.PannableCanvas;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import layout.CommitTreeLayout;
-import node.CommitNode;
+import models.CommitTreeLayout;
+import models.CommitNode;
 
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.io.IOException;
-import java.security.Guard;
 import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Controller {
+public class AppController {
     final Image FOLDER_ICON=new Image(getClass().getResourceAsStream("/resources/folderIcon.png"));
     final Image TEXT_ICON=new Image(getClass().getResourceAsStream("/resources/text-file-icon-5.jpg"));
 
@@ -61,7 +49,7 @@ public class Controller {
     private Graph commitTree;
     private Map<SHA1,ICell> nodesMap=new HashMap<>();
 
-    public Controller(){
+    public AppController(){
         repoPath=new SimpleStringProperty();
         userName=new SimpleStringProperty();
         repoName=new SimpleStringProperty();

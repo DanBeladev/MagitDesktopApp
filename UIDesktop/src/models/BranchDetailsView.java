@@ -1,4 +1,4 @@
-package DumbComponents;
+package models;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;

@@ -12,17 +12,17 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="475.0" prefWidth="715.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="App.Controller">
+<BorderPane id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="475.0" prefWidth="715.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.AppController">
    <left>
       <ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="250.0" prefWidth="184.0" BorderPane.alignment="CENTER">
-          <fx:include fx:id="leftBtnsComponent" source="../ActionBar/ActionBar.fxml" />
+          <fx:include fx:id="leftBtnsComponent" source="../views/actionbar/ActionBar.fxml" />
          <BorderPane.margin>
             <Insets />
          </BorderPane.margin>
       </ScrollPane>
    </left>
    <top>
-       <fx:include fx:id="topInfoComponent" source="../RepositoryInformation/RepoInformation.fxml" />
+       <fx:include fx:id="topInfoComponent" source="../views/repoinfo/RepoInformation.fxml" />
    </top>
    <center>
       <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">

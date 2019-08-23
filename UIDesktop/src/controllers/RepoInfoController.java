@@ -1,11 +1,11 @@
-package RepositoryInformation;
+package controllers;
 
-import App.Controller;
+import controllers.AppController;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 public class RepoInfoController {
 
-    private Controller mainController;
+    private AppController mainController;
 
     @FXML
     private Label reposNameLabel;
@@ -16,7 +16,7 @@ public class RepoInfoController {
     @FXML
     private Label userLabel;
 
-    public void setMainController(Controller controller){
+    public void setMainController(AppController controller){
         this.mainController=controller;
     }
 
