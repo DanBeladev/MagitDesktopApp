@@ -1,5 +1,7 @@
 package controllers;
 
+import javafx.event.EventHandler;
+import javafx.scene.input.MouseEvent;
 import models.GridPaneBuilder;
 import models.ListViewBuilder;
 import models.PopUpWindowWithBtn;
@@ -316,6 +318,13 @@ public class AppController {
         TreeItem<String> root = new TreeItem<>(nameMainFolder);
         buildTreeViewOfCommitFilesRec(mainFolder,root);
         treeView.setRoot(root);
+
+        EventHandler<MouseEvent> mouseEventHandle = (MouseEvent event) -> {
+          System.out.println("DAN: " + event.toString());
+        };
+        treeView.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventHandle);
+
+
         return treeView;
     }
 
