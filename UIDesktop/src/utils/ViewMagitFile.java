@@ -14,18 +14,6 @@ public class ViewMagitFile {
         return m_Content;
     }
 
-    public void setM_Content(String m_Content) {
-        this.m_Content = m_Content;
-    }
-
-    public String getM_Name() {
-        return m_Name;
-    }
-
-    public void setM_Name(String m_Name) {
-        this.m_Name = m_Name;
-    }
-
     @Override
     public String toString() {
         return m_Name;

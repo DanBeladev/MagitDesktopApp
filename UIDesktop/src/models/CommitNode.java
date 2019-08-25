@@ -19,6 +19,7 @@ public class CommitNode extends AbstractCell {
     private String committer;
     private String message;
     private String sha1;
+    private String pointedBranches="";
     private CommitNodeController commitNodeController;
 
     public CommitNode(String timestamp, String committer, String message, String sha1) {
@@ -36,12 +37,13 @@ public class CommitNode extends AbstractCell {
             URL url = getClass().getResource("../views/node/commitNode.fxml");
             fxmlLoader.setLocation(url);
             GridPane root = fxmlLoader.load(url.openStream());
-
+            root.setOnMouseClicked((v)-> System.out.println(message));
             commitNodeController = fxmlLoader.getController();
             commitNodeController.setCommitMessage(message);
             commitNodeController.setCommitter(committer);
             commitNodeController.setCommitTimeStamp(timestamp);
             commitNodeController.setCommitSha1(sha1);
+            commitNodeController.setBranchLabel(pointedBranches);
 
             return root;
         } catch (IOException e) {
@@ -71,5 +73,18 @@ public class CommitNode extends AbstractCell {
     @Override
     public int hashCode() {
         return timestamp != null ? timestamp.hashCode() : 0;
+    }
+
+    public String getPointedBranches() {
+        return pointedBranches;
+    }
+
+    public void concatPointedBranches(String BranchToAdd) {
+        if(pointedBranches.equals("")){
+            pointedBranches = pointedBranches.concat(BranchToAdd);
+        }
+        else{
+            pointedBranches = pointedBranches.concat(","+BranchToAdd);
+        }
     }
 }

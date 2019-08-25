@@ -11,8 +11,10 @@
 
 <GridPane hgap="5.0" maxHeight="60.0" maxWidth="1.7976931348623157E308" minHeight="44.0" prefHeight="44.0" styleClass="single-commit-row-container" stylesheets="@commitNode.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.CommitNodeController">
   <columnConstraints>
-    <ColumnConstraints hgrow="NEVER" minWidth="-Infinity" />
-      <ColumnConstraints hgrow="NEVER" maxWidth="270.0" minWidth="132.0" prefWidth="270.0" />
+    <ColumnConstraints hgrow="NEVER" maxWidth="67.2" minWidth="-Infinity" prefWidth="57.600006103515625" />
+      <ColumnConstraints hgrow="NEVER" />
+      <ColumnConstraints hgrow="NEVER" maxWidth="103.99997558593749" minWidth="0.0" prefWidth="100.79996337890624" />
+      <ColumnConstraints hgrow="NEVER" maxWidth="237.60001220703123" minWidth="144.80002441406248" prefWidth="148.00003662109373" />
       <ColumnConstraints hgrow="NEVER" maxWidth="190.0" minWidth="0.0" prefWidth="2.4000244140625" />
       <ColumnConstraints hgrow="NEVER" maxWidth="300.0" minWidth="110.0" prefWidth="171.19997558593752" />
       <ColumnConstraints hgrow="NEVER" maxWidth="100.800048828125" minWidth="0.0" prefWidth="1.60003662109375" />
@@ -31,16 +33,17 @@
             <Insets left="5.0" right="10.0" />
          </GridPane.margin>
       </Circle>
-      <Label fx:id="commitTimeStampLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="203.0" styleClass="timestamp-label" text="02.07.2019-22:36:57" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.hgrow="NEVER" GridPane.rowIndex="1" />
-      <Label fx:id="messageLabel" maxWidth="1.7976931348623157E308" prefHeight="27.0" styleClass="message-label" text="cccccccccc" GridPane.columnIndex="7" GridPane.rowIndex="1" />
-      <Label fx:id="committerLabel" styleClass="committer-label" text="ccc" GridPane.columnIndex="5" GridPane.rowIndex="1" />
-      <Separator maxHeight="20.0" minHeight="20.0" orientation="VERTICAL" prefHeight="20.0" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+      <Label fx:id="commitTimeStampLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="203.0" styleClass="timestamp-label" text="02.07.2019-22:36:57" GridPane.columnIndex="5" GridPane.halignment="CENTER" GridPane.hgrow="NEVER" GridPane.rowIndex="1" />
+      <Label fx:id="messageLabel" maxWidth="1.7976931348623157E308" prefHeight="27.0" styleClass="message-label" text="cccccccccc" GridPane.columnIndex="9" GridPane.rowIndex="1" />
+      <Label fx:id="committerLabel" styleClass="committer-label" text="ccc" GridPane.columnIndex="7" GridPane.rowIndex="1" />
       <Separator maxHeight="20.0" minHeight="20.0" orientation="VERTICAL" prefHeight="20.0" GridPane.columnIndex="6" GridPane.rowIndex="1" />
-      <Separator maxHeight="20.0" minHeight="20.0" orientation="VERTICAL" prefHeight="20.0" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-      <Label fx:id="sha1Label" text="12sjrker940fmcfdoeritrew3were3212kjfrtio" GridPane.columnIndex="1" GridPane.rowIndex="1">
+      <Separator maxHeight="20.0" minHeight="20.0" orientation="VERTICAL" prefHeight="20.0" GridPane.columnIndex="8" GridPane.rowIndex="1" />
+      <Separator maxHeight="20.0" minHeight="20.0" orientation="VERTICAL" prefHeight="20.0" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+      <Label fx:id="sha1Label" text="12sjrker940fmcfdoeritrew3were3212kjfrtio" GridPane.columnIndex="3" GridPane.rowIndex="1">
          <font>
             <Font size="13.0" />
          </font>
       </Label>
+      <Label fx:id="branchLabel" prefHeight="18.0" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
    </children>
 </GridPane>

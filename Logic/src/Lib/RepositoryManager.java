@@ -782,12 +782,12 @@ public class RepositoryManager {
         }
     }
 
-    public Commit getCommitFromCurrentRepositoryMapCommit(SHA1 sha1) {
+   /* public Commit getCommitFromCurrentRepositoryMapCommit(SHA1 sha1) {
         if (m_currentRepository != null) {
             return m_currentRepository.getCommitFromCommitsMap(sha1);
         }
         return null;
-    }
+    }*/
 }
 
 

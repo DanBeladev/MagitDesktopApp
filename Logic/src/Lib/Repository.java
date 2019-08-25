@@ -196,5 +196,12 @@ public class Repository {
     public String GetContentOfFolder(SHA1 folderSha1){
         return getFoldersMap().get(folderSha1).toString();
     }
+
+    public Commit getCommitFromMapCommit(SHA1 sha1) {
+            return getCommitFromCommitsMap(sha1);
+    }
+    public SHA1 getCommitSha1ByBranchName(String branchName) {
+        return m_BranchesMap.get(branchName).getCommitSH1();
+    }
 }
 

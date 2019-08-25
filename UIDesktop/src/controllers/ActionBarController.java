@@ -92,7 +92,6 @@ public class ActionBarController {
             mainController.repoPathProperty().set(path);
             mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
             mainController.getIsIsRepoLoadedProperty().set(true);
-            mainController.createCommitsGraphForRepository();
 
         } catch
         (RepositorySameToCurrentRepositoryException | RepositoryDoesnotExistException | ParseException | IOException e) {
@@ -169,7 +168,6 @@ public class ActionBarController {
         if (commitMsg != null) {
             try {
                 mainController.getRepositoryManager().MakeCommit(commitMsg);
-                mainController.createCommitsGraphForRepository();
                 GUIUtils.popUpMessage("Commit added successfully", Alert.AlertType.CONFIRMATION);
             } catch (IOException | ParseException | RepositoryDoesnotExistException | CommitException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
@@ -215,10 +213,16 @@ public class ActionBarController {
 
     public void resetBranchClick() {
         List<SHA1> commitsList = mainController.getRepositoryManager().getCurrentRepositoryAllCommitsSHA1();
-
         mainController.resetBranch(commitsList);
     }
     public void commitsTreeClick(){
+        try {
+            mainController.getRepositoryManager().IsRepositoryHasAtLeastOneCommit();
+        } catch (CommitException e) {
+            GUIUtils.popUpMessage("Repository without commits to draw", Alert.AlertType.INFORMATION);
+            return;
+        }
+        mainController.createCommitsGraphForRepository();
         mainController.drawCommitsTree();
     }
 

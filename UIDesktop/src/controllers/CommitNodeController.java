@@ -12,6 +12,7 @@ public class CommitNodeController {
     @FXML private Label committerLabel;
     @FXML private Circle CommitCircle;
     @FXML private Label sha1Label;
+    @FXML private Label branchLabel;
 
     public void setCommitTimeStamp(String timeStamp) {
         commitTimeStampLabel.setText(timeStamp);
@@ -30,6 +31,10 @@ public class CommitNodeController {
     public void setCommitSha1(String commitSha1){
         sha1Label.setText(commitSha1);
         sha1Label.setTooltip(new Tooltip(commitSha1));
+    }
+    public void setBranchLabel(String branches){
+        branchLabel.setText(branches);
+        branchLabel.setTooltip(new Tooltip(branches));
     }
 
     public int getCircleRadius() {

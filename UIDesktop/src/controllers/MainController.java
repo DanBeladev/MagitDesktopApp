@@ -9,6 +9,13 @@ import javafx.stage.Stage;
 import java.net.URL;
 
 //todo:: to notify in README that you have to click on the icons in tree view for let it work
+//TODO:: mark active branch in commit tree
+//todo:: xml to task
+//todo:: add functional method to commit tree
+//todo:: make commit tree to be home page
+//todo:: repair resize of all components
+//todo:: show differences between two commits
+//todo:: add new logic - Merge and Collaboration
 public class MainController extends Application {
 
     public static void main(String[] args){
