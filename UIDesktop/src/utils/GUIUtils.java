@@ -1,6 +1,7 @@
 package utils;
 
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextInputDialog;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
@@ -10,12 +11,12 @@ import java.util.Optional;
 
 public class GUIUtils {
 
-    public static void popUpMessage(String message, Alert.AlertType popUpType){
+    public static Optional<ButtonType> popUpMessage(String message, Alert.AlertType popUpType){
         Alert alert=new Alert(popUpType);
         alert.setTitle(popUpType.name());
         alert.setHeaderText(null);
         alert.setContentText(message);
-        alert.showAndWait();
+        return alert.showAndWait();
     }
 
     public static String getTextInput(String title,String headerText,String contnet,String defaultValue){

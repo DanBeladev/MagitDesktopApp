@@ -703,7 +703,7 @@ public class RepositoryManager {
     public String getMainFolderName() {
         String path = GetCurrentRepository().GetLocation();
         String[] parts = path.split("\\\\");
-        return parts[parts.length-1];
+        return parts[parts.length - 1];
     }
 
 
@@ -789,4 +789,6 @@ public class RepositoryManager {
         return null;
     }
 }
+
+
 

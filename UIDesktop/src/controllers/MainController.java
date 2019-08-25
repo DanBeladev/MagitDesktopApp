@@ -8,6 +8,7 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 
+//todo:: to notify in README that you have to click on the icons in tree view for let it work
 public class MainController extends Application {
 
     public static void main(String[] args){

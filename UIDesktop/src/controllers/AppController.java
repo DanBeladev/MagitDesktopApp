@@ -27,6 +27,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import models.CommitTreeLayout;
 import models.CommitNode;
+import utils.ViewMagitFile;
 
 import javax.swing.tree.TreeNode;
 import java.io.IOException;
@@ -80,7 +81,7 @@ public class AppController {
         userName.set(repositoryManager.GetUser().getName());
         isRepoLoadedProperty.set(false);
 
-        /*//todo::remove block
+        //todo::remove block
        //===============================
         String path = "C:\\try";
         try {
@@ -99,7 +100,7 @@ public class AppController {
         getIsIsRepoLoadedProperty().set(true);
         createCommitsGraphForRepository();
 
-        //==========================*/
+        //==========================
     }
 
     public void setPrimaryStage(Stage primaryStage){
@@ -216,37 +217,58 @@ public class AppController {
     }
 
     public void checkOut(List<BranchDetails> branchesList) {
-        String[] branchesName = branchesList.stream().map(BranchDetails::getName).toArray(String[]::new);
-        ComboBox<String> comboBox=new ComboBox<>();
-        comboBox.setPrefSize(150,10);
-        comboBox.setItems(FXCollections.observableArrayList(branchesName));
-        comboBox.getSelectionModel().select(0);
-        Label order=new Label("Choose branch to checkout");
-        PopUpWindowWithBtn.popUpWindow(100,300,"Checkout",(v)-> {
-            try {
-                repositoryManager.CheckOut(comboBox.getSelectionModel().getSelectedItem());
-                GUIUtils.popUpMessage("Successful checkout", Alert.AlertType.INFORMATION);
-            } catch (BranchDoesNotExistException| IOException |ParseException | BranchIsAllReadyOnWCException e) {
-                GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        try {
+            if(repositoryManager.HasOpenChanges()){
+                Optional<ButtonType>result = GUIUtils.popUpMessage("You have open changes, would you like to continue and ignore changes or stop and commit your open changes ?", Alert.AlertType.CONFIRMATION);
+                if(result.get()==ButtonType.OK){
+                    String[] branchesName = branchesList.stream().map(BranchDetails::getName).toArray(String[]::new);
+                    ComboBox<String> comboBox=new ComboBox<>();
+                    comboBox.setPrefSize(150,10);
+                    comboBox.setItems(FXCollections.observableArrayList(branchesName));
+                    comboBox.getSelectionModel().select("Choose branch");
+
+                    Label order=new Label("Choose branch to checkout");
+                    PopUpWindowWithBtn.popUpWindow(100,300,"Checkout",(v)-> {
+                        try {
+                            repositoryManager.CheckOut(comboBox.getSelectionModel().getSelectedItem());
+                            GUIUtils.popUpMessage("Successful checkout", Alert.AlertType.INFORMATION);
+                        } catch (BranchDoesNotExistException| IOException |ParseException | BranchIsAllReadyOnWCException e) {
+                            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+                        }
+                    },new Object(),order,comboBox);
+                }
             }
-        },new Object(),order,comboBox);
+        } catch (IOException | ParseException | CommitException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
+
     }
 
     public void resetBranch(List<SHA1> commitsSHA1) {
-        String[] commitsArray = commitsSHA1.stream().map(SHA1::getSh1).toArray(String[]::new);
-        ComboBox<String> comboBox=new ComboBox<>();
-        comboBox.setPrefSize(150,10);
-        comboBox.setItems(FXCollections.observableArrayList(commitsArray));
-        comboBox.getSelectionModel().select(0);
-        Label order=new Label("Choose commit SHA-1 for active branch");
-        PopUpWindowWithBtn.popUpWindow(100,300,"reset",(v)->{
-            try {
-                repositoryManager.ResetHeadBranch(new SHA1(comboBox.getSelectionModel().getSelectedItem()));
-                GUIUtils.popUpMessage("Successful reset", Alert.AlertType.INFORMATION);
-            } catch (CommitException | ParseException | IOException e) {
-                GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        try {
+            if(repositoryManager.HasOpenChanges()){
+                Optional<ButtonType>result = GUIUtils.popUpMessage("You have open changes, would you like to continue and ignore changes ?", Alert.AlertType.CONFIRMATION);
+                if(result.get()==ButtonType.OK){
+                    String[] commitsArray = commitsSHA1.stream().map(SHA1::getSh1).toArray(String[]::new);
+                    ComboBox<String> comboBox=new ComboBox<>();
+                    comboBox.setPrefSize(150,10);
+                    comboBox.setItems(FXCollections.observableArrayList(commitsArray));
+                    comboBox.getSelectionModel().select("Choose commit SHA-1");
+                    Label order=new Label("Choose commit SHA-1 for active branch");
+                    PopUpWindowWithBtn.popUpWindow(100,300,"reset",(v)->{
+                        try {
+                            repositoryManager.ResetHeadBranch(new SHA1(comboBox.getSelectionModel().getSelectedItem()));
+                            GUIUtils.popUpMessage("Successful reset", Alert.AlertType.INFORMATION);
+                        } catch (CommitException | ParseException | IOException e) {
+                            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+                        }
+                    },new Object(),order,comboBox);
+                }
             }
-        },new Object(),order,comboBox);
+        } catch (IOException | ParseException | CommitException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
+
     }
 
 
@@ -294,17 +316,18 @@ public class AppController {
         ComboBox<String> comboBox=new ComboBox<>();
         comboBox.setPrefSize(300,10);
         comboBox.setItems(FXCollections.observableArrayList(commitsArray));
-        comboBox.getSelectionModel().select(0);
+        comboBox.getSelectionModel().select("Choose commit SHA-1");
+        //comboBox.getSelectionModel().select(0);
         GridPane gridPane=GridPaneBuilder.buildGridPane(6,3,20,50);
         gridPane.add(comboBox,1,0,2,2);
         borderPane.setCenter(gridPane);
         comboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-            TreeView<String> tree=buildTreeViewOfCommitFiles(repositoryManager.getCommitFromCurrentRepositoryMapCommit(new SHA1(newValue)));
+            TreeView<ViewMagitFile> tree=buildTreeViewOfCommitFiles(repositoryManager.getCommitFromCurrentRepositoryMapCommit(new SHA1(newValue)));
             renderTreeView(tree,comboBox,borderPane);
         });
     }
 
-    private void renderTreeView(TreeView<String> treeView, ComboBox<String> comboBox,BorderPane borderPane){
+    private void renderTreeView(TreeView<ViewMagitFile> treeView, ComboBox<String> comboBox,BorderPane borderPane){
         treeView.setPrefHeight(300);
         treeView.setMaxHeight(400);
         GridPane gridPane=GridPaneBuilder.buildGridPane(6,3,20,50);
@@ -314,18 +337,20 @@ public class AppController {
         borderPane.setCenter(gridPane);
     }
 
-    public TreeView<String> buildTreeViewOfCommitFiles(Commit commit){
-        TreeView<String> treeView = new TreeView<>();
+    public TreeView<ViewMagitFile> buildTreeViewOfCommitFiles(Commit commit){
+        TreeView<ViewMagitFile> treeView = new TreeView<>();
         Folder mainFolder = getRepositoryManager().GetCurrentRepository().getFoldersMap().get(commit.getMainFolderSH1());
-        String nameMainFolder = repositoryManager.getMainFolderName();
-        TreeItem<String> root = new TreeItem<>(nameMainFolder);
+        //String nameMainFolder = repositoryManager.getMainFolderName();
+        ViewMagitFile viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfFolder(mainFolder.MakeSH1()),repositoryManager.getMainFolderName());
+        TreeItem<ViewMagitFile> root = new TreeItem<>(viewMagitFile);
         buildTreeViewOfCommitFilesRec(mainFolder,root);
         treeView.setRoot(root);
         EventHandler<MouseEvent> mouseEventHandle = (MouseEvent event) -> {
             Node node=event.getPickResult().getIntersectedNode();
             if(node instanceof TreeCell) {
-                if (event.getClickCount() == 2 && ((TreeItem)treeView.getSelectionModel().getSelectedItem()).isLeaf()) {
-                    System.out.println("shalom");
+                if (event.getClickCount() == 2 && (treeView.getSelectionModel().getSelectedItem()).isLeaf()) {
+                     TextArea textArea = new TextArea(treeView.getSelectionModel().getSelectedItem().getValue().getM_Content());
+                    PopUpWindowWithBtn.popUpWindow(200,200,"O.K",(v)->{},new Object(),textArea);
                 }
             }
 
@@ -335,7 +360,7 @@ public class AppController {
     }
 
     //todo:: fix icons
-    public void buildTreeViewOfCommitFilesRec(Folder folder, TreeItem<String> treeItem){
+    public void buildTreeViewOfCommitFilesRec(Folder folder, TreeItem<ViewMagitFile> treeItem){
         ImageView imageView=new ImageView();
         imageView.setFitHeight(20);
         imageView.setFitWidth(25);
@@ -343,7 +368,8 @@ public class AppController {
         treeItem.setGraphic(imageView);
         for(FileDetails fd: folder.getInnerFiles()){
             if(fd.getFileType()==FileType.FOLDER){
-                TreeItem<String> subTreeItem=new TreeItem<>(fd.getName());
+                ViewMagitFile viewMagitFile=new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfFolder(fd.getSh1()),fd.getName());
+                TreeItem<ViewMagitFile> subTreeItem=new TreeItem<>(viewMagitFile);
                 treeItem.getChildren().add(subTreeItem);
                 buildTreeViewOfCommitFilesRec(getRepositoryManager().GetCurrentRepository().getFoldersMap().get(fd.getSh1()),subTreeItem);
             }
@@ -352,7 +378,8 @@ public class AppController {
                 imageView2.setFitHeight(25);
                 imageView2.setFitWidth(20);
                 imageView2.setImage(TEXT_ICON);
-                TreeItem<String> subTreeItem=new TreeItem<>(fd.getName());
+                ViewMagitFile viewMagitFile=new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfBlob(fd.getSh1()),fd.getName());
+                TreeItem<ViewMagitFile> subTreeItem=new TreeItem<>(viewMagitFile);
                 treeItem.getChildren().add(subTreeItem);
                 subTreeItem.setGraphic(imageView2);
             }
