@@ -1,6 +1,8 @@
 package controllers;
 
 import javafx.event.EventHandler;
+import javafx.event.EventType;
+import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 import models.GridPaneBuilder;
 import models.ListViewBuilder;
@@ -26,6 +28,7 @@ import javafx.stage.Stage;
 import models.CommitTreeLayout;
 import models.CommitNode;
 
+import javax.swing.tree.TreeNode;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
@@ -77,7 +80,7 @@ public class AppController {
         userName.set(repositoryManager.GetUser().getName());
         isRepoLoadedProperty.set(false);
 
-        //todo::remove block
+        /*//todo::remove block
        //===============================
         String path = "C:\\try";
         try {
@@ -96,7 +99,7 @@ public class AppController {
         getIsIsRepoLoadedProperty().set(true);
         createCommitsGraphForRepository();
 
-        //==========================
+        //==========================*/
     }
 
     public void setPrimaryStage(Stage primaryStage){
@@ -318,13 +321,16 @@ public class AppController {
         TreeItem<String> root = new TreeItem<>(nameMainFolder);
         buildTreeViewOfCommitFilesRec(mainFolder,root);
         treeView.setRoot(root);
-
         EventHandler<MouseEvent> mouseEventHandle = (MouseEvent event) -> {
-          System.out.println("DAN: " + event.toString());
+            Node node=event.getPickResult().getIntersectedNode();
+            if(node instanceof TreeCell) {
+                if (event.getClickCount() == 2 && ((TreeItem)treeView.getSelectionModel().getSelectedItem()).isLeaf()) {
+                    System.out.println("shalom");
+                }
+            }
+
         };
         treeView.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventHandle);
-
-
         return treeView;
     }
 
@@ -332,18 +338,23 @@ public class AppController {
     public void buildTreeViewOfCommitFilesRec(Folder folder, TreeItem<String> treeItem){
         ImageView imageView=new ImageView();
         imageView.setFitHeight(20);
-        imageView.setFitWidth(30);
+        imageView.setFitWidth(25);
         imageView.setImage(FOLDER_ICON);
         treeItem.setGraphic(imageView);
         for(FileDetails fd: folder.getInnerFiles()){
-            TreeItem<String> subTreeItem=new TreeItem<>(fd.getName());
-            treeItem.getChildren().add(subTreeItem);
             if(fd.getFileType()==FileType.FOLDER){
+                TreeItem<String> subTreeItem=new TreeItem<>(fd.getName());
+                treeItem.getChildren().add(subTreeItem);
                 buildTreeViewOfCommitFilesRec(getRepositoryManager().GetCurrentRepository().getFoldersMap().get(fd.getSh1()),subTreeItem);
             }
             else{
-                imageView.setImage(TEXT_ICON);
-                treeItem.setGraphic(imageView);
+                ImageView imageView2=new ImageView();
+                imageView2.setFitHeight(25);
+                imageView2.setFitWidth(20);
+                imageView2.setImage(TEXT_ICON);
+                TreeItem<String> subTreeItem=new TreeItem<>(fd.getName());
+                treeItem.getChildren().add(subTreeItem);
+                subTreeItem.setGraphic(imageView2);
             }
         }
     }
