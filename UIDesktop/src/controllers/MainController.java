@@ -1,12 +1,20 @@
 package controllers;
 
+import Lib.RepositoryManager;
+import Lib.SHA1;
+import MagitExceptions.RepositoryDoesnotExistException;
+import MagitExceptions.RepositorySameToCurrentRepositoryException;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import puk.team.course.magit.ancestor.finder.AncestorFinder;
+import resources.generated.MagitRepository;
 
+import java.io.IOException;
 import java.net.URL;
+import java.text.ParseException;
 
 //todo:: to notify in README that you have to click on the icons in tree view for let it work
 //TODO:: mark active branch in commit tree

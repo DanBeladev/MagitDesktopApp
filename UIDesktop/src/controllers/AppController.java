@@ -36,8 +36,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class AppController {
-    final Image FOLDER_ICON = new Image(getClass().getResourceAsStream("/resources/folderIcon.png"));
-    final Image TEXT_ICON = new Image(getClass().getResourceAsStream("/resources/text-file-icon-5.jpg"));
+    final Image FOLDER_ICON = new Image(getClass().getResourceAsStream("/resources/hiclipart.com-id_qykni.png"));
+    final Image TEXT_ICON = new Image(getClass().getResourceAsStream("/resources/txt-file-icon-1186.png"));
 
 
     @FXML
@@ -83,7 +83,7 @@ public class AppController {
         isRepoLoadedProperty.set(false);
 
         //todo::remove block
-        //===============================
+      /*  //===============================
         String path = "C:\\try";
         try {
             this.setRepository(path);
@@ -101,7 +101,7 @@ public class AppController {
         getIsIsRepoLoadedProperty().set(true);
         createCommitsGraphForRepository();
 
-        //==========================
+        //==========================*/
     }
 
     public void setPrimaryStage(Stage primaryStage) {

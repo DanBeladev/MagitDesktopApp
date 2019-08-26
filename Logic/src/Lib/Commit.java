@@ -1,9 +1,11 @@
 package Lib;
+import puk.team.course.magit.ancestor.finder.CommitRepresentative;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class Commit extends MagitFile {
+public class Commit extends MagitFile implements CommitRepresentative {
     private SHA1 m_MainFolderSH1;
     private List<SHA1> m_PrevCommits;
     private String m_Message;
@@ -97,5 +99,26 @@ public class Commit extends MagitFile {
         SetWhoUpdated(user);
         SetCreateTime(fd.getLastUpdated());
         SetMainFolderSH1(fd.getSh1());
+    }
+
+    @Override
+    public String getSha1() {
+        return MakeSH1().getSh1();
+    }
+
+    @Override
+    public String getFirstPrecedingSha1() {
+        if(m_PrevCommits.size()==0){
+            return "";
+        }
+        return m_PrevCommits.get(0).getSh1();
+    }
+
+    @Override
+    public String getSecondPrecedingSha1() {
+        if(m_PrevCommits.size()<=1){
+            return "";
+        }
+        return m_PrevCommits.get(1).getSh1();
     }
 }
