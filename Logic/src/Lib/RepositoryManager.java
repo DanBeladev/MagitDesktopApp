@@ -106,18 +106,11 @@ public class RepositoryManager {
         if (m_currentRepository.getCommitMap().isEmpty()) {
             throw new CommitException("You have to do at least one commit before Show Status method");
         }
-        if (!m_currentRepository.getChangedList().isEmpty()) {
-            m_currentRepository.getChangedList().clear();
-        }
-        if (!m_currentRepository.getAddedList().isEmpty()) {
-            m_currentRepository.getAddedList().clear();
-        }
-        if (!m_currentRepository.getDeletedList().isEmpty()) {
-            m_currentRepository.getDeletedList().clear();
-        }
+        m_currentRepository.clearDeltaLists();
+
 
         List<List<String>> listOfLists = new ArrayList<>();
-        GetAllCurrentCommitsFiles().stream().forEach(v -> m_currentRepository.getDeletedList().add(v));
+        GetAllCurrentCommitsFiles().forEach(v -> m_currentRepository.getDeletedList().add(v));
         MoveWCtoObjectFolder(m_currentRepository.GetLocation(), 1);
         if (!m_currentRepository.getChangedList().isEmpty() || !m_currentRepository.getDeletedList().isEmpty() || !m_currentRepository.getAddedList().isEmpty()) {
             m_currentRepository.getChangedList().add(m_currentRepository.GetLocation());
@@ -428,6 +421,9 @@ public class RepositoryManager {
     public void ResetHeadBranch(SHA1 sha1) throws CommitException, ParseException, IOException {
         if (!m_currentRepository.getCommitMap().containsKey(sha1)) {
             throw new CommitException("SHA-1: " + sha1.getSh1() + " doesnt exist");
+        }
+        else if(m_currentRepository.getActiveBranch().getCommitSH1().equals(sha1)){
+            throw new CommitException("SHA-1: " + sha1.getSh1() + " already pointed by Head branch");
         } else {
             m_currentRepository.getActiveBranch().setCommitSH1(sha1);
             FileUtils.WriteToFile(sha1.getSh1(), m_currentRepository.GetLocation() + BRANCHES_FOLDER + m_currentRepository.getActiveBranch().getName() + ".txt");
@@ -802,6 +798,7 @@ public class RepositoryManager {
         }
         return MergeTwoSons(ancestorFileDetails,ourFilesCompareAncestor,theirFilesCompareAncestor,ourFileDetails,theirFileDetails);
     }
+
     private void ClassifyFilesForSons(FileDetails file, List<FileDetails> sonFilesDetails, Map<String,FileStatusCompareAncestor> sonFilesMap){
         List<FileDetails> givenFileInSon = sonFilesDetails.stream().filter(v->v.getName().equals(file.getName())).collect(Collectors.toList());
         if(givenFileInSon.size()==0){
@@ -816,6 +813,7 @@ public class RepositoryManager {
             }
         }
     }
+
     private List<List<FileDetails>> MergeTwoSons(List<FileDetails> filesList,Map<String,FileStatusCompareAncestor> son1,Map<String,FileStatusCompareAncestor> son2, List<FileDetails> son1FileDetails, List<FileDetails> son2FileDetails){
         List<FileDetails> mergeList=new ArrayList<>();
         List<FileDetails> conflictedList=new ArrayList<>();
@@ -851,6 +849,37 @@ public class RepositoryManager {
         listToReturn.add(mergeList);
         listToReturn.add(conflictedList);
         return listToReturn;
+    }
+
+    public List<List<String>> compareTwoCommits(Commit current, Commit parent) throws CommitException, ParseException {
+        m_currentRepository.clearDeltaLists();
+        if(current == null || parent == null){
+            throw new CommitException("Error: commit without parent to compare");
+        }
+        List<FileDetails> currentCommitDetails = ShowAllCommitFiles(current.MakeSH1());
+        List<FileDetails> otherCommitDetails = ShowAllCommitFiles(parent.MakeSH1());
+
+        for(FileDetails fileDetails : currentCommitDetails){
+            List<FileDetails> sameFiles = otherCommitDetails.stream().filter(v->v.getName().equals(fileDetails.getName())).collect(Collectors.toList());
+            if(sameFiles.isEmpty()){
+                m_currentRepository.getAddedList().add(fileDetails.getName());
+            }
+            else{
+                if(!sameFiles.get(0).getSh1().equals(fileDetails.getSh1())){
+                    m_currentRepository.getChangedList().add(fileDetails.getName());
+                }
+                otherCommitDetails.remove(sameFiles.get(0));
+            }
+        }
+
+        for(FileDetails fileDetailsInOtherList : otherCommitDetails){
+            m_currentRepository.getDeletedList().add(fileDetailsInOtherList.getName());
+        }
+         List<List<String>> deltas = new ArrayList<>();
+        deltas.add(m_currentRepository.getAddedList());
+        deltas.add(m_currentRepository.getChangedList());
+        deltas.add(m_currentRepository.getDeletedList());
+        return deltas;
     }
 }
 

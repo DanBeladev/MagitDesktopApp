@@ -1,5 +1,7 @@
 package controllers;
 
+import javafx.beans.InvalidationListener;
+import javafx.collections.MapChangeListener;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.scene.Node;
@@ -81,6 +83,10 @@ public class AppController {
         topInfoComponentController.getUserLabel().textProperty().bind(userName);
         topInfoComponentController.getReposNameLabel().textProperty().bind(repoName);
         userName.set(repositoryManager.GetUser().getName());
+        //commitTree.getCanvas().getProperties().addListener(new MapChangeListener<Object, Object>() {
+
+        //commitTree.getCanvas()
+        
         isRepoLoadedProperty.set(false);
 
         //todo::remove block
@@ -284,7 +290,7 @@ public class AppController {
         List<SHA1> commitsSha1 = repositoryManager.getCurrentRepositoryAllCommitsSHA1();
         for (SHA1 commitSha1 : commitsSha1) {
             Commit commit = repositoryManager.GetCurrentRepository().getCommitFromMapCommit(commitSha1);
-            ICell cell = new CommitNode(commit.getCreateTime().toString(), commit.getWhoUpdated().getName(), commit.getMessage(), commitSha1.getSh1());
+            ICell cell = new CommitNode(commit.getCreateTime().toString(), commit.getWhoUpdated().getName(), commit.getMessage(), commitSha1.getSh1(),this);
             model.addCell(cell);
             nodesMap.put(commitSha1, cell);
         }
@@ -323,13 +329,15 @@ public class AppController {
         BorderPane borderPane = (BorderPane) primaryStage.getScene().lookup("#root");
         String[] commitsArray = repositoryManager.getCurrentRepositoryAllCommitsSHA1().stream().map(SHA1::getSh1).toArray(String[]::new);
         ComboBox<String> comboBox = new ComboBox<>();
-        comboBox.setPrefSize(300, 10);
+        comboBox.setPrefSize(Region.USE_COMPUTED_SIZE, 10);
         comboBox.setItems(FXCollections.observableArrayList(commitsArray));
         comboBox.getSelectionModel().select("Choose commit SHA-1");
         //comboBox.getSelectionModel().select(0);
         GridPane gridPane = GridPaneBuilder.buildGridPane(6, 3, 20, 50);
         gridPane.add(comboBox, 1, 0, 2, 2);
+        gridPane.setMinWidth(10);
         borderPane.setCenter(gridPane);
+        comboBox.setMinWidth(10);
         comboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
             TreeView<ViewMagitFile> tree = buildTreeViewOfCommitFiles(repositoryManager.GetCurrentRepository().getCommitFromMapCommit(new SHA1(newValue)));
             renderTreeView(tree, comboBox, borderPane);
@@ -356,7 +364,7 @@ public class AppController {
         EventHandler<MouseEvent> mouseEventHandle = (MouseEvent event) -> {
             Node node = event.getPickResult().getIntersectedNode();
             if (node instanceof TreeCell) {
-                if (event.getClickCount() == 2 && (treeView.getSelectionModel().getSelectedItem()).isLeaf()) {
+                if (event.getClickCount() == 2 &&treeView.getSelectionModel().getSelectedItem()!= null && (treeView.getSelectionModel().getSelectedItem()).isLeaf()) {
                     TextArea textArea = new TextArea(treeView.getSelectionModel().getSelectedItem().getValue().getM_Content());
                     PopUpWindowWithBtn.popUpWindow(200, 200, "O.K", (v) -> {
                     }, new Object(), textArea);
@@ -376,18 +384,18 @@ public class AppController {
         imageView.setImage(FOLDER_ICON);
         treeItem.setGraphic(imageView);
         List<FileDetails> list= folder.getInnerFiles();
-        for (int i = 0 ; i <list.size(); i++) {
-            if (list.get(i).getFileType() == FileType.FOLDER) {
-                ViewMagitFile viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfFolder(list.get(i).getSh1()), list.get(i).getName());
+        for (FileDetails fileDetails : list) {
+            if (fileDetails.getFileType() == FileType.FOLDER) {
+                ViewMagitFile viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfFolder(fileDetails.getSh1()), fileDetails.getName());
                 TreeItem<ViewMagitFile> subTreeItem = new TreeItem<>(viewMagitFile);
                 treeItem.getChildren().add(subTreeItem);
-                buildTreeViewOfCommitFilesRec(getRepositoryManager().GetCurrentRepository().getFoldersMap().get(list.get(i).getSh1()), subTreeItem);
+                buildTreeViewOfCommitFilesRec(getRepositoryManager().GetCurrentRepository().getFoldersMap().get(fileDetails.getSh1()), subTreeItem);
             } else {
                 ImageView imageView2 = new ImageView();
                 imageView2.setFitHeight(25);
                 imageView2.setFitWidth(20);
                 imageView2.setImage(TEXT_ICON);
-                ViewMagitFile viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfBlob(list.get(i).getSh1()), list.get(i).getName());
+                ViewMagitFile viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfBlob(fileDetails.getSh1()), fileDetails.getName());
                 TreeItem<ViewMagitFile> subTreeItem = new TreeItem<>(viewMagitFile);
                 treeItem.getChildren().add(subTreeItem);
                 subTreeItem.setGraphic(imageView2);

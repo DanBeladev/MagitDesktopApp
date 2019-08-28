@@ -1,5 +1,6 @@
 package Lib;
 import Lib.Blob;
+import MagitExceptions.CommitException;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +43,7 @@ public class Repository {
         this.m_ActiveBranch = new Branch();
         DeltasListReset();
     }
+
     public void DeltasListReset(){
         this.m_ChangedList =new ArrayList<>();
         this.m_AddedList =new ArrayList<>();
@@ -169,7 +171,6 @@ public class Repository {
         return m_FoldersMap;
     }
 
-
     public String GetLocation() {
         return m_Location;
     }
@@ -188,7 +189,6 @@ public class Repository {
     }
 
 
-
     public String GetContentOfBlob(SHA1 sha1Blob){
         return getBlobsMap().get(sha1Blob).getContent();
     }
@@ -200,8 +200,23 @@ public class Repository {
     public Commit getCommitFromMapCommit(SHA1 sha1) {
             return getCommitFromCommitsMap(sha1);
     }
+
     public SHA1 getCommitSha1ByBranchName(String branchName) {
         return m_BranchesMap.get(branchName).getCommitSH1();
+    }
+
+
+
+    public void clearDeltaLists() {
+        if (!m_ChangedList.isEmpty()) {
+            m_ChangedList.clear();
+        }
+        if (!m_AddedList.isEmpty()) {
+            m_AddedList.clear();
+        }
+        if (!m_DeletedList.isEmpty()) {
+            m_DeletedList.clear();
+        }
     }
 }
 
