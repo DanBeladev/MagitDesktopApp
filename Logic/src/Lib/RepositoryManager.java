@@ -830,13 +830,14 @@ public class RepositoryManager {
                         mergeList.add(son2FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
                     }
                 } else {
-                    if(son1FileDetails.stream().filter(v->v.getName().equals(fd.getName())).count()!=0) {
+                    //todo:: deleted and deleted
+                    if(son1FileDetails.stream().anyMatch(v -> v.getName().equals(fd.getName()))) {
                         conflictedList.add(son1FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
                     }
                     else{
                         conflictedList.add(null);
                     }
-                    if(son2FileDetails.stream().filter(v->v.getName().equals(fd.getName())).count()!=0) {
+                    if(son2FileDetails.stream().anyMatch(v -> v.getName().equals(fd.getName()))) {
                         conflictedList.add(son2FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
                     }
                     else{
