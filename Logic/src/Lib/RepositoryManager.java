@@ -783,6 +783,8 @@ public class RepositoryManager {
         }
     }
 
+    //todo:: check if with there is no open changes
+    //todo:: check theris diffrent from ours
     public List<List<FileDetails>> MergeHeadBranchWithOtherBranch(Branch their) throws ParseException {
         AncestorFinder ancestorFinder = new AncestorFinder((v) -> m_currentRepository.getCommitFromCommitsMap(new SHA1(v)));
         String ancestorSha1 = ancestorFinder.traceAncestor(m_currentRepository.getActiveBranch().getCommitSH1().getSh1(), their.getCommitSH1().getSh1());
@@ -819,7 +821,7 @@ public class RepositoryManager {
         List<FileDetails> conflictedList=new ArrayList<>();
         for(FileDetails fd: filesList){
             if(fd.getFileType()==FileType.FILE) {
-                if (son1.get(fd.getName()) == FileStatusCompareAncestor.SAME && son1.get(fd.getName()) == FileStatusCompareAncestor.SAME) {
+                if (son1.get(fd.getName()) == FileStatusCompareAncestor.SAME && son2.get(fd.getName()) == FileStatusCompareAncestor.SAME) {
                     mergeList.add(fd);
                 } else if (son2.get(fd.getName()) == FileStatusCompareAncestor.SAME && son1.get(fd.getName()) != FileStatusCompareAncestor.SAME) {
                     if (son1.get(fd.getName()) == FileStatusCompareAncestor.CHANGED) {
@@ -830,8 +832,18 @@ public class RepositoryManager {
                         mergeList.add(son2FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
                     }
                 } else {
-                    conflictedList.add(son1FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
-                    conflictedList.add(son2FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
+                    if(son1FileDetails.stream().filter(v->v.getName().equals(fd.getName())).count()!=0) {
+                        conflictedList.add(son1FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
+                    }
+                    else{
+                        conflictedList.add(null);
+                    }
+                    if(son2FileDetails.stream().filter(v->v.getName().equals(fd.getName())).count()!=0) {
+                        conflictedList.add(son2FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
+                    }
+                    else{
+                        conflictedList.add(null);
+                    }
                 }
             }
         }

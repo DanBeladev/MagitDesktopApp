@@ -84,7 +84,7 @@ public class AppController {
         isRepoLoadedProperty.set(false);
 
         //todo::remove block
-      /*  //===============================
+       //===============================
         String path = "C:\\try";
         try {
             this.setRepository(path);
@@ -102,7 +102,7 @@ public class AppController {
         getIsIsRepoLoadedProperty().set(true);
         createCommitsGraphForRepository();
 
-        //==========================*/
+        //==========================
     }
 
     public void setPrimaryStage(Stage primaryStage) {

@@ -37,7 +37,8 @@ public class CommitNode extends AbstractCell {
             URL url = getClass().getResource("../views/node/commitNode.fxml");
             fxmlLoader.setLocation(url);
             GridPane root = fxmlLoader.load(url.openStream());
-            root.setOnMouseClicked((v)-> System.out.println(message));
+            ContextMenuCommitNode contextMenuCommitNode = new ContextMenuCommitNode();
+            root.setOnMouseClicked((v)-> contextMenuCommitNode.getContextMenu().show(root,v.getScreenX(),v.getScreenY()));
             commitNodeController = fxmlLoader.getController();
             commitNodeController.setCommitMessage(message);
             commitNodeController.setCommitter(committer);
