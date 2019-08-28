@@ -30,6 +30,7 @@ import models.CommitNode;
 import utils.ViewMagitFile;
 
 import javax.swing.tree.TreeNode;
+import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
@@ -341,7 +342,6 @@ public class AppController {
         GridPane gridPane = GridPaneBuilder.buildGridPane(6, 3, 20, 50);
         gridPane.add(comboBox, 1, 0, 2, 2);
         gridPane.add(treeView, 1, 2, 1, 3);
-
         borderPane.setCenter(gridPane);
     }
 
@@ -375,18 +375,19 @@ public class AppController {
         imageView.setFitWidth(25);
         imageView.setImage(FOLDER_ICON);
         treeItem.setGraphic(imageView);
-        for (FileDetails fd : folder.getInnerFiles()) {
-            if (fd.getFileType() == FileType.FOLDER) {
-                ViewMagitFile viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfFolder(fd.getSh1()), fd.getName());
+        List<FileDetails> list= folder.getInnerFiles();
+        for (int i = 0 ; i <list.size(); i++) {
+            if (list.get(i).getFileType() == FileType.FOLDER) {
+                ViewMagitFile viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfFolder(list.get(i).getSh1()), list.get(i).getName());
                 TreeItem<ViewMagitFile> subTreeItem = new TreeItem<>(viewMagitFile);
                 treeItem.getChildren().add(subTreeItem);
-                buildTreeViewOfCommitFilesRec(getRepositoryManager().GetCurrentRepository().getFoldersMap().get(fd.getSh1()), subTreeItem);
+                buildTreeViewOfCommitFilesRec(getRepositoryManager().GetCurrentRepository().getFoldersMap().get(list.get(i).getSh1()), subTreeItem);
             } else {
                 ImageView imageView2 = new ImageView();
                 imageView2.setFitHeight(25);
                 imageView2.setFitWidth(20);
                 imageView2.setImage(TEXT_ICON);
-                ViewMagitFile viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfBlob(fd.getSh1()), fd.getName());
+                ViewMagitFile viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfBlob(list.get(i).getSh1()), list.get(i).getName());
                 TreeItem<ViewMagitFile> subTreeItem = new TreeItem<>(viewMagitFile);
                 treeItem.getChildren().add(subTreeItem);
                 subTreeItem.setGraphic(imageView2);

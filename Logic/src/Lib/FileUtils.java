@@ -202,7 +202,8 @@ public class FileUtils {
                 content=content+line;
                 line=br.readLine();
                 if(line!=null){
-                    line='\n'+line;
+                    line="\r\n"+line;
+                    //line='\n\'+line;
                 }
             }
 

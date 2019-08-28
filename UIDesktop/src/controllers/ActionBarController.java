@@ -226,9 +226,18 @@ public class ActionBarController {
         mainController.drawCommitsTree();
     }
 
-    public void bindNodeDisabledToBoolProperty(BooleanProperty booleanProperty, Node... nodes) {
+    private void bindNodeDisabledToBoolProperty(BooleanProperty booleanProperty, Node... nodes) {
         for (Node node : nodes) {
             node.disableProperty().bind(booleanProperty.not());
+        }
+    }
+
+    public void MergeClick(){
+        String dafi=GUIUtils.getTextInput("whtsapp","fdf","fv","");
+        try {
+            System.out.println(mainController.getRepositoryManager().MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(dafi)));
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
     }
 

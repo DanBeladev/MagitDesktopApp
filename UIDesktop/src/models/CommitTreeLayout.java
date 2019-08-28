@@ -6,6 +6,7 @@ import com.fxgraph.layout.Layout;
 
 
 import java.util.List;
+import java.util.Random;
 
 // simple test for scattering commits in imaginary tree, where every 3rd node is in a new 'branch' (moved to the right)
 public class CommitTreeLayout implements Layout {
@@ -15,16 +16,19 @@ public class CommitTreeLayout implements Layout {
         final List<ICell> cells = graph.getModel().getAllCells();
         int startX = 10;
         int startY = 50;
-        int every3rdNode = 1;
+        int every4rdNode = 1;
         for (ICell cell : cells) {
             CommitNode c = (CommitNode) cell;
-            if (every3rdNode % 3 == 0) {
-                graph.getGraphic(c).relocate(startX + 50, startY);
+            if (every4rdNode % 4 == 0) {
+                //graph.getGraphic(c).relocate(startX + 50, startY);
+                startX=0;
             } else {
-                graph.getGraphic(c).relocate(startX, startY);
+                //graph.getGraphic(c).relocate(startX, startY);
+                startX=startX+new Random().nextInt(50);
             }
+            graph.getGraphic(c).relocate(startX, startY);
             startY += 50;
-            every3rdNode++;
+            every4rdNode++;
         }
     }
 }

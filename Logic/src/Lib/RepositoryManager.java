@@ -2,8 +2,10 @@ package Lib;
 
 import Lib.Blob;
 import MagitExceptions.*;
+import puk.team.course.magit.ancestor.finder.AncestorFinder;
 import resources.generated.*;
 
+import javax.swing.text.html.ListView;
 import javax.xml.bind.JAXBException;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -222,7 +224,7 @@ public class RepositoryManager {
         }
         String[] array = innerPath.split("\\\\");
         List<FileDetails> rootFolderDetails = GetRootFolderFileDetailsFromCurrentCommit();
-        return CheckInCommitRecursion(array, rootFolderDetails, sha1/*, ending*/, ver, path);
+        return CheckInCommitRecursion(array, rootFolderDetails, sha1, ver, path);
     }
 
     private FileDetails CheckInCommitRecursion(String[] innerPath, List<FileDetails> folderDetails, SHA1 sh1, int ver, String fullPath) throws IOException, ParseException {
@@ -398,8 +400,8 @@ public class RepositoryManager {
         return list;
     }
 
-    public List<FileDetails> ShowAllCommitFiles() throws ParseException {
-        Commit commit = m_currentRepository.getCommitMap().get(m_currentRepository.getActiveBranch().getCommitSH1());
+    public List<FileDetails> ShowAllCommitFiles(SHA1 commitSha1) throws ParseException {
+        Commit commit = m_currentRepository.getCommitMap().get(commitSha1);
         Folder folder = m_currentRepository.getFoldersMap().get(commit.getMainFolderSH1());
         String folderPathName = m_currentRepository.GetLocation();
 
@@ -423,7 +425,7 @@ public class RepositoryManager {
         }
     }
 
-    public List<FileDetails> ResetHeadBranch(SHA1 sha1) throws CommitException, ParseException, IOException {
+    public void ResetHeadBranch(SHA1 sha1) throws CommitException, ParseException, IOException {
         if (!m_currentRepository.getCommitMap().containsKey(sha1)) {
             throw new CommitException("SHA-1: " + sha1.getSh1() + " doesnt exist");
         } else {
@@ -432,7 +434,6 @@ public class RepositoryManager {
             Commit commit = m_currentRepository.getCommitMap().get(m_currentRepository.getActiveBranch().getCommitSH1());
             DeleteWC();
             CheckOutRecursion(m_currentRepository.GetLocation(), commit.getMainFolderSH1());
-            return ShowAllCommitFiles();
         }
     }
 
@@ -782,13 +783,63 @@ public class RepositoryManager {
         }
     }
 
-   /* public Commit getCommitFromCurrentRepositoryMapCommit(SHA1 sha1) {
-        if (m_currentRepository != null) {
-            return m_currentRepository.getCommitFromCommitsMap(sha1);
-        }
-        return null;
-    }*/
-}
+    public List<List<FileDetails>> MergeHeadBranchWithOtherBranch(Branch their) throws ParseException {
+        AncestorFinder ancestorFinder = new AncestorFinder((v) -> m_currentRepository.getCommitFromCommitsMap(new SHA1(v)));
+        String ancestorSha1 = ancestorFinder.traceAncestor(m_currentRepository.getActiveBranch().getCommitSH1().getSh1(), their.getCommitSH1().getSh1());
+        List<FileDetails> ourFileDetails = ShowAllCommitFiles(m_currentRepository.getActiveBranch().getCommitSH1());
+        List<FileDetails> theirFileDetails = ShowAllCommitFiles(their.getCommitSH1());
+        List<FileDetails> ancestorFileDetails = ShowAllCommitFiles(new SHA1(ancestorSha1));
+        Map<String, FileStatusCompareAncestor> ourFilesCompareAncestor = new HashMap<>();
+        Map<String, FileStatusCompareAncestor> theirFilesCompareAncestor = new HashMap<>();
 
+        for (FileDetails file : ancestorFileDetails) {
+            if(file.getFileType()==FileType.FILE) {
+                ClassifyFilesForSons(file, ourFileDetails, ourFilesCompareAncestor);
+                ClassifyFilesForSons(file, theirFileDetails, theirFilesCompareAncestor);
+            }
+        }
+        return MergeTwoSons(ancestorFileDetails,ourFilesCompareAncestor,theirFilesCompareAncestor,ourFileDetails,theirFileDetails);
+    }
+    private void ClassifyFilesForSons(FileDetails file, List<FileDetails> sonFilesDetails, Map<String,FileStatusCompareAncestor> sonFilesMap){
+        List<FileDetails> givenFileInSon = sonFilesDetails.stream().filter(v->v.getName().equals(file.getName())).collect(Collectors.toList());
+        if(givenFileInSon.size()==0){
+            sonFilesMap.put(file.getName(),FileStatusCompareAncestor.DELETED);
+        }
+        else{
+            if(givenFileInSon.get(0).getSh1().equals(file.getSh1())){
+                sonFilesMap.put(file.getName(),FileStatusCompareAncestor.SAME);
+            }
+            else{
+                sonFilesMap.put(file.getName(),FileStatusCompareAncestor.CHANGED);
+            }
+        }
+    }
+    private List<List<FileDetails>> MergeTwoSons(List<FileDetails> filesList,Map<String,FileStatusCompareAncestor> son1,Map<String,FileStatusCompareAncestor> son2, List<FileDetails> son1FileDetails, List<FileDetails> son2FileDetails){
+        List<FileDetails> mergeList=new ArrayList<>();
+        List<FileDetails> conflictedList=new ArrayList<>();
+        for(FileDetails fd: filesList){
+            if(fd.getFileType()==FileType.FILE) {
+                if (son1.get(fd.getName()) == FileStatusCompareAncestor.SAME && son1.get(fd.getName()) == FileStatusCompareAncestor.SAME) {
+                    mergeList.add(fd);
+                } else if (son2.get(fd.getName()) == FileStatusCompareAncestor.SAME && son1.get(fd.getName()) != FileStatusCompareAncestor.SAME) {
+                    if (son1.get(fd.getName()) == FileStatusCompareAncestor.CHANGED) {
+                        mergeList.add(son1FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
+                    }
+                } else if (son2.get(fd.getName()) != FileStatusCompareAncestor.SAME && son1.get(fd.getName()) == FileStatusCompareAncestor.SAME) {
+                    if (son2.get(fd.getName()) == FileStatusCompareAncestor.CHANGED) {
+                        mergeList.add(son2FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
+                    }
+                } else {
+                    conflictedList.add(son1FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
+                    conflictedList.add(son2FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
+                }
+            }
+        }
+        List<List<FileDetails>> listToReturn=new ArrayList<>();
+        listToReturn.add(mergeList);
+        listToReturn.add(conflictedList);
+        return listToReturn;
+    }
+}
 
 
