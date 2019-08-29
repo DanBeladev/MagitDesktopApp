@@ -1,6 +1,12 @@
 package controllers;
 
 
+import Lib.MergeConfilct;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.layout.GridPane;
 import models.ListViewBuilder;
 import Lib.BranchDetails;
 import Lib.SHA1;
@@ -20,6 +26,7 @@ import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.text.ParseException;
 import java.util.List;
 
@@ -119,10 +126,10 @@ public class ActionBarController {
                     mainController.getIsIsRepoLoadedProperty().set(true);
                     mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
                     mainController.repoPathProperty().set(mainController.getRepositoryManager().GetCurrentRepository().GetLocation());
-                }else {
-                    ListView<String> listView=ListViewBuilder.buildListView("Errors in Xml file",200,100);
-                    errors.forEach(v->listView.getItems().add(v));
-                    BorderPane bp=(BorderPane)primaryStage.getScene().lookup("#root");
+                } else {
+                    ListView<String> listView = ListViewBuilder.buildListView("Errors in Xml file", 200, 100);
+                    errors.forEach(v -> listView.getItems().add(v));
+                    BorderPane bp = (BorderPane) primaryStage.getScene().lookup("#root");
                     bp.setCenter(listView);
                 }
 
@@ -215,7 +222,8 @@ public class ActionBarController {
         List<SHA1> commitsList = mainController.getRepositoryManager().getCurrentRepositoryAllCommitsSHA1();
         mainController.resetBranch(commitsList);
     }
-    public void commitsTreeClick(){
+
+    public void commitsTreeClick() {
         try {
             mainController.getRepositoryManager().IsRepositoryHasAtLeastOneCommit();
         } catch (CommitException e) {
@@ -232,16 +240,36 @@ public class ActionBarController {
         }
     }
 
-    public void MergeClick(){
-        String dafi=GUIUtils.getTextInput("whtsapp","fdf","fv","");
+    public void MergeClick() {
+        String dafi = GUIUtils.getTextInput("whtsapp", "fdf", "fv", "");
         try {
-            System.out.println(mainController.getRepositoryManager().MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(dafi)));
+
+            List<MergeConfilct> confilcts = mainController.getRepositoryManager().MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(dafi));
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            URL url = getClass().getResource("../views/conflictsolver/ConflictSolver.fxml");
+            fxmlLoader.setLocation(url);
+            try {
+                GridPane root = fxmlLoader.load(url.openStream());
+                ConflictSolverController conflictSolverController = fxmlLoader.getController();
+                Stage secStage = new Stage();
+                secStage.setScene(new Scene(root));
+                secStage.show();
+                BooleanProperty conflictedResolved = new SimpleBooleanProperty(false);
+                for (MergeConfilct confilct : confilcts) {
+                    conflictSolverController.setAncestorTextArea(confilct.getAncestorContent());
+                    conflictSolverController.setOursTextArea(confilct.getOurContent());
+                    conflictSolverController.setTheirsTextArea(confilct.getTheirsContent());
+
+                }
+            } catch (IOException e) {
+                GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+            }
         } catch (ParseException e) {
             e.printStackTrace();
         }
     }
 
-    public void  commitFilesInfoClick(){
+    public void commitFilesInfoClick() {
         mainController.commitFilesInformation();
     }
 

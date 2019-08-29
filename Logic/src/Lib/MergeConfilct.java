@@ -18,4 +18,16 @@ public class MergeConfilct {
     public void resolveConflict(String content){
         resolveContent = content;
     }
+
+    public String getTheirsContent() {
+        return theirsContent;
+    }
+
+    public String getAncestorContent() {
+        return ancestorContent;
+    }
+
+    public String getOurContent() {
+        return ourContent;
+    }
 }

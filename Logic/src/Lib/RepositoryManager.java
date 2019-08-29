@@ -1,11 +1,7 @@
 package Lib;
-
-import Lib.Blob;
 import MagitExceptions.*;
 import puk.team.course.magit.ancestor.finder.AncestorFinder;
 import resources.generated.*;
-
-import javax.swing.text.html.ListView;
 import javax.xml.bind.JAXBException;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -393,7 +389,7 @@ public class RepositoryManager {
         return list;
     }
 
-    public List<FileDetails> ShowAllCommitFiles(SHA1 commitSha1) throws ParseException {
+    private List<FileDetails> ShowAllCommitFiles(SHA1 commitSha1) throws ParseException {
         Commit commit = m_currentRepository.getCommitMap().get(commitSha1);
         Folder folder = m_currentRepository.getFoldersMap().get(commit.getMainFolderSH1());
         String folderPathName = m_currentRepository.GetLocation();
@@ -446,7 +442,7 @@ public class RepositoryManager {
     }
 
     private void GetAllCurrentCommitsFilesRec(List<FileDetails> folderDetails, List<String> FilesInCommit, String path) {
-        folderDetails.stream().forEach((val) -> {
+        folderDetails.forEach((val) -> {
             String innerPath = path + "\\" + val.getName();
             FilesInCommit.add(innerPath);
             if (val.getFileType() == FileType.FOLDER) {
@@ -508,7 +504,7 @@ public class RepositoryManager {
 
     private void LoadObjectsFolder(MagitRepository magitRepository) throws IOException, ParseException, BranchDoesNotExistException, BranchIsAllReadyOnWCException {
         List<MagitSingleFolder> folderList = magitRepository.getMagitFolders().getMagitSingleFolder();
-        List<MagitSingleFolder> rootFolders = folderList.stream().filter(v -> v.isIsRoot()).collect(Collectors.toList());
+        List<MagitSingleFolder> rootFolders = folderList.stream().filter(MagitSingleFolder::isIsRoot).collect(Collectors.toList());
         Map<String, FileDetails> folderIDToFileDetails = new HashMap<>();
         Map<String, SHA1> commitIDToCommitSha1 = new HashMap<>();
 
@@ -604,7 +600,7 @@ public class RepositoryManager {
         return m_MagitRepository;
     }
 
-    public void IsCurrentRepositoryInitialize() throws RepositoryDoesnotExistException {
+    private void IsCurrentRepositoryInitialize() throws RepositoryDoesnotExistException {
         if (m_currentRepository == null) {
             throw new RepositoryDoesnotExistException("Error: not initialize \"current repository\"");
         }

@@ -1,0 +1,16 @@
+.button {
+    -fx-background-color: #008CBA; /* Green */
+    -fx-border: none;
+    -fx-color: white;
+    -fx-text-align: center;
+    -fx-text-decoration: none;
+    -fx-display: inline-block;
+    -fx-font-size: 16px;
+}
+.button:hover{
+    -fx-background-color: #0ca6ba;
+
+}
+.button:disabled{
+    -fx-background-color: #adb0ba;
+}

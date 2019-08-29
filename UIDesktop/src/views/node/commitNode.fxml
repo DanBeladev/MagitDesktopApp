@@ -9,6 +9,7 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
+<?import java.net.URL?>
 <GridPane hgap="5.0" maxHeight="60.0" maxWidth="1.7976931348623157E308" minHeight="44.0" prefHeight="44.0" styleClass="single-commit-row-container" stylesheets="@commitNode.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.CommitNodeController">
   <columnConstraints>
     <ColumnConstraints hgrow="NEVER" maxWidth="67.2" minWidth="-Infinity" prefWidth="57.600006103515625" />
@@ -46,4 +47,7 @@
       </Label>
       <Label fx:id="branchLabel" prefHeight="18.0" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
    </children>
+    <stylesheets>
+        <URL value="@commitNode.css" />
+    </stylesheets>
 </GridPane>
