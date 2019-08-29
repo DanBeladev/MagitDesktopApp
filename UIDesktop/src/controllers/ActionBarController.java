@@ -242,31 +242,33 @@ public class ActionBarController {
 
     public void MergeClick() {
         String dafi = GUIUtils.getTextInput("whtsapp", "fdf", "fv", "");
-        try {
 
-            List<MergeConfilct> confilcts = mainController.getRepositoryManager().MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(dafi));
-            FXMLLoader fxmlLoader = new FXMLLoader();
-            URL url = getClass().getResource("../views/conflictsolver/ConflictSolver.fxml");
-            fxmlLoader.setLocation(url);
+            List<MergeConfilct> confilcts = null;
             try {
-                GridPane root = fxmlLoader.load(url.openStream());
-                ConflictSolverController conflictSolverController = fxmlLoader.getController();
-                Stage secStage = new Stage();
-                secStage.setScene(new Scene(root));
-                secStage.show();
-                BooleanProperty conflictedResolved = new SimpleBooleanProperty(false);
-                for (MergeConfilct confilct : confilcts) {
-                    conflictSolverController.setAncestorTextArea(confilct.getAncestorContent());
-                    conflictSolverController.setOursTextArea(confilct.getOurContent());
-                    conflictSolverController.setTheirsTextArea(confilct.getTheirsContent());
-
-                }
-            } catch (IOException e) {
-                GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+                confilcts = mainController.getRepositoryManager().MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(dafi));
+            } catch (ParseException e) {
+                e.printStackTrace();
             }
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+            for (MergeConfilct conflict : confilcts) {
+                FXMLLoader fxmlLoader = new FXMLLoader();
+                URL url = getClass().getResource("../views/conflictsolver/ConflictSolver.fxml");
+                fxmlLoader.setLocation(url);
+                GridPane root = null;
+                try { root = fxmlLoader.load(url.openStream());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    ConflictSolverController conflictSolverController = fxmlLoader.getController();
+                    Stage secStage = new Stage();
+                    secStage.setScene(new Scene(root));
+                    conflictSolverController.setStage(secStage);
+                    conflictSolverController.setAncestorTextArea(conflict.getAncestorContent());
+                    conflictSolverController.setOursTextArea(conflict.getOurContent());
+                    conflictSolverController.setTheirsTextArea(conflict.getTheirsContent());
+                    secStage.showAndWait();
+            }
+
+
     }
 
     public void commitFilesInfoClick() {
