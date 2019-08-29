@@ -421,8 +421,7 @@ public class RepositoryManager {
     public void ResetHeadBranch(SHA1 sha1) throws CommitException, ParseException, IOException {
         if (!m_currentRepository.getCommitMap().containsKey(sha1)) {
             throw new CommitException("SHA-1: " + sha1.getSh1() + " doesnt exist");
-        }
-        else if(m_currentRepository.getActiveBranch().getCommitSH1().equals(sha1)){
+        } else if (m_currentRepository.getActiveBranch().getCommitSH1().equals(sha1)) {
             throw new CommitException("SHA-1: " + sha1.getSh1() + " already pointed by Head branch");
         } else {
             m_currentRepository.getActiveBranch().setCommitSH1(sha1);
@@ -781,7 +780,7 @@ public class RepositoryManager {
 
     //todo:: check if with there is no open changes
     //todo:: check theris diffrent from ours
-    public List<List<FileDetails>> MergeHeadBranchWithOtherBranch(Branch their) throws ParseException {
+    public List<MergeConfilct> MergeHeadBranchWithOtherBranch(Branch their) throws ParseException {
         AncestorFinder ancestorFinder = new AncestorFinder((v) -> m_currentRepository.getCommitFromCommitsMap(new SHA1(v)));
         String ancestorSha1 = ancestorFinder.traceAncestor(m_currentRepository.getActiveBranch().getCommitSH1().getSh1(), their.getCommitSH1().getSh1());
         List<FileDetails> ourFileDetails = ShowAllCommitFiles(m_currentRepository.getActiveBranch().getCommitSH1());
@@ -791,92 +790,108 @@ public class RepositoryManager {
         Map<String, FileStatusCompareAncestor> theirFilesCompareAncestor = new HashMap<>();
 
         for (FileDetails file : ancestorFileDetails) {
-            if(file.getFileType()==FileType.FILE) {
+            if (file.getFileType() == FileType.FILE) {
                 ClassifyFilesForSons(file, ourFileDetails, ourFilesCompareAncestor);
                 ClassifyFilesForSons(file, theirFileDetails, theirFilesCompareAncestor);
             }
         }
-        return MergeTwoSons(ancestorFileDetails,ourFilesCompareAncestor,theirFilesCompareAncestor,ourFileDetails,theirFileDetails);
+        return MergeTwoSons(ancestorFileDetails, ourFilesCompareAncestor, theirFilesCompareAncestor, ourFileDetails, theirFileDetails);
     }
 
-    private void ClassifyFilesForSons(FileDetails file, List<FileDetails> sonFilesDetails, Map<String,FileStatusCompareAncestor> sonFilesMap){
-        List<FileDetails> givenFileInSon = sonFilesDetails.stream().filter(v->v.getName().equals(file.getName())).collect(Collectors.toList());
-        if(givenFileInSon.size()==0){
-            sonFilesMap.put(file.getName(),FileStatusCompareAncestor.DELETED);
-        }
-        else{
-            if(givenFileInSon.get(0).getSh1().equals(file.getSh1())){
-                sonFilesMap.put(file.getName(),FileStatusCompareAncestor.SAME);
+    private void ClassifyFilesForSons(FileDetails file, List<FileDetails> sonFilesDetails, Map<String, FileStatusCompareAncestor> sonFilesMap) {
+        List<FileDetails> givenFileInSon = sonFilesDetails.stream().filter(v -> v.getName().equals(file.getName())).collect(Collectors.toList());
+        if (givenFileInSon.size() == 0) {
+            sonFilesMap.put(file.getName(), FileStatusCompareAncestor.DELETED);
+        } else {
+            if (givenFileInSon.get(0).getSh1().equals(file.getSh1())) {
+                sonFilesMap.put(file.getName(), FileStatusCompareAncestor.SAME);
+            } else {
+                sonFilesMap.put(file.getName(), FileStatusCompareAncestor.CHANGED);
             }
-            else{
-                sonFilesMap.put(file.getName(),FileStatusCompareAncestor.CHANGED);
+        }
+        for(FileDetails fd:sonFilesDetails){
+            if(!sonFilesMap.containsKey(fd.getName())){
+                sonFilesMap.put(fd.getName(),FileStatusCompareAncestor.ADDED);
             }
         }
     }
-
-    private List<List<FileDetails>> MergeTwoSons(List<FileDetails> filesList,Map<String,FileStatusCompareAncestor> son1,Map<String,FileStatusCompareAncestor> son2, List<FileDetails> son1FileDetails, List<FileDetails> son2FileDetails){
-        List<FileDetails> mergeList=new ArrayList<>();
-        List<FileDetails> conflictedList=new ArrayList<>();
-        for(FileDetails fd: filesList){
-            if(fd.getFileType()==FileType.FILE) {
-                if (son1.get(fd.getName()) == FileStatusCompareAncestor.SAME && son2.get(fd.getName()) == FileStatusCompareAncestor.SAME) {
+    //todo:: handle case two added files with diffrent content but with same name
+    private List<MergeConfilct> MergeTwoSons(List<FileDetails> ancestorFilesList, Map<String, FileStatusCompareAncestor> ourClassifiedFiles, Map<String, FileStatusCompareAncestor> theirsClassifiedFiles, List<FileDetails> ourFileDetails, List<FileDetails> theirsFileDetails) {
+        List<FileDetails> mergeList = new ArrayList<>();
+        List<MergeConfilct> conflictedList = new ArrayList<>();
+        MergeConfilct confilct;
+        for (FileDetails fd : ancestorFilesList) {
+            List<FileDetails> currentFileInOurCommit=ourFileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList());
+            List<FileDetails> currentFileInTheirsCommit=theirsFileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList());
+            if (fd.getFileType() == FileType.FILE) {
+                if (ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.SAME && theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.SAME) {
                     mergeList.add(fd);
-                } else if (son2.get(fd.getName()) == FileStatusCompareAncestor.SAME && son1.get(fd.getName()) != FileStatusCompareAncestor.SAME) {
-                    if (son1.get(fd.getName()) == FileStatusCompareAncestor.CHANGED) {
-                        mergeList.add(son1FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
+                } else if (theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.SAME && ourClassifiedFiles.get(fd.getName()) != FileStatusCompareAncestor.SAME) {
+                    if (ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.CHANGED) {
+                        mergeList.add(currentFileInOurCommit.get(0));
                     }
-                } else if (son2.get(fd.getName()) != FileStatusCompareAncestor.SAME && son1.get(fd.getName()) == FileStatusCompareAncestor.SAME) {
-                    if (son2.get(fd.getName()) == FileStatusCompareAncestor.CHANGED) {
-                        mergeList.add(son2FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
+                } else if (theirsClassifiedFiles.get(fd.getName()) != FileStatusCompareAncestor.SAME && ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.SAME) {
+                    if (theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.CHANGED) {
+                        mergeList.add(currentFileInTheirsCommit.get(0));
                     }
                 } else {
-                    //todo:: deleted and deleted
-                    if(son1FileDetails.stream().anyMatch(v -> v.getName().equals(fd.getName()))) {
-                        conflictedList.add(son1FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
-                    }
-                    else{
-                        conflictedList.add(null);
-                    }
-                    if(son2FileDetails.stream().anyMatch(v -> v.getName().equals(fd.getName()))) {
-                        conflictedList.add(son2FileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList()).get(0));
-                    }
-                    else{
-                        conflictedList.add(null);
+                    if (!(theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.DELETED && theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.DELETED)) {
+                        if (theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.CHANGED && ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.CHANGED &&
+                                currentFileInOurCommit.get(0).getSh1().equals(currentFileInTheirsCommit.get(0).getSh1())){
+                            mergeList.add(currentFileInOurCommit.get(0));
+                        } else {
+                            String ourFDContent="";
+                            String theirFDContent="";
+                            if(!currentFileInOurCommit.isEmpty())
+                                ourFDContent=m_currentRepository.GetContentOfBlob(currentFileInOurCommit.get(0).getSh1());
+                            if(!currentFileInTheirsCommit.isEmpty()){
+                                theirFDContent=m_currentRepository.GetContentOfBlob(currentFileInTheirsCommit.get(0).getSh1());
+                            }
+                            confilct = new MergeConfilct(fd.getName(),ourFDContent,theirFDContent,m_currentRepository.GetContentOfBlob(fd.getSh1()));
+                            conflictedList.add(confilct);
+                        }
                     }
                 }
             }
         }
-        List<List<FileDetails>> listToReturn=new ArrayList<>();
-        listToReturn.add(mergeList);
-        listToReturn.add(conflictedList);
-        return listToReturn;
+        addSonAddedFiles(ourClassifiedFiles,ourFileDetails,mergeList);
+        addSonAddedFiles(theirsClassifiedFiles,theirsFileDetails,mergeList);
+        //span merge list in wc
+        return conflictedList;
+    }
+
+    private void addSonAddedFiles(Map<String, FileStatusCompareAncestor> son,List<FileDetails> sonFilesList,List<FileDetails> mergeList) {
+        for(FileDetails fd: sonFilesList){
+            if(son.get(fd.getName())==FileStatusCompareAncestor.ADDED){
+                mergeList.add(fd);
+            }
+        }
     }
 
     public List<List<String>> compareTwoCommits(Commit current, Commit parent) throws CommitException, ParseException {
         m_currentRepository.clearDeltaLists();
-        if(current == null || parent == null){
+        if (current == null || parent == null) {
             throw new CommitException("Error: commit without parent to compare");
         }
         List<FileDetails> currentCommitDetails = ShowAllCommitFiles(current.MakeSH1());
         List<FileDetails> otherCommitDetails = ShowAllCommitFiles(parent.MakeSH1());
 
-        for(FileDetails fileDetails : currentCommitDetails){
-            List<FileDetails> sameFiles = otherCommitDetails.stream().filter(v->v.getName().equals(fileDetails.getName())).collect(Collectors.toList());
-            if(sameFiles.isEmpty()){
+        for (FileDetails fileDetails : currentCommitDetails) {
+            List<FileDetails> sameFiles = otherCommitDetails.stream().filter(v -> v.getName().equals(fileDetails.getName())).collect(Collectors.toList());
+            if (sameFiles.isEmpty()) {
                 m_currentRepository.getAddedList().add(fileDetails.getName());
-            }
-            else{
-                if(!sameFiles.get(0).getSh1().equals(fileDetails.getSh1())){
+            } else {
+                if (!sameFiles.get(0).getSh1().equals(fileDetails.getSh1())) {
                     m_currentRepository.getChangedList().add(fileDetails.getName());
                 }
                 otherCommitDetails.remove(sameFiles.get(0));
             }
         }
 
-        for(FileDetails fileDetailsInOtherList : otherCommitDetails){
+        for (FileDetails fileDetailsInOtherList : otherCommitDetails) {
             m_currentRepository.getDeletedList().add(fileDetailsInOtherList.getName());
         }
-         List<List<String>> deltas = new ArrayList<>();
+        List<List<String>> deltas = new ArrayList<>();
         deltas.add(m_currentRepository.getAddedList());
         deltas.add(m_currentRepository.getChangedList());
         deltas.add(m_currentRepository.getDeletedList());

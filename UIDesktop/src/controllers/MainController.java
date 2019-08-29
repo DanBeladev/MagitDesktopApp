@@ -12,6 +12,8 @@ import javafx.stage.Stage;
 import puk.team.course.magit.ancestor.finder.AncestorFinder;
 import resources.generated.MagitRepository;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
