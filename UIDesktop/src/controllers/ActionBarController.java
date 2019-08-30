@@ -241,34 +241,28 @@ public class ActionBarController {
     }
 
     public void MergeClick() {
-        String dafi = GUIUtils.getTextInput("whtsapp", "fdf", "fv", "");
-
-            List<MergeConfilct> confilcts = null;
-            try {
-                confilcts = mainController.getRepositoryManager().MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(dafi));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            for (MergeConfilct conflict : confilcts) {
+        String branchToMerge = GUIUtils.getTextInput("merge", "enter branch to merge with it", "branch:", "");
+        if(branchToMerge==null){ return; }
+        try {
+            List<MergeConfilct> conflicts = mainController.getRepositoryManager().MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(branchToMerge));
+            for (MergeConfilct conflict : conflicts) {
                 FXMLLoader fxmlLoader = new FXMLLoader();
                 URL url = getClass().getResource("../views/conflictsolver/ConflictSolver.fxml");
                 fxmlLoader.setLocation(url);
-                GridPane root = null;
-                try { root = fxmlLoader.load(url.openStream());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    ConflictSolverController conflictSolverController = fxmlLoader.getController();
-                    Stage secStage = new Stage();
-                    secStage.setScene(new Scene(root));
-                    conflictSolverController.setStage(secStage);
-                    conflictSolverController.setAncestorTextArea(conflict.getAncestorContent());
-                    conflictSolverController.setOursTextArea(conflict.getOurContent());
-                    conflictSolverController.setTheirsTextArea(conflict.getTheirsContent());
-                    secStage.showAndWait();
+                GridPane root = fxmlLoader.load(url.openStream());
+                ConflictSolverController conflictSolverController = fxmlLoader.getController();
+                conflictSolverController.setMergeConfilct(conflict);
+                Stage secStage = new Stage();
+                secStage.setScene(new Scene(root));
+                conflictSolverController.setStage(secStage);
+                conflictSolverController.setAncestorTextArea(conflict.getAncestorContent());
+                conflictSolverController.setOursTextArea(conflict.getOurContent());
+                conflictSolverController.setTheirsTextArea(conflict.getTheirsContent());
+                secStage.showAndWait();
             }
-
-
+        }catch (ParseException | IOException e) {
+           GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
     public void commitFilesInfoClick() {

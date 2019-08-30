@@ -1,5 +1,6 @@
 package controllers;
 
+import Lib.MergeConfilct;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
 import javafx.stage.Stage;
@@ -21,7 +22,11 @@ public class ConflictSolverController {
     private TextArea ancestorTextArea;
 
     private Stage stage;
+    private MergeConfilct mergeConfilct;
 
+    public void setMergeConfilct(MergeConfilct mergeConfilct){
+        this.mergeConfilct=mergeConfilct;
+    }
     public void setStage(Stage stage){
         this.stage=stage;
     }
@@ -35,7 +40,11 @@ public class ConflictSolverController {
     public void setTheirsTextArea(String finalTextArea) {
         this.theirsTextArea.setText(finalTextArea);
     }
-    public void goNext(){
+    public void goNextAndResolve(){
+        mergeConfilct.resolveConflict(theirsTextArea.getText());
+        stage.close();
+    }
+    public void deleteCurrentFile(){
         stage.close();
     }
 }
