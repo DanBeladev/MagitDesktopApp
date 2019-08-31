@@ -35,14 +35,7 @@ public class LoadXmlTask extends Task<Void> {
         if (!errors.isEmpty()) {
             return returnErrors(errors);
         }
-        updateProgress(0.6, 1);
-        try{
-            repoManager.LoadXML();
-        }catch (Exception e){
-            errors.add(e.getMessage());
-            return returnErrors(errors);
-        }
-        updateProgress(0.9, 1);
+        updateProgress(0.7, 1);
 
         onSuccess.run();
 

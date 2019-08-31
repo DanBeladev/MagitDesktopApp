@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -112,6 +113,16 @@ public class ActionBarController {
 
     }
 
+    private void displayErrors(List<String> errors) {
+        Platform.runLater(()-> {
+            ListView<String> listView = ListViewBuilder.buildListView("Errors in Xml file", 200, 100);
+            errors.forEach(v -> listView.getItems().add(v));
+            BorderPane bp = (BorderPane) primaryStage.getScene().lookup("#root");
+            bp.setCenter(listView);
+            mainController.topInfoComponentController.getTaskProgressBar().setVisible(false);
+        });
+    }
+
     public void loadXMLClick() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose XML File");
@@ -127,8 +138,8 @@ public class ActionBarController {
                     () -> Platform.runLater(() -> {
                         try {
                             final RepositoryManager repoManager = mainController.getRepositoryManager();
-                            final Repository currentRepo = repoManager.GetCurrentRepository();
-                            if(repoManager.IsRepositoryExist(currentRepo.GetLocation())){
+
+                            if(repoManager.IsRepositoryExist(repoManager.GetMagitRepository().getLocation())){
                                 Optional<ButtonType> result = GUIUtils.popUpMessage(
                                         "An existing repository was found in path, would you like to override it?", Alert.AlertType.CONFIRMATION);
                                 if (result.get() != ButtonType.OK) {
@@ -136,24 +147,36 @@ public class ActionBarController {
                                 }
                             }
 
-                            mainController.getIsIsRepoLoadedProperty().set(true);
-                            mainController.repoNameProperty().set(currentRepo.getName());
-                            mainController.repoPathProperty().set(currentRepo.GetLocation());
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                            new Thread(() -> {
+                                try{
+                                     repoManager.LoadXML();
+                                    Platform.runLater(() -> {
+                                        final Repository currentRepo = repoManager.GetCurrentRepository();
+                                        if (currentRepo == null){
+                                            return;
+                                        }
+                                        mainController.getIsIsRepoLoadedProperty().set(true);
+                                        mainController.repoNameProperty().set(currentRepo.getName());
+                                        mainController.repoPathProperty().set(currentRepo.GetLocation());
+                                    });
+                            } catch (Exception e){
+                                    ArrayList<String> errors = new ArrayList<>();
+                                    errors.add(e.getMessage());
+                                    displayErrors(errors);
+                            } }).start();
+
+                        }
+                        catch (Exception e){
+                            ArrayList<String> errors = new ArrayList<>();
+                            errors.add(e.getMessage());
+                            displayErrors(errors);
                         }
                         finally {
                             mainController.topInfoComponentController.getTaskProgressBar().setVisible(false);
                         }
                     }),
 
-                    (errors) -> Platform.runLater(() -> {
-                        ListView<String> listView = ListViewBuilder.buildListView("Errors in Xml file", 200, 100);
-                        errors.forEach(v -> listView.getItems().add(v));
-                        BorderPane bp = (BorderPane) primaryStage.getScene().lookup("#root");
-                        bp.setCenter(listView);
-                        mainController.topInfoComponentController.getTaskProgressBar().setVisible(false);
-                    }));
+                    this::displayErrors);
 
 
 
