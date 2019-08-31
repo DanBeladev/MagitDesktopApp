@@ -791,7 +791,16 @@ public class RepositoryManager {
                 ClassifyFilesForSons(file, theirFileDetails, theirFilesCompareAncestor);
             }
         }
+        handleWithAddedFile(ourFileDetails,ourFilesCompareAncestor);
+        handleWithAddedFile(theirFileDetails,theirFilesCompareAncestor);
         return MergeTwoSons(ancestorFileDetails, ourFilesCompareAncestor, theirFilesCompareAncestor, ourFileDetails, theirFileDetails);
+    }
+    private void handleWithAddedFile(List<FileDetails> fileDetailsList, Map<String,FileStatusCompareAncestor> compareToAncestor){
+        for(FileDetails fd:fileDetailsList){
+            if(!compareToAncestor.containsKey(fd.getName()) && fd.getFileType()==FileType.FILE){
+                compareToAncestor.put(fd.getName(),FileStatusCompareAncestor.ADDED);
+            }
+        }
     }
 
     private void ClassifyFilesForSons(FileDetails file, List<FileDetails> sonFilesDetails, Map<String, FileStatusCompareAncestor> sonFilesMap) {
@@ -803,11 +812,6 @@ public class RepositoryManager {
                 sonFilesMap.put(file.getName(), FileStatusCompareAncestor.SAME);
             } else {
                 sonFilesMap.put(file.getName(), FileStatusCompareAncestor.CHANGED);
-            }
-        }
-        for(FileDetails fd:sonFilesDetails){
-            if(!sonFilesMap.containsKey(fd.getName())){
-                sonFilesMap.put(fd.getName(),FileStatusCompareAncestor.ADDED);
             }
         }
     }
@@ -831,7 +835,7 @@ public class RepositoryManager {
                         mergeList.add(currentFileInTheirsCommit.get(0));
                     }
                 } else {
-                    if (!(theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.DELETED && theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.DELETED)) {
+                    if (!(theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.DELETED && ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.DELETED)) {
                         if (theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.CHANGED && ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.CHANGED &&
                                 currentFileInOurCommit.get(0).getSh1().equals(currentFileInTheirsCommit.get(0).getSh1())){
                             mergeList.add(currentFileInOurCommit.get(0));
