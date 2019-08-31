@@ -1,31 +1,25 @@
 package controllers;
 
-
-import Lib.MergeConfilct;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.layout.GridPane;
-import models.ListViewBuilder;
-import Lib.BranchDetails;
-import Lib.SHA1;
-import Lib.User;
+import Lib.*;
 import MagitExceptions.*;
-import utils.GUIUtils;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import models.ListViewBuilder;
+import utils.GUIUtils;
 
-
-import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.List;
@@ -119,29 +113,26 @@ public class ActionBarController {
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files", "*.xml"));
         File selectedFile = fileChooser.showOpenDialog(primaryStage);
         if (selectedFile != null) {
-            try {
-                List<String> errors = mainController.getRepositoryManager().CheckXml(selectedFile.getAbsolutePath());
-                if (errors.isEmpty()) {
-                    mainController.getRepositoryManager().LoadXML();
-                    mainController.getIsIsRepoLoadedProperty().set(true);
-                    mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
-                    mainController.repoPathProperty().set(mainController.getRepositoryManager().GetCurrentRepository().GetLocation());
-                } else {
-                    ListView<String> listView = ListViewBuilder.buildListView("Errors in Xml file", 200, 100);
-                    errors.forEach(v -> listView.getItems().add(v));
-                    BorderPane bp = (BorderPane) primaryStage.getScene().lookup("#root");
-                    bp.setCenter(listView);
-                }
+            new Thread(new LoadXmlTask(mainController.getRepositoryManager(), selectedFile,
+                    () -> Platform.runLater(() -> {
+                        try {
+                            mainController.getIsIsRepoLoadedProperty().set(true);
+                            final Repository currentRepo = mainController.getRepositoryManager().GetCurrentRepository();
+                            mainController.repoNameProperty().set(currentRepo.getName());
+                            mainController.repoPathProperty().set(currentRepo.GetLocation());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }),
 
-            } catch (BranchDoesNotExistException | RepositoryAllreadyExistException | BranchIsAllReadyOnWCException | JAXBException | IllegalAccessException | XMLException | NoSuchMethodException e) {
-                GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
-            } catch (ParseException | InvocationTargetException | IOException e) {
-                e.printStackTrace();
-            }
+                    (errors) -> Platform.runLater(() -> {
+                        ListView<String> listView = ListViewBuilder.buildListView("Errors in Xml file", 200, 100);
+                        errors.forEach(v -> listView.getItems().add(v));
+                        BorderPane bp = (BorderPane) primaryStage.getScene().lookup("#root");
+                        bp.setCenter(listView);
+                    }))).start();
         }
-
     }
-
 
     public void initRepoClick() {
         String result = GUIUtils.getTextInput("Repository name", "Enter repository name:", "Name:", mainController.getRepositoryManager().GetUser().getName());
@@ -242,7 +233,9 @@ public class ActionBarController {
 
     public void MergeClick() {
         String branchToMerge = GUIUtils.getTextInput("merge", "enter branch to merge with it", "branch:", "");
-        if(branchToMerge==null){ return; }
+        if (branchToMerge == null) {
+            return;
+        }
         try {
             List<MergeConfilct> conflicts = mainController.getRepositoryManager().MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(branchToMerge));
             for (MergeConfilct conflict : conflicts) {
@@ -260,13 +253,12 @@ public class ActionBarController {
                 conflictSolverController.setTheirsTextArea(conflict.getTheirsContent());
                 secStage.showAndWait();
             }
-        }catch (ParseException | IOException e) {
-           GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        } catch (ParseException | IOException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
     public void commitFilesInfoClick() {
         mainController.commitFilesInformation();
     }
-
 }
