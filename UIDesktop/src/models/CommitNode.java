@@ -16,11 +16,13 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import controllers.CommitNodeController;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 import utils.GUIUtils;
 
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CommitNode extends AbstractCell {
@@ -29,7 +31,7 @@ public class CommitNode extends AbstractCell {
     private String committer;
     private String message;
     private String sha1;
-    private String pointedBranches = "";
+    private List<Pair<String, Boolean>> pointedBranches;
     private CommitNodeController commitNodeController;
     private AppController appController;
 
@@ -39,6 +41,8 @@ public class CommitNode extends AbstractCell {
         this.message = message;
         this.sha1 = sha1;
         this.appController = controller;
+        this.pointedBranches = new ArrayList<>();
+
     }
 
     @Override
@@ -135,16 +139,8 @@ public class CommitNode extends AbstractCell {
         return timestamp != null ? timestamp.hashCode() : 0;
     }
 
-    public String getPointedBranches() {
-        return pointedBranches;
-    }
-
-    public void concatPointedBranches(String BranchToAdd) {
-        if (pointedBranches.equals("")) {
-            pointedBranches = pointedBranches.concat(BranchToAdd);
-        } else {
-            pointedBranches = pointedBranches.concat("," + BranchToAdd);
-        }
+    public void concatPointedBranches(String BranchToAdd, Boolean isActive) {
+        pointedBranches.add(new Pair<>(BranchToAdd, isActive));
     }
 
 

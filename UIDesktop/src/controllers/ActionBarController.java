@@ -13,6 +13,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.List;
+import java.util.Optional;
 
 public class ActionBarController {
 
@@ -115,19 +117,34 @@ public class ActionBarController {
         fileChooser.setTitle("Choose XML File");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files", "*.xml"));
         File selectedFile = fileChooser.showOpenDialog(primaryStage);
+
+
+
+
         if (selectedFile != null) {
             mainController.topInfoComponentController.getTaskProgressBar().setVisible(true);
             LoadXmlTask task = new LoadXmlTask(mainController.getRepositoryManager(), selectedFile,
                     () -> Platform.runLater(() -> {
                         try {
+                            final RepositoryManager repoManager = mainController.getRepositoryManager();
+                            final Repository currentRepo = repoManager.GetCurrentRepository();
+                            if(repoManager.IsRepositoryExist(currentRepo.GetLocation())){
+                                Optional<ButtonType> result = GUIUtils.popUpMessage(
+                                        "An existing repository was found in path, would you like to override it?", Alert.AlertType.CONFIRMATION);
+                                if (result.get() != ButtonType.OK) {
+                                    return;
+                                }
+                            }
+
                             mainController.getIsIsRepoLoadedProperty().set(true);
-                            final Repository currentRepo = mainController.getRepositoryManager().GetCurrentRepository();
                             mainController.repoNameProperty().set(currentRepo.getName());
                             mainController.repoPathProperty().set(currentRepo.GetLocation());
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        mainController.topInfoComponentController.getTaskProgressBar().setVisible(false);
+                        finally {
+                            mainController.topInfoComponentController.getTaskProgressBar().setVisible(false);
+                        }
                     }),
 
                     (errors) -> Platform.runLater(() -> {

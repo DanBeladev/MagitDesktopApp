@@ -287,15 +287,17 @@ public class AppController {
         final Model model = commitTree.getModel();
         commitTree.beginUpdate();
 
+        final Repository currentRepo = repositoryManager.GetCurrentRepository();
+
         List<SHA1> commitsSha1 = repositoryManager.getCurrentRepositoryAllCommitsSHA1();
         for (SHA1 commitSha1 : commitsSha1) {
-            Commit commit = repositoryManager.GetCurrentRepository().getCommitFromMapCommit(commitSha1);
+            Commit commit = currentRepo.getCommitFromMapCommit(commitSha1);
             ICell cell = new CommitNode(commit.getCreateTime().toString(), commit.getWhoUpdated().getName(), commit.getMessage(), commitSha1.getSh1(),this);
             model.addCell(cell);
             nodesMap.put(commitSha1, cell);
         }
         for (SHA1 commitSha1 : commitsSha1) {
-            Commit commit = repositoryManager.GetCurrentRepository().getCommitFromMapCommit(commitSha1);
+            Commit commit = currentRepo.getCommitFromMapCommit(commitSha1);
             List<SHA1> prevCommits = commit.getPrevCommits();
             for (SHA1 sha1 : prevCommits) {
                 final Edge edge = new Edge(nodesMap.get(commitSha1), nodesMap.get(sha1));
@@ -303,9 +305,9 @@ public class AppController {
             }
         }
 
-        repositoryManager.GetCurrentRepository().getBranchesMap().forEach((k, v) -> {
-            ICell commitNode = nodesMap.get(repositoryManager.GetCurrentRepository().getCommitSha1ByBranchName(k));
-            ((CommitNode)commitNode).concatPointedBranches(k);
+        currentRepo.getBranchesMap().forEach((k, v) -> {
+            ICell commitNode = nodesMap.get(currentRepo.getCommitSha1ByBranchName(k));
+            ((CommitNode)commitNode).concatPointedBranches(k, currentRepo.getActiveBranch().getName().equals(k));
         });
         commitTree.endUpdate();
         commitTree.layout(new CommitTreeLayout());

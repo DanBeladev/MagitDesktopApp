@@ -4,6 +4,11 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import javafx.util.Pair;
+
+import java.util.List;
 
 public class CommitNodeController {
 
@@ -12,7 +17,7 @@ public class CommitNodeController {
     @FXML private Label committerLabel;
     @FXML private Circle CommitCircle;
     @FXML private Label sha1Label;
-    @FXML private Label branchLabel;
+    @FXML private TextFlow branches;
 
     public void setCommitTimeStamp(String timeStamp) {
         commitTimeStampLabel.setText(timeStamp);
@@ -32,9 +37,16 @@ public class CommitNodeController {
         sha1Label.setText(commitSha1);
         sha1Label.setTooltip(new Tooltip(commitSha1));
     }
-    public void setBranchLabel(String branches){
-        branchLabel.setText(branches);
-        branchLabel.setTooltip(new Tooltip(branches));
+    public void setBranchLabel(List<Pair<String, Boolean>> pointBranches){
+        for (Pair<String, Boolean> pair: pointBranches) {
+            Text text = new Text(pair.getKey());
+            if (pair.getValue()){
+                text.setStyle("-fx-font-weight: bold");
+            }
+            branches.getChildren().add(text);
+            branches.getChildren().add(new Text("&"));
+        }
+        branches.getChildren().remove(branches.getChildren().size() -1 );
     }
 
     public int getCircleRadius() {
