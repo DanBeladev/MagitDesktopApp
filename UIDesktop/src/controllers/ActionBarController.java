@@ -1,7 +1,10 @@
 package controllers;
 
 import Lib.*;
-import MagitExceptions.*;
+import MagitExceptions.BranchNameIsAllreadyExistException;
+import MagitExceptions.CommitException;
+import MagitExceptions.RepositoryDoesnotExistException;
+import MagitExceptions.RepositorySameToCurrentRepositoryException;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
@@ -113,7 +116,8 @@ public class ActionBarController {
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files", "*.xml"));
         File selectedFile = fileChooser.showOpenDialog(primaryStage);
         if (selectedFile != null) {
-            new Thread(new LoadXmlTask(mainController.getRepositoryManager(), selectedFile,
+            mainController.topInfoComponentController.getTaskProgressBar().setVisible(true);
+            LoadXmlTask task = new LoadXmlTask(mainController.getRepositoryManager(), selectedFile,
                     () -> Platform.runLater(() -> {
                         try {
                             mainController.getIsIsRepoLoadedProperty().set(true);
@@ -123,6 +127,7 @@ public class ActionBarController {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                        mainController.topInfoComponentController.getTaskProgressBar().setVisible(false);
                     }),
 
                     (errors) -> Platform.runLater(() -> {
@@ -130,7 +135,14 @@ public class ActionBarController {
                         errors.forEach(v -> listView.getItems().add(v));
                         BorderPane bp = (BorderPane) primaryStage.getScene().lookup("#root");
                         bp.setCenter(listView);
-                    }))).start();
+                        mainController.topInfoComponentController.getTaskProgressBar().setVisible(false);
+                    }));
+
+
+
+            mainController.topInfoComponentController.getTaskProgressBar().progressProperty().bind(task.progressProperty());
+            new Thread(task).start();
+
         }
     }
 
@@ -167,6 +179,7 @@ public class ActionBarController {
             try {
                 mainController.getRepositoryManager().MakeCommit(commitMsg);
                 GUIUtils.popUpMessage("Commit added successfully", Alert.AlertType.CONFIRMATION);
+                refresh();
             } catch (IOException | ParseException | RepositoryDoesnotExistException | CommitException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
             }
@@ -219,6 +232,16 @@ public class ActionBarController {
             mainController.getRepositoryManager().IsRepositoryHasAtLeastOneCommit();
         } catch (CommitException e) {
             GUIUtils.popUpMessage("Repository without commits to draw", Alert.AlertType.INFORMATION);
+            return;
+        }
+        mainController.createCommitsGraphForRepository();
+        mainController.drawCommitsTree();
+    }
+
+    public void refresh(){
+        try {
+            mainController.getRepositoryManager().IsRepositoryHasAtLeastOneCommit();
+        } catch (CommitException e) {
             return;
         }
         mainController.createCommitsGraphForRepository();

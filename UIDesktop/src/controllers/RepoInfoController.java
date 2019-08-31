@@ -1,8 +1,9 @@
 package controllers;
 
-import controllers.AppController;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+
 public class RepoInfoController {
 
     private AppController mainController;
@@ -15,6 +16,19 @@ public class RepoInfoController {
 
     @FXML
     private Label userLabel;
+
+    @FXML
+    private  ProgressBar taskProgressBar;
+
+    public ProgressBar getTaskProgressBar() {
+        return taskProgressBar;
+    }
+
+    public void setTaskProgressBar(ProgressBar taskProgressBar) {
+        this.taskProgressBar = taskProgressBar;
+    }
+
+
 
     public void setMainController(AppController controller){
         this.mainController=controller;
