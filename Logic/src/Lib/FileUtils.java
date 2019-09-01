@@ -212,7 +212,16 @@ public class FileUtils {
         return content;
     }
 
+public static  void createParentsFoldersByPath(String path) throws IOException {
+        File file = new File(path);
+        file.getParentFile().mkdirs();
+        file.createNewFile();
+}
 
+public static void createFoldersByPathAndWriteContent(String content, String path) throws IOException {
+        createParentsFoldersByPath(path);
+        WriteToFile(content,path);
+}
     public static void BuildTestDirectory(String path) throws Exception {
         new File(path +"\\"+ "folder1").mkdirs();
         new File(path +"\\"+ "folder2").mkdirs();

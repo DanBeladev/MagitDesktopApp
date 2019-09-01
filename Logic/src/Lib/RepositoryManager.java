@@ -776,9 +776,21 @@ public class RepositoryManager {
 
     //todo:: check if with there is no open changes
     //todo:: check theris diffrent from ours
-    public List<MergeConfilct> MergeHeadBranchWithOtherBranch(Branch their) throws ParseException {
+    public List<MergeConfilct> MergeHeadBranchWithOtherBranch(Branch their) throws ParseException, IOException, OpenChangesException, BranchDoesNotExistException, FFException, CommitException {
+        if(m_currentRepository.HasOpenChanges()){
+            throw new OpenChangesException("You have open changes on your working copy");
+        }
+        if(their == m_currentRepository.getActiveBranch()){
+            throw new BranchDoesNotExistException("Impossible merge HEAD branch with itself, You have to choose another branch");
+        }
         AncestorFinder ancestorFinder = new AncestorFinder((v) -> m_currentRepository.getCommitFromCommitsMap(new SHA1(v)));
-        String ancestorSha1 = ancestorFinder.traceAncestor(m_currentRepository.getActiveBranch().getCommitSH1().getSh1(), their.getCommitSH1().getSh1());
+        String activeBranchCommitSH1=m_currentRepository.getActiveBranch().getCommitSH1().getSh1();
+        String theirBranchCommitSH1 = their.getCommitSH1().getSh1();
+        String ancestorSha1 = ancestorFinder.traceAncestor(activeBranchCommitSH1,theirBranchCommitSH1 );
+        if(ancestorSha1.equals(activeBranchCommitSH1) || ancestorSha1.equals(theirBranchCommitSH1))
+        {
+            handleFastForwardMerge(ancestorSha1, m_currentRepository.getActiveBranch(),their);
+        }
         List<FileDetails> ourFileDetails = ShowAllCommitFiles(m_currentRepository.getActiveBranch().getCommitSH1());
         List<FileDetails> theirFileDetails = ShowAllCommitFiles(their.getCommitSH1());
         List<FileDetails> ancestorFileDetails = ShowAllCommitFiles(new SHA1(ancestorSha1));
@@ -795,6 +807,15 @@ public class RepositoryManager {
         handleWithAddedFile(theirFileDetails,theirFilesCompareAncestor);
         return MergeTwoSons(ancestorFileDetails, ourFilesCompareAncestor, theirFilesCompareAncestor, ourFileDetails, theirFileDetails);
     }
+
+    private void handleFastForwardMerge( String ancestorSha1, Branch activeBranch, Branch theirBranch) throws  IOException, ParseException, FFException, CommitException {
+        if(ancestorSha1.equals(activeBranch.getCommitSH1().getSh1())) {
+            ResetHeadBranch(theirBranch.getCommitSH1());
+        }
+            throw new FFException("Fast Forward Merge");
+
+    }
+
     private void handleWithAddedFile(List<FileDetails> fileDetailsList, Map<String,FileStatusCompareAncestor> compareToAncestor){
         for(FileDetails fd:fileDetailsList){
             if(!compareToAncestor.containsKey(fd.getName()) && fd.getFileType()==FileType.FILE){
@@ -816,7 +837,7 @@ public class RepositoryManager {
         }
     }
     //todo:: handle case two added files with diffrent content but with same name
-    private List<MergeConfilct> MergeTwoSons(List<FileDetails> ancestorFilesList, Map<String, FileStatusCompareAncestor> ourClassifiedFiles, Map<String, FileStatusCompareAncestor> theirsClassifiedFiles, List<FileDetails> ourFileDetails, List<FileDetails> theirsFileDetails) {
+    private List<MergeConfilct> MergeTwoSons(List<FileDetails> ancestorFilesList, Map<String, FileStatusCompareAncestor> ourClassifiedFiles, Map<String, FileStatusCompareAncestor> theirsClassifiedFiles, List<FileDetails> ourFileDetails, List<FileDetails> theirsFileDetails) throws IOException {
         List<FileDetails> mergeList = new ArrayList<>();
         List<MergeConfilct> conflictedList = new ArrayList<>();
         MergeConfilct confilct;
@@ -857,6 +878,7 @@ public class RepositoryManager {
         addSonAddedFiles(ourClassifiedFiles,ourFileDetails,mergeList);
         addSonAddedFiles(theirsClassifiedFiles,theirsFileDetails,mergeList);
         //span merge list in wc
+        spanWCByMergeList(mergeList);
         return conflictedList;
     }
 
@@ -896,6 +918,29 @@ public class RepositoryManager {
         deltas.add(m_currentRepository.getChangedList());
         deltas.add(m_currentRepository.getDeletedList());
         return deltas;
+    }
+
+    private void spanWCByMergeList(List<FileDetails> mergeList) throws IOException {
+        DeleteWC();
+        for(FileDetails fd : mergeList){
+            String content = FileUtils.getContentFromZippedFile(m_currentRepository.GetLocation()+OBJECTS_FOLDER+fd.getSh1().getSh1()+".zip");
+           FileUtils.createFoldersByPathAndWriteContent(content,fd.getName());
+
+        }
+    }
+
+    public void spanWCsolvedConflictList(List<MergeConfilct> confilctList) throws IOException {
+        for(MergeConfilct confilct : confilctList){
+            if(confilct.getResolveContent()!= null) {
+                FileUtils.createFoldersByPathAndWriteContent(confilct.getResolveContent(), confilct.getPath());
+            }
+        }
+    }
+    public void CommitOfMerge(String message,String branchToMergeWithActivBranch) throws RepositoryDoesnotExistException, CommitException, ParseException, IOException {
+        MakeCommit(message);
+        Commit commit = m_currentRepository.getCommitFromMapCommit(m_currentRepository.getActiveBranch().getCommitSH1());
+        Branch branch = m_currentRepository.getBranchesMap().get(branchToMergeWithActivBranch);
+        commit.getPrevCommits().add(branch.getCommitSH1());
     }
 }
 

@@ -206,7 +206,6 @@ public class Repository {
     }
 
 
-
     public void clearDeltaLists() {
         if (!m_ChangedList.isEmpty()) {
             m_ChangedList.clear();

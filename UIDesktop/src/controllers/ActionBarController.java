@@ -1,10 +1,7 @@
 package controllers;
 
 import Lib.*;
-import MagitExceptions.BranchNameIsAllreadyExistException;
-import MagitExceptions.CommitException;
-import MagitExceptions.RepositoryDoesnotExistException;
-import MagitExceptions.RepositorySameToCurrentRepositoryException;
+import MagitExceptions.*;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
@@ -114,7 +111,7 @@ public class ActionBarController {
     }
 
     private void displayErrors(List<String> errors) {
-        Platform.runLater(()-> {
+        Platform.runLater(() -> {
             ListView<String> listView = ListViewBuilder.buildListView("Errors in Xml file", 200, 100);
             errors.forEach(v -> listView.getItems().add(v));
             BorderPane bp = (BorderPane) primaryStage.getScene().lookup("#root");
@@ -130,8 +127,6 @@ public class ActionBarController {
         File selectedFile = fileChooser.showOpenDialog(primaryStage);
 
 
-
-
         if (selectedFile != null) {
             mainController.topInfoComponentController.getTaskProgressBar().setVisible(true);
             LoadXmlTask task = new LoadXmlTask(mainController.getRepositoryManager(), selectedFile,
@@ -139,7 +134,7 @@ public class ActionBarController {
                         try {
                             final RepositoryManager repoManager = mainController.getRepositoryManager();
 
-                            if(repoManager.IsRepositoryExist(repoManager.GetMagitRepository().getLocation())){
+                            if (repoManager.IsRepositoryExist(repoManager.GetMagitRepository().getLocation())) {
                                 Optional<ButtonType> result = GUIUtils.popUpMessage(
                                         "An existing repository was found in path, would you like to override it?", Alert.AlertType.CONFIRMATION);
                                 if (result.get() != ButtonType.OK) {
@@ -148,36 +143,34 @@ public class ActionBarController {
                             }
 
                             new Thread(() -> {
-                                try{
-                                     repoManager.LoadXML();
+                                try {
+                                    repoManager.LoadXML();
                                     Platform.runLater(() -> {
                                         final Repository currentRepo = repoManager.GetCurrentRepository();
-                                        if (currentRepo == null){
+                                        if (currentRepo == null) {
                                             return;
                                         }
                                         mainController.getIsIsRepoLoadedProperty().set(true);
                                         mainController.repoNameProperty().set(currentRepo.getName());
                                         mainController.repoPathProperty().set(currentRepo.GetLocation());
                                     });
-                            } catch (Exception e){
+                                } catch (Exception e) {
                                     ArrayList<String> errors = new ArrayList<>();
                                     errors.add(e.getMessage());
                                     displayErrors(errors);
-                            } }).start();
+                                }
+                            }).start();
 
-                        }
-                        catch (Exception e){
+                        } catch (Exception e) {
                             ArrayList<String> errors = new ArrayList<>();
                             errors.add(e.getMessage());
                             displayErrors(errors);
-                        }
-                        finally {
+                        } finally {
                             mainController.topInfoComponentController.getTaskProgressBar().setVisible(false);
                         }
                     }),
 
                     this::displayErrors);
-
 
 
             mainController.topInfoComponentController.getTaskProgressBar().progressProperty().bind(task.progressProperty());
@@ -278,7 +271,7 @@ public class ActionBarController {
         mainController.drawCommitsTree();
     }
 
-    public void refresh(){
+    public void refresh() {
         try {
             mainController.getRepositoryManager().IsRepositoryHasAtLeastOneCommit();
         } catch (CommitException e) {
@@ -295,12 +288,14 @@ public class ActionBarController {
     }
 
     public void MergeClick() {
+        RepositoryManager repositoryManager = mainController.getRepositoryManager();
         String branchToMerge = GUIUtils.getTextInput("merge", "enter branch to merge with it", "branch:", "");
         if (branchToMerge == null) {
             return;
         }
         try {
-            List<MergeConfilct> conflicts = mainController.getRepositoryManager().MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(branchToMerge));
+            List<MergeConfilct> conflicts = null;
+                conflicts = repositoryManager.MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(branchToMerge));
             for (MergeConfilct conflict : conflicts) {
                 FXMLLoader fxmlLoader = new FXMLLoader();
                 URL url = getClass().getResource("../views/conflictsolver/ConflictSolver.fxml");
@@ -316,8 +311,14 @@ public class ActionBarController {
                 conflictSolverController.setTheirsTextArea(conflict.getTheirsContent());
                 secStage.showAndWait();
             }
-        } catch (ParseException | IOException e) {
+            repositoryManager.spanWCsolvedConflictList(conflicts);
+            String message = GUIUtils.getTextInput("Commit", "Enter commit message", "message:", "");
+            repositoryManager.CommitOfMerge(message,branchToMerge);
+        } catch ( BranchDoesNotExistException | OpenChangesException |RepositoryDoesnotExistException|CommitException| ParseException | IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
+        catch (FFException e){
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.INFORMATION);
         }
     }
 

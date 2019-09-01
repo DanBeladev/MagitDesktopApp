@@ -30,4 +30,12 @@ public class MergeConfilct {
     public String getOurContent() {
         return ourContent;
     }
+
+    public String getPath() {
+        return path;
+    }
+
+    public String getResolveContent() {
+        return resolveContent;
+    }
 }

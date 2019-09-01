@@ -41,7 +41,7 @@ public class ConflictSolverController {
         this.theirsTextArea.setText(finalTextArea);
     }
     public void goNextAndResolve(){
-        mergeConfilct.resolveConflict(theirsTextArea.getText());
+        mergeConfilct.resolveConflict(finalTextArea.getText());
         stage.close();
     }
     public void deleteCurrentFile(){
