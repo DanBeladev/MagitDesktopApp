@@ -17,6 +17,7 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import models.ListViewBuilder;
+import sun.security.provider.SHA;
 import utils.GUIUtils;
 
 import java.io.File;
@@ -210,7 +211,7 @@ public class ActionBarController {
         String commitMsg = GUIUtils.getTextInput("Commit", "Enter commit message", "Message:", "");
         if (commitMsg != null) {
             try {
-                mainController.getRepositoryManager().MakeCommit(commitMsg);
+                mainController.getRepositoryManager().MakeCommit(commitMsg,null);
                 GUIUtils.popUpMessage("Commit added successfully", Alert.AlertType.CONFIRMATION);
                 refresh();
             } catch (IOException | ParseException | RepositoryDoesnotExistException | CommitException e) {
@@ -313,7 +314,7 @@ public class ActionBarController {
             }
             repositoryManager.spanWCsolvedConflictList(conflicts);
             String message = GUIUtils.getTextInput("Commit", "Enter commit message", "message:", "");
-            repositoryManager.CommitOfMerge(message,branchToMerge);
+            repositoryManager.MakeCommit(message,repositoryManager.GetCurrentRepository().getCommitFromCommitsMap(repositoryManager.GetCurrentRepository().getBranchesMap().get(branchToMerge).getCommitSH1()));
         } catch ( BranchDoesNotExistException | OpenChangesException |RepositoryDoesnotExistException|CommitException| ParseException | IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }

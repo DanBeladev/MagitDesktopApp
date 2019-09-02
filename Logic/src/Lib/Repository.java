@@ -72,10 +72,6 @@ public class Repository {
 
     }
 
-    public boolean HasOpenChanges(){
-        return !m_AddedList.isEmpty() || !m_ChangedList.isEmpty() || !m_DeletedList.isEmpty() ;
-    }
-
     private void LoadActiveBranch() throws IOException {
         File file = new File (m_Location  + BRANCHES_FOLDER+"HEAD.txt");
         if(!FileUtils.ReadContentFromFile(file).equals("")) {
@@ -114,8 +110,11 @@ public class Repository {
             commit.SetCreateTime(new OurDate(commitDetails[commitDetails.length-1]));
             commit.SetWhoUpdated(new User(commitDetails[commitDetails.length-2]));
             List<SHA1> prevCommits = new ArrayList<>();
-            if(!commitDetails[1].equals("null") /*|| (!commitDetails[1].equals(""))*/){
-            prevCommits.add(new SHA1(commitDetails[1]));
+            if(!commitDetails[1].equals("null")){
+                prevCommits.add(new SHA1(commitDetails[1]));
+                if(commitDetails.length==6){
+                    prevCommits.add(new SHA1(commitDetails[2].substring(1)));
+                }
             }
             commit.SetPrevCommits(prevCommits);
             m_CommitMap.put(commit.MakeSH1(),commit);

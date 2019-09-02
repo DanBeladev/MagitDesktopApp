@@ -17,14 +17,14 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-public class ShowDeltaBiConsumer implements BiConsumer <AppController,String>{
+public class ShowDeltaBiConsumer implements BiConsumer <AppController,List<SHA1> >{
 
     @Override
-    public void accept(AppController appController, String sha1) {
-        Commit current = appController.getRepositoryManager().GetCurrentRepository().getCommitFromMapCommit(new SHA1(sha1));
+    public void accept(AppController appController, List<SHA1> sha1List) {
+        Commit current = appController.getRepositoryManager().GetCurrentRepository().getCommitFromMapCommit(sha1List.get(1));
         Commit parent=null;
         if (!current.getPrevCommits().isEmpty()) {
-            parent = appController.getRepositoryManager().GetCurrentRepository().getCommitFromMapCommit(current.getPrevCommits().get(0));
+            parent = appController.getRepositoryManager().GetCurrentRepository().getCommitFromMapCommit(sha1List.get(0));
         }
         try {
             List<List<String>> deltas = appController.getRepositoryManager().compareTwoCommits(current, parent);

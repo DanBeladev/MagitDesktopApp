@@ -108,7 +108,10 @@ public class CommitNode extends AbstractCell {
         Menu differenceCommitMenu=new Menu("Show delta with prev commit");
         contextMenuCommitNode.mainMenuCreator(differenceCommitMenu);
         for(SHA1 sha: appController.getRepositoryManager().GetCurrentRepository().getCommitFromMapCommit(new SHA1(sha1)).getPrevCommits()){
-            MenuItem subMenu = contextMenuCommitNode.createMenuItem(sha.getSh1(),new ShowDeltaBiConsumer(),appController,sha1);
+            List<SHA1> shaList=new ArrayList<>();
+            shaList.add(sha);
+            shaList.add(new SHA1(sha1));
+            MenuItem subMenu = contextMenuCommitNode.createMenuItem(sha.getSh1(),new ShowDeltaBiConsumer(),appController,shaList);
             contextMenuCommitNode.addSubMenuItem(differenceCommitMenu,subMenu);
         }
     }

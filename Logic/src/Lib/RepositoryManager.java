@@ -66,7 +66,7 @@ public class RepositoryManager {
         }
     }
 
-    public void MakeCommit(String message) throws IOException, ParseException, RepositoryDoesnotExistException, CommitException {
+    public void MakeCommit(String message, Commit anotherPrevCommit) throws IOException, ParseException, RepositoryDoesnotExistException, CommitException {
         if (m_currentRepository == null) {
             throw new RepositoryDoesnotExistException("You have to initialize repository before making commit");
         }
@@ -83,6 +83,9 @@ public class RepositoryManager {
             m_currentRepository.getActiveBranch().CreateBranchTextFile(m_currentRepository.GetLocation() + BRANCHES_FOLDER);
         } else {
             newCommit.AddPrevCommit(m_currentRepository.getActiveBranch().getCommitSH1());
+            if(anotherPrevCommit!=null){
+                newCommit.AddPrevCommit(anotherPrevCommit.MakeSH1());
+            }
             m_currentRepository.getActiveBranch().UpdateSHA1AndBranchFileContent(newCommit.MakeSH1(), m_currentRepository.GetLocation() + BRANCHES_FOLDER + m_currentRepository.getActiveBranch().getName() + ".txt");
         }
         File commitFile = FileUtils.CreateTextFile(m_currentRepository.GetLocation() + OBJECTS_FOLDER + newCommit.MakeSH1() + ".txt", newCommit.toString());
@@ -777,7 +780,7 @@ public class RepositoryManager {
     //todo:: check if with there is no open changes
     //todo:: check theris diffrent from ours
     public List<MergeConfilct> MergeHeadBranchWithOtherBranch(Branch their) throws ParseException, IOException, OpenChangesException, BranchDoesNotExistException, FFException, CommitException {
-        if(m_currentRepository.HasOpenChanges()){
+        if(HasOpenChanges()){
             throw new OpenChangesException("You have open changes on your working copy");
         }
         if(their == m_currentRepository.getActiveBranch()){
@@ -936,12 +939,12 @@ public class RepositoryManager {
             }
         }
     }
-    public void CommitOfMerge(String message,String branchToMergeWithActivBranch) throws RepositoryDoesnotExistException, CommitException, ParseException, IOException {
+ /*   public void CommitOfMerge(String message,String branchToMergeWithActivBranch) throws RepositoryDoesnotExistException, CommitException, ParseException, IOException {
         MakeCommit(message);
         Commit commit = m_currentRepository.getCommitFromMapCommit(m_currentRepository.getActiveBranch().getCommitSH1());
         Branch branch = m_currentRepository.getBranchesMap().get(branchToMergeWithActivBranch);
         commit.getPrevCommits().add(branch.getCommitSH1());
-    }
+    }*/
 }
 
 
