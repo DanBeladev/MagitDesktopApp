@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="475.0" prefWidth="171.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.ActionBarController">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.ActionBarController">
    <children>
       <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" text="Repository">
          <font>
@@ -15,6 +15,7 @@
       </Label>
       <Button fx:id="switchRepoBtn" mnemonicParsing="false" onAction="#switchRepoClick" prefHeight="29.0" prefWidth="171.0" text="Switch repository" />
       <Button fx:id="initRepoBtn" mnemonicParsing="false" onAction="#initRepoClick" prefHeight="29.0" prefWidth="171.0" text="Init repository" />
+      <Button fx:id="cloneBtn" mnemonicParsing="false" prefHeight="29.0" prefWidth="171.0" text="Clone" />
       <Button fx:id="loadXMLBtn" mnemonicParsing="false" onAction="#loadXMLClick" prefHeight="29.0" prefWidth="171.0" text="Load XML" />
       <Button fx:id="switchUserBtn" mnemonicParsing="false" onAction="#switchUserClick" prefHeight="29.0" prefWidth="171.0" text="Switch user" />
       <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" text="Commits">
@@ -24,7 +25,7 @@
       </Label>
       <Button fx:id="commitBtn" mnemonicParsing="false" onAction="#commitClick" prefHeight="29.0" prefWidth="171.0" text="Commit" />
       <Button fx:id="showStatusBtn" mnemonicParsing="false" onAction="#showStatusClick" prefHeight="29.0" prefWidth="171.0" text="WC status" />
-      <Button fx:id="commitContentBtn" mnemonicParsing="false" onAction="#commitFilesInfoClick" prefHeight="29.0" prefWidth="171.0" text="commit content" />
+      <Button fx:id="commitContentBtn" mnemonicParsing="false" onAction="#commitFilesInfoClick" prefHeight="29.0" prefWidth="171.0" text="Commit content" />
       <Button fx:id="commitsTreeBtn" mnemonicParsing="false" onAction="#commitsTreeClick" prefHeight="29.0" prefWidth="171.0" text="Commits tree" />
       <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" text="Branches">
          <font>

@@ -5,7 +5,7 @@
 
 <BorderPane id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="475.0" prefWidth="715.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.AppController">
    <left>
-      <ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="250.0" prefWidth="184.0" BorderPane.alignment="CENTER">
+      <ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="392.0" prefWidth="186.0" BorderPane.alignment="CENTER">
           <fx:include fx:id="leftBtnsComponent" source="../actionbar/ActionBar.fxml" />
       </ScrollPane>
    </left>
