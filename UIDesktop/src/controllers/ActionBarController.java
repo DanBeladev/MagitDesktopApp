@@ -313,6 +313,7 @@ public class ActionBarController {
 
     public void cloneClick() {
         try {
+
             FXMLLoader fxmlLoader = new FXMLLoader();
             fxmlLoader.setLocation(getClass().getResource("../views/clone/CloneRepositoryView.fxml"));
             GridPane gridPane = fxmlLoader.load();
