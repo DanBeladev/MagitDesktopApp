@@ -42,7 +42,7 @@ public class RepositoryManager {
         }
 
     }*/
-    public void CloneRepository(String localRepoLocation, String remoteRepoLocation ) throws RepositoryDoesnotExistException, IOException {
+    public void CloneRepository(String localRepoLocation, String remoteRepoLocation ) throws RepositoryDoesnotExistException, IOException, RepositorySameToCurrentRepositoryException, ParseException {
         File rootFolderInRR=new File(remoteRepoLocation);
         File rootFolderInLR=new File(localRepoLocation);
         if(!rootFolderInRR.exists() || !rootFolderInRR.isDirectory() || !new File(remoteRepoLocation+"\\.magit").exists()){
@@ -54,10 +54,17 @@ public class RepositoryManager {
             throw new FileAlreadyExistsException("file: "+ e.getMessage()+" already exist");
         }
         File nameOfRRfILE=new File(rootFolderInRR.getPath()+MAGIT_FOLDER+"\\repository name.txt");
-
         String RRName=FileUtils.ReadContentFromFile(nameOfRRfILE);
         moveBranchesToInnerDirectory(RRName,rootFolderInLR);
+        CreateHeadRTB(localRepoLocation,RRName);
+        ChangeRepository(localRepoLocation);
 
+    }
+
+    private void CreateHeadRTB(String LRLocation, String RRName) throws IOException {
+        String activeBranchName = FileUtils.ReadContentFromFile(new File(LRLocation+BRANCHES_FOLDER+"HEAD.txt"));
+        String content = FileUtils.ReadContentFromFile(new File(LRLocation+BRANCHES_FOLDER+RRName+"\\"+activeBranchName+".txt"));
+        FileUtils.CreateTextFile(LRLocation+BRANCHES_FOLDER+activeBranchName+".txt",content);
     }
 
     private void moveBranchesToInnerDirectory(String rrName, File rootFolderInLR) throws IOException {
@@ -311,7 +318,6 @@ public class RepositoryManager {
             m_currentRepository = new Repository(path);
             m_currentRepository.LoadData();
         }
-
     }
 
     public void CreateNewBranch(String name) throws BranchNameIsAllreadyExistException, IOException, CommitException, RepositoryDoesnotExistException {
@@ -329,6 +335,20 @@ public class RepositoryManager {
         }
     }
 
+    public void CreateNewRemoteTrackingBranch(String name,RemoteBranch remoteBranch) throws RepositoryDoesnotExistException, CommitException, BranchNameIsAllreadyExistException, IOException {
+        IsCurrentRepositoryInitialize();
+        if (m_currentRepository.getCommitMap().isEmpty()) {
+            throw new CommitException("you don't have any commits so you can't make new branch");
+        }
+        if (m_currentRepository.getBranchesMap().containsKey(name)) {
+            throw new BranchNameIsAllreadyExistException("The name: " + name + " is already exist");
+        } else{
+            Branch remoteTrackingBranch = new RemoteTrackingBranch(name,remoteBranch.getCommitSH1(),remoteBranch);
+            remoteTrackingBranch.CreateBranchTextFile(m_currentRepository.GetLocation() + BRANCHES_FOLDER);
+            m_currentRepository.getBranchesMap().put(name, remoteTrackingBranch);
+        }
+    }
+
     private File GetCommitOfHeadBranch() throws IOException {
         File file = new File(m_currentRepository.GetLocation() + BRANCHES_FOLDER + "HEAD.txt");
         if (!file.exists()) {
@@ -340,7 +360,7 @@ public class RepositoryManager {
         return file;
     }
 
-    public void CheckOut(String name) throws BranchDoesNotExistException, IOException, ParseException, BranchIsAllReadyOnWCException {
+    public void CheckOut(String name) throws BranchDoesNotExistException, IOException, ParseException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException {
         Branch branch;
         if (!m_currentRepository.getBranchesMap().containsKey(name)) {
             throw new BranchDoesNotExistException("The branch: " + name + " does'nt exist");
@@ -348,6 +368,9 @@ public class RepositoryManager {
             throw new BranchIsAllReadyOnWCException("The Branch: " + name + " is already Head branch");
         } else {
             branch = m_currentRepository.getBranchesMap().get(name);
+            if(branch instanceof RemoteBranch){
+                throw new CheckoutToRemoteBranchException("not available to do checkout to remote branch");
+            }
             m_currentRepository.setActiveBranch(branch);
             SHA1 commitSH1 = branch.getCommitSH1();
             SHA1 mainFolderSH1 = m_currentRepository.getCommitMap().get(commitSH1).getMainFolderSH1();
@@ -509,14 +532,14 @@ public class RepositoryManager {
         return f.exists();
     }
 
-    private void changeMagitRepositoryToRepository(MagitRepository magitRepository) throws RepositoryAllreadyExistException, IOException, ParseException, BranchDoesNotExistException, BranchIsAllReadyOnWCException {
+    private void changeMagitRepositoryToRepository(MagitRepository magitRepository) throws RepositoryAllreadyExistException, IOException, ParseException, BranchDoesNotExistException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException {
         FileUtils.deleteDirectory(magitRepository.getLocation());
         BonusInit(magitRepository.getName(), magitRepository.getLocation());
         LoadObjectsFolder(magitRepository);
 
     }
 
-    private void LoadBranches(MagitRepository magitRepository, Map<String, SHA1> commitIDToCommitSha1) throws IOException, BranchDoesNotExistException, ParseException, BranchIsAllReadyOnWCException {
+    private void LoadBranches(MagitRepository magitRepository, Map<String, SHA1> commitIDToCommitSha1) throws IOException, BranchDoesNotExistException, ParseException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException {
         List<MagitSingleBranch> branchesList = magitRepository.getMagitBranches().getMagitSingleBranch();
         for (MagitSingleBranch msb : branchesList) {
             File branchFile = new File(m_currentRepository.GetLocation() + BRANCHES_FOLDER + msb.getName() + ".txt");
@@ -540,7 +563,7 @@ public class RepositoryManager {
         }
     }
 
-    private void LoadObjectsFolder(MagitRepository magitRepository) throws IOException, ParseException, BranchDoesNotExistException, BranchIsAllReadyOnWCException {
+    private void LoadObjectsFolder(MagitRepository magitRepository) throws IOException, ParseException, BranchDoesNotExistException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException {
         List<MagitSingleFolder> folderList = magitRepository.getMagitFolders().getMagitSingleFolder();
         List<MagitSingleFolder> rootFolders = folderList.stream().filter(MagitSingleFolder::isIsRoot).collect(Collectors.toList());
         Map<String, FileDetails> folderIDToFileDetails = new HashMap<>();
@@ -623,7 +646,7 @@ public class RepositoryManager {
         return b;
     }
 
-    public void LoadXML() throws BranchIsAllReadyOnWCException, IOException, BranchDoesNotExistException, ParseException, RepositoryAllreadyExistException {
+    public void LoadXML() throws BranchIsAllReadyOnWCException, IOException, BranchDoesNotExistException, ParseException, RepositoryAllreadyExistException, CheckoutToRemoteBranchException {
         changeMagitRepositoryToRepository(m_MagitRepository);
     }
 
@@ -656,7 +679,7 @@ public class RepositoryManager {
 
     }
 
-    public void ExportRepositoryToXML(String path) throws XMLException, RepositoryDoesnotExistException {
+  /*  public void ExportRepositoryToXML(String path) throws XMLException, RepositoryDoesnotExistException {
         try {
             Path xmlPath = Paths.get(path);
 
@@ -681,7 +704,7 @@ public class RepositoryManager {
             throw new RepositoryDoesnotExistException("Repository wasn't been loaded");
         }
 
-    }
+    }*/
 
     private void exportMagitCommits(MagitRepository i_MagitRepository) {
         Map<SHA1, Commit> commits = m_currentRepository.getCommitMap();
@@ -785,7 +808,7 @@ public class RepositoryManager {
         i_Sha1TrackerSet.add(i_MagitBlob.getId());
     }
 
-    private void exportMagitBranches(MagitRepository i_MagitRepository) {
+    /*private void exportMagitBranches(MagitRepository i_MagitRepository) {
         Map<String, Branch> branches = m_currentRepository.getBranchesMap();
         i_MagitRepository.setMagitBranches(new MagitBranches());
         List<MagitSingleBranch> magitBranches = i_MagitRepository.getMagitBranches().getMagitSingleBranch();
@@ -810,7 +833,7 @@ public class RepositoryManager {
 
             magitBranches.add(magitBranch);
         }
-    }
+    }*/
 
     //todo:: check if with there is no open changes
     //todo:: check theris diffrent from ours

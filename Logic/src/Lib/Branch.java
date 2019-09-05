@@ -8,9 +8,9 @@ public class Branch {
 
     private  String m_Name;
     private  SHA1 m_CommitSH1;
-    private boolean m_IsRemote = false;
-    private boolean m_IsTracking = false;
-    private String m_TrakingAfter = "";
+    //private boolean m_IsRemote = false;
+    //private boolean m_IsTracking = false;
+    //private String m_TrakingAfter = "";
 
 
     public Branch(String name, SHA1 commitSH1) {
@@ -68,7 +68,7 @@ public class Branch {
         return m_Name;
     }
 
-    public boolean IsTracking() {
+   /* public boolean IsTracking() {
         return m_IsTracking;
     }
 
@@ -88,6 +88,6 @@ public class Branch {
 
     public void setIsRemote(boolean i_IsRemote) {
         m_IsRemote = i_IsRemote;
-    }
+    }*/
 
 }

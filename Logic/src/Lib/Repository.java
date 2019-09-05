@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Repository {
     private static final String MAGIT_FOLDER = "\\.magit\\";
@@ -14,6 +15,7 @@ public class Repository {
     private String m_Name;
     private String m_Location;
     private Branch m_ActiveBranch;
+    private boolean isCloned;
     private List<String> m_DeletedList;
     private List<String> m_AddedList;
     private List<String> m_ChangedList;
@@ -27,6 +29,7 @@ public class Repository {
         m_Location = path;
         InitMaps();
         m_ActiveBranch=null;
+        isCloned=false;
 
     }
 
@@ -69,7 +72,6 @@ public class Repository {
         LoadCommits();
         LoadBranches();
         LoadActiveBranch();
-
     }
 
     private void LoadActiveBranch() throws IOException {
@@ -82,12 +84,38 @@ public class Repository {
     private void LoadBranches() throws IOException {
         File file = new File (m_Location + BRANCHES_FOLDER);
         File [] files =file.listFiles();
-        for(File f : files)
-        {
-            if(!f.getName().equals("HEAD.txt")){
-                String branchName=f.getName().substring(0,f.getName().length()-4);
-                Branch branch = new Branch(branchName,new SHA1(FileUtils.ReadContentFromFile(f)));
-                m_BranchesMap.put(branchName,branch);
+        assert files != null;
+        List<File> RRFolder=Arrays.stream(files).filter(File::isDirectory).collect(Collectors.toList());
+        if(!RRFolder.isEmpty()){
+            isCloned=true;
+            File remoteFolder = RRFolder.get(0);
+            File [] filesInRemoteFolder =remoteFolder.listFiles();
+            assert filesInRemoteFolder != null;
+            for(File f : filesInRemoteFolder){
+                RemoteBranch remoteBranch = new RemoteBranch(remoteFolder.getName()+"\\"+f.getName().substring(0,f.getName().length()-4),new SHA1 (FileUtils.ReadContentFromFile(f)));
+                m_BranchesMap.put(remoteBranch.getName(),remoteBranch);
+            }
+        }
+        for (File f : files) {
+            if(!f.isDirectory()) {
+                if (!f.getName().equals("HEAD.txt")) {
+                    String branchName = f.getName().substring(0, f.getName().length() - 4);
+                    if(!RRFolder.isEmpty()){
+                        File remoteFolder = RRFolder.get(0);
+                        if(m_BranchesMap.containsKey(remoteFolder.getName()+ "\\" +branchName)){
+                            RemoteTrackingBranch rtb =new RemoteTrackingBranch(branchName, new SHA1(FileUtils.ReadContentFromFile(f)),(RemoteBranch)m_BranchesMap.get(remoteFolder.getName()+"\\"+branchName));
+                            m_BranchesMap.put(branchName, rtb);
+                        }
+                        else{
+                            Branch branch = new Branch(branchName, new SHA1(FileUtils.ReadContentFromFile(f)));
+                            m_BranchesMap.put(branchName, branch);
+                        }
+                    }
+                    else {
+                        Branch branch = new Branch(branchName, new SHA1(FileUtils.ReadContentFromFile(f)));
+                        m_BranchesMap.put(branchName, branch);
+                    }
+                }
             }
         }
 
@@ -215,6 +243,14 @@ public class Repository {
         if (!m_DeletedList.isEmpty()) {
             m_DeletedList.clear();
         }
+    }
+
+    public boolean isCloned() {
+        return isCloned;
+    }
+
+    public void setCloned(boolean cloned) {
+        isCloned = cloned;
     }
 }
 

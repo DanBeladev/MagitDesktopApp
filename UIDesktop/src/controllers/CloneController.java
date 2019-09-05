@@ -1,6 +1,7 @@
 package controllers;
 
 import MagitExceptions.RepositoryDoesnotExistException;
+import MagitExceptions.RepositorySameToCurrentRepositoryException;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -9,6 +10,7 @@ import javafx.stage.Stage;
 import utils.GUIUtils;
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 
 
 public class CloneController {
@@ -40,8 +42,9 @@ public class CloneController {
         if (appController != null) {
             try {
                 appController.getRepositoryManager().CloneRepository(lrTextField.getText()+"\\"+newRepoNameTextField.getText(), rrTextField.getText());
-
-            } catch (RepositoryDoesnotExistException | IOException e) {
+                appController.getIsIsRepoLoadedProperty().set(true);
+                secondaryStage.close();
+            } catch (RepositoryDoesnotExistException | IOException | RepositorySameToCurrentRepositoryException | ParseException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
             }
 

@@ -247,7 +247,21 @@ public class AppController {
                     GUIUtils.popUpMessage("Successful checkout", Alert.AlertType.INFORMATION);
                 } catch (BranchDoesNotExistException | IOException | ParseException | BranchIsAllReadyOnWCException e) {
                     GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+                } catch(CheckoutToRemoteBranchException e){
+                    String message=e.getMessage()+"\n Would you like to create Remote Tracking Branch instead?";
+                    Optional<ButtonType> result =GUIUtils.popUpMessage(message, Alert.AlertType.CONFIRMATION);
+                    if (result.get() == ButtonType.OK) {
+                        String remoteBranchName =comboBox.getSelectionModel().getSelectedItem();
+                        String [] araayNameOfRTB = remoteBranchName.split("\\\\");
+                        String nameOfRTB = araayNameOfRTB[araayNameOfRTB.length-1];
+                        try {
+                            repositoryManager.CreateNewRemoteTrackingBranch(nameOfRTB,(RemoteBranch)repositoryManager.GetCurrentRepository().getBranchesMap().get(remoteBranchName));
+                        } catch (BranchNameIsAllreadyExistException |CommitException|IOException| RepositoryDoesnotExistException ex) {
+                           GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.ERROR);
+                        }
+                    }
                 }
+
             }, new Object(), order, comboBox);
         } catch (IOException | ParseException | CommitException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
