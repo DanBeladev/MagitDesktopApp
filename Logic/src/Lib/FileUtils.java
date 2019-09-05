@@ -1,11 +1,11 @@
 package Lib;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Stream;
@@ -36,12 +36,9 @@ public class FileUtils {
 
     public static String ReadContentFromFile(File f) throws IOException {
         String content = "";
-        try
-        {
-            content = new String ( Files.readAllBytes( Paths.get(f.getPath()) ) );
-        }
-        catch (IOException e)
-        {
+        try {
+            content = new String(Files.readAllBytes(Paths.get(f.getPath())));
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return content;
@@ -65,16 +62,16 @@ public class FileUtils {
         fos.close();
     }
 
-    public static void CreateZipFile(String content,String fileName, String location) throws IOException {
-        SHA1 sh1=new SHA1();
+    public static void CreateZipFile(String content, String fileName, String location) throws IOException {
+        SHA1 sh1 = new SHA1();
         sh1.MakeSH1FromContent(content);
-        if(fileName==null){
-            fileName=sh1.getSh1();
+        if (fileName == null) {
+            fileName = sh1.getSh1();
         }
-        File file = new File(location+fileName+".txt");
+        File file = new File(location + fileName + ".txt");
         file.createNewFile();
-        WriteToFile(content,location+fileName+".txt");
-        CreateZipFile(file,sh1,location);
+        WriteToFile(content, location + fileName + ".txt");
+        CreateZipFile(file, sh1, location);
         file.delete();
     }
 
@@ -98,8 +95,8 @@ public class FileUtils {
 
     }
 
-    public static void AppendTextToFile(String filePath,String text) throws IOException {
-        text=text+"\n";
+    public static void AppendTextToFile(String filePath, String text) throws IOException {
+        text = text + "\n";
         Files.write(Paths.get(filePath), text.getBytes(), StandardOpenOption.APPEND);
     }
 
@@ -141,7 +138,7 @@ public class FileUtils {
         return (path.delete());
     }
 
-    public static boolean deleteDirectory(String path){
+    public static boolean deleteDirectory(String path) {
         return deleteDirectory(new File(path));
     }
 
@@ -160,23 +157,23 @@ public class FileUtils {
         return fileDetailsList;
     }
 
-    public static void ClearDirectory(String path){
-        File file=new File(path);
-        File[] listFiles=file.listFiles();
-        for(File f:listFiles){
-            if(f.isDirectory()){
-            FileUtils.deleteDirectory(f);
-              }else {
+    public static void ClearDirectory(String path) {
+        File file = new File(path);
+        File[] listFiles = file.listFiles();
+        for (File f : listFiles) {
+            if (f.isDirectory()) {
+                FileUtils.deleteDirectory(f);
+            } else {
                 f.delete();
             }
         }
     }
 
-    public static List<FileDetails> ParseFolderTextFileToFileDetailsList(String content) throws  ParseException {
+    public static List<FileDetails> ParseFolderTextFileToFileDetailsList(String content) throws ParseException {
         List<FileDetails> fileDetailsList = new ArrayList<>();
         FileDetails fileDetails;
-        String [] stringArray = content.split("\n");
-        if(stringArray.length==1 && stringArray[0].equals("")){
+        String[] stringArray = content.split("\n");
+        if (stringArray.length == 1 && stringArray[0].equals("")) {
             return fileDetailsList;
         }
         for (String str : stringArray) {
@@ -191,18 +188,18 @@ public class FileUtils {
         ZipFile zipFile = new ZipFile(path);
 
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
-        String content="";
+        String content = "";
         while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
             InputStream stream = zipFile.getInputStream(entry);
             InputStreamReader isr = new InputStreamReader(stream);
             BufferedReader br = new BufferedReader(isr);
-            String line=br.readLine();
-            while(line!=null){
-                content=content+line;
-                line=br.readLine();
-                if(line!=null){
-                    line="\r\n"+line;
+            String line = br.readLine();
+            while (line != null) {
+                content = content + line;
+                line = br.readLine();
+                if (line != null) {
+                    line = "\r\n" + line;
                     //line='\n\'+line;
                 }
             }
@@ -212,43 +209,57 @@ public class FileUtils {
         return content;
     }
 
-public static  void createParentsFoldersByPath(String path) throws IOException {
+    public static void createParentsFoldersByPath(String path) throws IOException {
         File file = new File(path);
         file.getParentFile().mkdirs();
         file.createNewFile();
-}
+    }
 
-public static void createFoldersByPathAndWriteContent(String content, String path) throws IOException {
+    public static void CopyDirectory(File source, File target) throws IOException {
+        Files.copy(Paths.get(source.getPath()), Paths.get(target.getPath()));
+        if (source.isDirectory()) {
+            File[] innerFiles = source.listFiles();
+            if (innerFiles != null) {
+                for (File innerFile : innerFiles) {
+                    CopyDirectory(innerFile, new File(target + "\\" + innerFile.getName()));
+                }
+            }
+        }
+    }
+
+    public static void createFoldersByPathAndWriteContent(String content, String path) throws IOException {
         createParentsFoldersByPath(path);
         WriteToFile(content,path);
-}
+    }
+
+
     public static void BuildTestDirectory(String path) throws Exception {
-        new File(path +"\\"+ "folder1").mkdirs();
-        new File(path +"\\"+ "folder2").mkdirs();
-        new File(path +"\\"+ "folder3").mkdirs();
-        FileUtils.WriteToFile("file 1 content",path +"\\"+ "file1.txt");
-        FileUtils.WriteToFile("file 2 content",path +"\\"+ "file2.txt");
+        new File(path + "\\" + "folder1").mkdirs();
+        new File(path + "\\" + "folder2").mkdirs();
+        new File(path + "\\" + "folder3").mkdirs();
+        FileUtils.WriteToFile("file 1 content", path + "\\" + "file1.txt");
+        FileUtils.WriteToFile("file 2 content", path + "\\" + "file2.txt");
 
 
-        new File(path +"\\"+ "folder1\\folder1.1").mkdirs();
-        FileUtils.WriteToFile("file 1.1 content",path +"\\"+ "folder1\\file1.1.txt");
-        FileUtils.WriteToFile("file 1.1.1 content",path +"\\"+ "folder1\\folder1.1\\file1.1.1.txt");
+        new File(path + "\\" + "folder1\\folder1.1").mkdirs();
+        FileUtils.WriteToFile("file 1.1 content", path + "\\" + "folder1\\file1.1.txt");
+        FileUtils.WriteToFile("file 1.1.1 content", path + "\\" + "folder1\\folder1.1\\file1.1.1.txt");
 
-        new File(path +"\\"+ "folder2\\folder2.1").mkdirs();
-        new File(path +"\\"+ "folder2\\folder2.2").mkdirs();
-        FileUtils.WriteToFile("file 2.1 content",path +"\\"+ "folder2\\file2.1.txt");
-        FileUtils.WriteToFile("file 2.1.1 content",path +"\\"+ "folder2\\folder2.1\\file2.1.1.txt");
-        FileUtils.WriteToFile("file 2.2.1 content",path +"\\"+ "folder2\\folder2.2\\file2.2.1.txt");
-        FileUtils.WriteToFile("file 2.2.2 content",path +"\\"+ "folder2\\folder2.1\\file2.2.2.txt");
+        new File(path + "\\" + "folder2\\folder2.1").mkdirs();
+        new File(path + "\\" + "folder2\\folder2.2").mkdirs();
+        FileUtils.WriteToFile("file 2.1 content", path + "\\" + "folder2\\file2.1.txt");
+        FileUtils.WriteToFile("file 2.1.1 content", path + "\\" + "folder2\\folder2.1\\file2.1.1.txt");
+        FileUtils.WriteToFile("file 2.2.1 content", path + "\\" + "folder2\\folder2.2\\file2.2.1.txt");
+        FileUtils.WriteToFile("file 2.2.2 content", path + "\\" + "folder2\\folder2.1\\file2.2.2.txt");
 
-        new File(path +"\\"+ "folder3\\folder3.1").mkdirs();
-        FileUtils.WriteToFile("file 3.1 content",path +"\\"+ "folder3\\file3.1.txt");
-        FileUtils.WriteToFile("file 3.1.1 content",path +"\\"+ "folder3\\folder3.1\\file3.1.1.txt");
+        new File(path + "\\" + "folder3\\folder3.1").mkdirs();
+        FileUtils.WriteToFile("file 3.1 content", path + "\\" + "folder3\\file3.1.txt");
+        FileUtils.WriteToFile("file 3.1.1 content", path + "\\" + "folder3\\folder3.1\\file3.1.1.txt");
     }
 
     public static void DoChangesTest(String path) throws IOException {
         deleteDirectory(path + "\\folder3");
-        AppendTextToFile(path+ "\\file1.txt"," shinuy");
-        WriteToFile("hadash",path+"\\folder2\\filehadash.txt");
+        AppendTextToFile(path + "\\file1.txt", " shinuy");
+        WriteToFile("hadash", path + "\\folder2\\filehadash.txt");
     }
 }

@@ -15,6 +15,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import controllers.CommitNodeController;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Pair;
 import utils.GUIUtils;
@@ -98,6 +99,7 @@ public class CommitNode extends AbstractCell {
             TreeView treeView=appController.buildTreeViewOfCommitFiles(appController.getRepositoryManager().GetCurrentRepository().getCommitFromMapCommit(new SHA1(sha1)));
             Stage stage=new Stage();
             stage.setScene(new Scene(treeView));
+            stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
         },null,null);
         contextMenuCommitNode.mainMenuCreator(commitFilesItem);

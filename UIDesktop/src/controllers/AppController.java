@@ -116,6 +116,10 @@ public class AppController {
         leftBtnsComponentController.setPrimaryStage(primaryStage);
     }
 
+    public Stage getPrimaryStage() {
+        return primaryStage;
+    }
+
     public String getRepoPath() {
         return repoPath.get();
     }
@@ -386,7 +390,8 @@ public class AppController {
         imageView.setImage(FOLDER_ICON);
         treeItem.setGraphic(imageView);
         List<FileDetails> list= folder.getInnerFiles();
-        for (FileDetails fileDetails : list) {
+        list.forEach(fileDetails -> {
+            System.out.println(fileDetails.getName());
             if (fileDetails.getFileType() == FileType.FOLDER) {
                 ViewMagitFile viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfFolder(fileDetails.getSh1()), fileDetails.getName());
                 TreeItem<ViewMagitFile> subTreeItem = new TreeItem<>(viewMagitFile);
@@ -402,7 +407,7 @@ public class AppController {
                 treeItem.getChildren().add(subTreeItem);
                 subTreeItem.setGraphic(imageView2);
             }
-        }
+        });
     }
 /*
     public void updateGraph() {

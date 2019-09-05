@@ -2,13 +2,12 @@ package Lib;
 import MagitExceptions.*;
 import puk.team.course.magit.ancestor.finder.AncestorFinder;
 import resources.generated.*;
+import sun.reflect.generics.visitor.Visitor;
+
 import javax.xml.bind.JAXBException;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,7 +26,7 @@ public class RepositoryManager {
         m_MagitRepository = null;
     }
 
-    public void InitRepository(String name, String path) throws RepositoryAllreadyExistException, IOException {
+/*    public void InitRepository(String name, String path) throws RepositoryAllreadyExistException, IOException {
 //
         if (new File(path + MAGIT_FOLDER).mkdirs()) {
             new File(path + OBJECTS_FOLDER).mkdirs();
@@ -42,6 +41,42 @@ public class RepositoryManager {
             throw new RepositoryAllreadyExistException("the repository in path: " + path + " allready exist");
         }
 
+    }*/
+    public void CloneRepository(String localRepoLocation, String remoteRepoLocation ) throws RepositoryDoesnotExistException, IOException {
+        File rootFolderInRR=new File(remoteRepoLocation);
+        File rootFolderInLR=new File(localRepoLocation);
+        if(!rootFolderInRR.exists() || !rootFolderInRR.isDirectory() || !new File(remoteRepoLocation+"\\.magit").exists()){
+            throw new RepositoryDoesnotExistException("the given remote repository doesn't exist");
+        }
+        try {
+            FileUtils.CopyDirectory(rootFolderInRR, rootFolderInLR);
+        }catch (FileAlreadyExistsException e){
+            throw new FileAlreadyExistsException("file: "+ e.getMessage()+" already exist");
+        }
+        File nameOfRRfILE=new File(rootFolderInRR.getPath()+MAGIT_FOLDER+"\\repository name.txt");
+
+        String RRName=FileUtils.ReadContentFromFile(nameOfRRfILE);
+        moveBranchesToInnerDirectory(RRName,rootFolderInLR);
+
+    }
+
+    private void moveBranchesToInnerDirectory(String rrName, File rootFolderInLR) throws IOException {
+        File newDirectoryForBranches=new File(rootFolderInLR+BRANCHES_FOLDER+"\\"+rrName);
+        if(newDirectoryForBranches.mkdir()){
+            File[] branches=new File(rootFolderInLR+BRANCHES_FOLDER).listFiles();
+            if (branches != null) {
+                for(File file:branches){
+                    if(!file.isDirectory()){
+                        if(!file.getName().equals("HEAD.txt")) {
+                            Files.copy(Paths.get(file.getPath()), Paths.get(rootFolderInLR + BRANCHES_FOLDER + "\\" + rrName + "\\" + file.getName()));
+                            if (!file.delete()) {
+                                throw new IOException("error in clone progress");
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void BonusInit(String name, String path) throws IOException {

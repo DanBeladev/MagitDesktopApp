@@ -15,6 +15,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import models.ListViewBuilder;
 import sun.security.provider.SHA;
@@ -29,18 +30,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class ActionBarController {
-
-    @FXML
-    private Button switchRepoBtn;
-
-    @FXML
-    private Button initRepoBtn;
-
-    @FXML
-    private Button loadXMLBtn;
-
-    @FXML
-    private Button switchUserBtn;
 
     @FXML
     private Button commitBtn;
@@ -211,7 +200,7 @@ public class ActionBarController {
         String commitMsg = GUIUtils.getTextInput("Commit", "Enter commit message", "Message:", "");
         if (commitMsg != null) {
             try {
-                mainController.getRepositoryManager().MakeCommit(commitMsg,null);
+                mainController.getRepositoryManager().MakeCommit(commitMsg, null);
                 GUIUtils.popUpMessage("Commit added successfully", Alert.AlertType.CONFIRMATION);
                 refresh();
             } catch (IOException | ParseException | RepositoryDoesnotExistException | CommitException e) {
@@ -296,7 +285,7 @@ public class ActionBarController {
         }
         try {
             List<MergeConfilct> conflicts = null;
-                conflicts = repositoryManager.MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(branchToMerge));
+            conflicts = repositoryManager.MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(branchToMerge));
             for (MergeConfilct conflict : conflicts) {
                 FXMLLoader fxmlLoader = new FXMLLoader();
                 URL url = getClass().getResource("../views/conflictsolver/ConflictSolver.fxml");
@@ -314,13 +303,30 @@ public class ActionBarController {
             }
             repositoryManager.spanWCsolvedConflictList(conflicts);
             String message = GUIUtils.getTextInput("Commit", "Enter commit message", "message:", "");
-            repositoryManager.MakeCommit(message,repositoryManager.GetCurrentRepository().getCommitFromCommitsMap(repositoryManager.GetCurrentRepository().getBranchesMap().get(branchToMerge).getCommitSH1()));
-        } catch ( BranchDoesNotExistException | OpenChangesException |RepositoryDoesnotExistException|CommitException| ParseException | IOException e) {
+            repositoryManager.MakeCommit(message, repositoryManager.GetCurrentRepository().getCommitFromCommitsMap(repositoryManager.GetCurrentRepository().getBranchesMap().get(branchToMerge).getCommitSH1()));
+        } catch (BranchDoesNotExistException | OpenChangesException | RepositoryDoesnotExistException | CommitException | ParseException | IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
-        }
-        catch (FFException e){
+        } catch (FFException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.INFORMATION);
         }
+    }
+
+    public void cloneClick() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            fxmlLoader.setLocation(getClass().getResource("../views/clone/CloneRepositoryView.fxml"));
+            GridPane gridPane = fxmlLoader.load();
+            CloneController cloneController = fxmlLoader.getController();
+            cloneController.setAppController(this.mainController);
+            Stage stage = new Stage();
+            cloneController.setSecondaryStage(stage);
+            stage.setScene(new Scene(gridPane));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+        } catch (IOException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
+
     }
 
     public void commitFilesInfoClick() {

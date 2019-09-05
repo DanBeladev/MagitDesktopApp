@@ -15,7 +15,7 @@
       </Label>
       <Button fx:id="switchRepoBtn" mnemonicParsing="false" onAction="#switchRepoClick" prefHeight="29.0" prefWidth="171.0" text="Switch repository" />
       <Button fx:id="initRepoBtn" mnemonicParsing="false" onAction="#initRepoClick" prefHeight="29.0" prefWidth="171.0" text="Init repository" />
-      <Button fx:id="cloneBtn" mnemonicParsing="false" prefHeight="29.0" prefWidth="171.0" text="Clone" />
+      <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneClick" prefHeight="29.0" prefWidth="171.0" text="Clone" />
       <Button fx:id="loadXMLBtn" mnemonicParsing="false" onAction="#loadXMLClick" prefHeight="29.0" prefWidth="171.0" text="Load XML" />
       <Button fx:id="switchUserBtn" mnemonicParsing="false" onAction="#switchUserClick" prefHeight="29.0" prefWidth="171.0" text="Switch user" />
       <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" text="Commits">
