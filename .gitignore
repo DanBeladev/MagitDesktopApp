@@ -1,2 +1,6 @@
 out/production/
 production
+artifacts
+.idea/workspace.xml
+
+
