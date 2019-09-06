@@ -2,6 +2,7 @@ package controllers;
 
 import Lib.*;
 import MagitExceptions.*;
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
@@ -327,6 +328,13 @@ public class ActionBarController {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
 
+    }
+    public void fetchClick(){
+        try {
+            mainController.getRepositoryManager().FetchRRNewData();
+        } catch (RepositoryDoesnotExistException | RepositoryDoesntTrackAfterOtherRepositoryException | IOException | ParseException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
     public void commitFilesInfoClick() {

@@ -15,7 +15,7 @@ public class Repository {
     private String m_Name;
     private String m_Location;
     private Branch m_ActiveBranch;
-    private boolean isCloned;
+    private String RRLocation;
     private List<String> m_DeletedList;
     private List<String> m_AddedList;
     private List<String> m_ChangedList;
@@ -29,8 +29,6 @@ public class Repository {
         m_Location = path;
         InitMaps();
         m_ActiveBranch=null;
-        isCloned=false;
-
     }
 
     public Repository(String path) {
@@ -72,6 +70,14 @@ public class Repository {
         LoadCommits();
         LoadBranches();
         LoadActiveBranch();
+        LoadRRLocation();
+    }
+
+    private void LoadRRLocation() throws IOException {
+        File file = new File (m_Location+MAGIT_FOLDER+"RRLocation.txt");
+        if(file.exists()){
+            RRLocation=FileUtils.ReadContentFromFile(file);
+        }
     }
 
     private void LoadActiveBranch() throws IOException {
@@ -87,7 +93,6 @@ public class Repository {
         assert files != null;
         List<File> RRFolder=Arrays.stream(files).filter(File::isDirectory).collect(Collectors.toList());
         if(!RRFolder.isEmpty()){
-            isCloned=true;
             File remoteFolder = RRFolder.get(0);
             File [] filesInRemoteFolder =remoteFolder.listFiles();
             assert filesInRemoteFolder != null;
@@ -245,12 +250,13 @@ public class Repository {
         }
     }
 
-    public boolean isCloned() {
-        return isCloned;
+    public void setRRLocation(String location){
+    RRLocation=location;
     }
 
-    public void setCloned(boolean cloned) {
-        isCloned = cloned;
+    public String getRRLocation(){
+        return RRLocation;
     }
 }
+
 

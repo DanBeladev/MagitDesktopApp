@@ -1,5 +1,7 @@
 package Lib;
 
+import jdk.nashorn.internal.objects.annotations.Constructor;
+
 public class Blob extends MagitFile {
    private String m_Content;
 
@@ -25,6 +27,10 @@ public class Blob extends MagitFile {
     }
     public String getContent() {
         return m_Content;
+    }
+    @Override
+    public  String toString(){
+        return getContent();
     }
 
 }
