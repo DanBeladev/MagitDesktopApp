@@ -1,4 +1,5 @@
 package Lib;
+
 import MagitExceptions.*;
 import puk.team.course.magit.ancestor.finder.AncestorFinder;
 import resources.generated.*;
@@ -26,55 +27,55 @@ public class RepositoryManager {
         m_MagitRepository = null;
     }
 
-/*    public void InitRepository(String name, String path) throws RepositoryAllreadyExistException, IOException {
-//
-        if (new File(path + MAGIT_FOLDER).mkdirs()) {
-            new File(path + OBJECTS_FOLDER).mkdirs();
-            new File(path + BRANCHES_FOLDER).mkdirs();
-            FileUtils.CreateTextFile(path + BRANCHES_FOLDER + "HEAD.txt", "");
-            FileUtils.CreateTextFile(path + MAGIT_FOLDER + "blobs.txt", "");
-            FileUtils.CreateTextFile(path + MAGIT_FOLDER + "folders.txt", "");
-            FileUtils.CreateTextFile(path + MAGIT_FOLDER + "commits.txt", "");
-            FileUtils.CreateTextFile(path + MAGIT_FOLDER + "repository name.txt", name);
-            m_currentRepository = new Repository(name, path);
-        } else {
-            throw new RepositoryAllreadyExistException("the repository in path: " + path + " allready exist");
-        }
+    /*    public void InitRepository(String name, String path) throws RepositoryAllreadyExistException, IOException {
+    //
+            if (new File(path + MAGIT_FOLDER).mkdirs()) {
+                new File(path + OBJECTS_FOLDER).mkdirs();
+                new File(path + BRANCHES_FOLDER).mkdirs();
+                FileUtils.CreateTextFile(path + BRANCHES_FOLDER + "HEAD.txt", "");
+                FileUtils.CreateTextFile(path + MAGIT_FOLDER + "blobs.txt", "");
+                FileUtils.CreateTextFile(path + MAGIT_FOLDER + "folders.txt", "");
+                FileUtils.CreateTextFile(path + MAGIT_FOLDER + "commits.txt", "");
+                FileUtils.CreateTextFile(path + MAGIT_FOLDER + "repository name.txt", name);
+                m_currentRepository = new Repository(name, path);
+            } else {
+                throw new RepositoryAllreadyExistException("the repository in path: " + path + " allready exist");
+            }
 
-    }*/
-    public void CloneRepository(String localRepoLocation, String remoteRepoLocation ) throws RepositoryDoesnotExistException, IOException, RepositorySameToCurrentRepositoryException, ParseException {
-        File rootFolderInRR=new File(remoteRepoLocation);
-        File rootFolderInLR=new File(localRepoLocation);
-        if(!rootFolderInRR.exists() || !rootFolderInRR.isDirectory() || !new File(remoteRepoLocation+"\\.magit").exists()){
+        }*/
+    public void CloneRepository(String localRepoLocation, String remoteRepoLocation) throws RepositoryDoesnotExistException, IOException, RepositorySameToCurrentRepositoryException, ParseException {
+        File rootFolderInRR = new File(remoteRepoLocation);
+        File rootFolderInLR = new File(localRepoLocation);
+        if (!rootFolderInRR.exists() || !rootFolderInRR.isDirectory() || !new File(remoteRepoLocation + "\\.magit").exists()) {
             throw new RepositoryDoesnotExistException("the given remote repository doesn't exist");
         }
         try {
             FileUtils.CopyDirectory(rootFolderInRR, rootFolderInLR);
-        }catch (FileAlreadyExistsException e){
-            throw new FileAlreadyExistsException("file: "+ e.getMessage()+" already exist");
+        } catch (FileAlreadyExistsException e) {
+            throw new FileAlreadyExistsException("file: " + e.getMessage() + " already exist");
         }
-        File nameOfRRfILE=new File(rootFolderInRR.getPath()+MAGIT_FOLDER+"\\repository name.txt");
-        String RRName=FileUtils.ReadContentFromFile(nameOfRRfILE);
-        moveBranchesToInnerDirectory(RRName,rootFolderInLR);
-        CreateHeadRTB(localRepoLocation,RRName);
+        File nameOfRRfILE = new File(rootFolderInRR.getPath() + MAGIT_FOLDER + "\\repository name.txt");
+        String RRName = FileUtils.ReadContentFromFile(nameOfRRfILE);
+        moveBranchesToInnerDirectory(RRName, rootFolderInLR);
+        CreateHeadRTB(localRepoLocation, RRName);
         ChangeRepository(localRepoLocation);
 
     }
 
     private void CreateHeadRTB(String LRLocation, String RRName) throws IOException {
-        String activeBranchName = FileUtils.ReadContentFromFile(new File(LRLocation+BRANCHES_FOLDER+"HEAD.txt"));
-        String content = FileUtils.ReadContentFromFile(new File(LRLocation+BRANCHES_FOLDER+RRName+"\\"+activeBranchName+".txt"));
-        FileUtils.CreateTextFile(LRLocation+BRANCHES_FOLDER+activeBranchName+".txt",content);
+        String activeBranchName = FileUtils.ReadContentFromFile(new File(LRLocation + BRANCHES_FOLDER + "HEAD.txt"));
+        String content = FileUtils.ReadContentFromFile(new File(LRLocation + BRANCHES_FOLDER + RRName + "\\" + activeBranchName + ".txt"));
+        FileUtils.CreateTextFile(LRLocation + BRANCHES_FOLDER + activeBranchName + ".txt", content);
     }
 
     private void moveBranchesToInnerDirectory(String rrName, File rootFolderInLR) throws IOException {
-        File newDirectoryForBranches=new File(rootFolderInLR+BRANCHES_FOLDER+"\\"+rrName);
-        if(newDirectoryForBranches.mkdir()){
-            File[] branches=new File(rootFolderInLR+BRANCHES_FOLDER).listFiles();
+        File newDirectoryForBranches = new File(rootFolderInLR + BRANCHES_FOLDER + "\\" + rrName);
+        if (newDirectoryForBranches.mkdir()) {
+            File[] branches = new File(rootFolderInLR + BRANCHES_FOLDER).listFiles();
             if (branches != null) {
-                for(File file:branches){
-                    if(!file.isDirectory()){
-                        if(!file.getName().equals("HEAD.txt")) {
+                for (File file : branches) {
+                    if (!file.isDirectory()) {
+                        if (!file.getName().equals("HEAD.txt")) {
                             Files.copy(Paths.get(file.getPath()), Paths.get(rootFolderInLR + BRANCHES_FOLDER + "\\" + rrName + "\\" + file.getName()));
                             if (!file.delete()) {
                                 throw new IOException("error in clone progress");
@@ -125,7 +126,7 @@ public class RepositoryManager {
             m_currentRepository.getActiveBranch().CreateBranchTextFile(m_currentRepository.GetLocation() + BRANCHES_FOLDER);
         } else {
             newCommit.AddPrevCommit(m_currentRepository.getActiveBranch().getCommitSH1());
-            if(anotherPrevCommit!=null){
+            if (anotherPrevCommit != null) {
                 newCommit.AddPrevCommit(anotherPrevCommit.MakeSH1());
             }
             m_currentRepository.getActiveBranch().UpdateSHA1AndBranchFileContent(newCommit.MakeSH1(), m_currentRepository.GetLocation() + BRANCHES_FOLDER + m_currentRepository.getActiveBranch().getName() + ".txt");
@@ -335,17 +336,18 @@ public class RepositoryManager {
         }
     }
 
-    public void CreateNewRemoteTrackingBranch(String name,RemoteBranch remoteBranch) throws RepositoryDoesnotExistException, CommitException, BranchNameIsAllreadyExistException, IOException {
+    public RemoteTrackingBranch CreateNewRemoteTrackingBranch(String name, RemoteBranch remoteBranch) throws RepositoryDoesnotExistException, CommitException, BranchNameIsAllreadyExistException, IOException {
         IsCurrentRepositoryInitialize();
         if (m_currentRepository.getCommitMap().isEmpty()) {
             throw new CommitException("you don't have any commits so you can't make new branch");
         }
         if (m_currentRepository.getBranchesMap().containsKey(name)) {
             throw new BranchNameIsAllreadyExistException("The name: " + name + " is already exist");
-        } else{
-            Branch remoteTrackingBranch = new RemoteTrackingBranch(name,remoteBranch.getCommitSH1(),remoteBranch);
+        } else {
+            Branch remoteTrackingBranch = new RemoteTrackingBranch(name, remoteBranch.getCommitSH1(), remoteBranch);
             remoteTrackingBranch.CreateBranchTextFile(m_currentRepository.GetLocation() + BRANCHES_FOLDER);
             m_currentRepository.getBranchesMap().put(name, remoteTrackingBranch);
+            return (RemoteTrackingBranch) remoteTrackingBranch;
         }
     }
 
@@ -368,7 +370,7 @@ public class RepositoryManager {
             throw new BranchIsAllReadyOnWCException("The Branch: " + name + " is already Head branch");
         } else {
             branch = m_currentRepository.getBranchesMap().get(name);
-            if(branch instanceof RemoteBranch){
+            if (branch instanceof RemoteBranch) {
                 throw new CheckoutToRemoteBranchException("not available to do checkout to remote branch");
             }
             m_currentRepository.setActiveBranch(branch);
@@ -838,19 +840,18 @@ public class RepositoryManager {
     //todo:: check if with there is no open changes
     //todo:: check theris diffrent from ours
     public List<MergeConfilct> MergeHeadBranchWithOtherBranch(Branch their) throws ParseException, IOException, OpenChangesException, BranchDoesNotExistException, FFException, CommitException {
-        if(HasOpenChanges()){
+        if (HasOpenChanges()) {
             throw new OpenChangesException("You have open changes on your working copy");
         }
-        if(their == m_currentRepository.getActiveBranch()){
+        if (their == m_currentRepository.getActiveBranch()) {
             throw new BranchDoesNotExistException("Impossible merge HEAD branch with itself, You have to choose another branch");
         }
         AncestorFinder ancestorFinder = new AncestorFinder((v) -> m_currentRepository.getCommitFromCommitsMap(new SHA1(v)));
-        String activeBranchCommitSH1=m_currentRepository.getActiveBranch().getCommitSH1().getSh1();
+        String activeBranchCommitSH1 = m_currentRepository.getActiveBranch().getCommitSH1().getSh1();
         String theirBranchCommitSH1 = their.getCommitSH1().getSh1();
-        String ancestorSha1 = ancestorFinder.traceAncestor(activeBranchCommitSH1,theirBranchCommitSH1 );
-        if(ancestorSha1.equals(activeBranchCommitSH1) || ancestorSha1.equals(theirBranchCommitSH1))
-        {
-            handleFastForwardMerge(ancestorSha1, m_currentRepository.getActiveBranch(),their);
+        String ancestorSha1 = ancestorFinder.traceAncestor(activeBranchCommitSH1, theirBranchCommitSH1);
+        if (ancestorSha1.equals(activeBranchCommitSH1) || ancestorSha1.equals(theirBranchCommitSH1)) {
+            handleFastForwardMerge(ancestorSha1, m_currentRepository.getActiveBranch(), their);
         }
         List<FileDetails> ourFileDetails = ShowAllCommitFiles(m_currentRepository.getActiveBranch().getCommitSH1());
         List<FileDetails> theirFileDetails = ShowAllCommitFiles(their.getCommitSH1());
@@ -864,23 +865,23 @@ public class RepositoryManager {
                 ClassifyFilesForSons(file, theirFileDetails, theirFilesCompareAncestor);
             }
         }
-        handleWithAddedFile(ourFileDetails,ourFilesCompareAncestor);
-        handleWithAddedFile(theirFileDetails,theirFilesCompareAncestor);
+        handleWithAddedFile(ourFileDetails, ourFilesCompareAncestor);
+        handleWithAddedFile(theirFileDetails, theirFilesCompareAncestor);
         return MergeTwoSons(ancestorFileDetails, ourFilesCompareAncestor, theirFilesCompareAncestor, ourFileDetails, theirFileDetails);
     }
 
-    private void handleFastForwardMerge( String ancestorSha1, Branch activeBranch, Branch theirBranch) throws  IOException, ParseException, FFException, CommitException {
-        if(ancestorSha1.equals(activeBranch.getCommitSH1().getSh1())) {
+    private void handleFastForwardMerge(String ancestorSha1, Branch activeBranch, Branch theirBranch) throws IOException, ParseException, FFException, CommitException {
+        if (ancestorSha1.equals(activeBranch.getCommitSH1().getSh1())) {
             ResetHeadBranch(theirBranch.getCommitSH1());
         }
-            throw new FFException("Fast Forward Merge");
+        throw new FFException("Fast Forward Merge");
 
     }
 
-    private void handleWithAddedFile(List<FileDetails> fileDetailsList, Map<String,FileStatusCompareAncestor> compareToAncestor){
-        for(FileDetails fd:fileDetailsList){
-            if(!compareToAncestor.containsKey(fd.getName()) && fd.getFileType()==FileType.FILE){
-                compareToAncestor.put(fd.getName(),FileStatusCompareAncestor.ADDED);
+    private void handleWithAddedFile(List<FileDetails> fileDetailsList, Map<String, FileStatusCompareAncestor> compareToAncestor) {
+        for (FileDetails fd : fileDetailsList) {
+            if (!compareToAncestor.containsKey(fd.getName()) && fd.getFileType() == FileType.FILE) {
+                compareToAncestor.put(fd.getName(), FileStatusCompareAncestor.ADDED);
             }
         }
     }
@@ -897,14 +898,15 @@ public class RepositoryManager {
             }
         }
     }
+
     //todo:: handle case two added files with diffrent content but with same name
     private List<MergeConfilct> MergeTwoSons(List<FileDetails> ancestorFilesList, Map<String, FileStatusCompareAncestor> ourClassifiedFiles, Map<String, FileStatusCompareAncestor> theirsClassifiedFiles, List<FileDetails> ourFileDetails, List<FileDetails> theirsFileDetails) throws IOException {
         List<FileDetails> mergeList = new ArrayList<>();
         List<MergeConfilct> conflictedList = new ArrayList<>();
         MergeConfilct confilct;
         for (FileDetails fd : ancestorFilesList) {
-            List<FileDetails> currentFileInOurCommit=ourFileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList());
-            List<FileDetails> currentFileInTheirsCommit=theirsFileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList());
+            List<FileDetails> currentFileInOurCommit = ourFileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList());
+            List<FileDetails> currentFileInTheirsCommit = theirsFileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList());
             if (fd.getFileType() == FileType.FILE) {
                 if (ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.SAME && theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.SAME) {
                     mergeList.add(fd);
@@ -919,33 +921,33 @@ public class RepositoryManager {
                 } else {
                     if (!(theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.DELETED && ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.DELETED)) {
                         if (theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.CHANGED && ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.CHANGED &&
-                                currentFileInOurCommit.get(0).getSh1().equals(currentFileInTheirsCommit.get(0).getSh1())){
+                                currentFileInOurCommit.get(0).getSh1().equals(currentFileInTheirsCommit.get(0).getSh1())) {
                             mergeList.add(currentFileInOurCommit.get(0));
                         } else {
-                            String ourFDContent="";
-                            String theirFDContent="";
-                            if(!currentFileInOurCommit.isEmpty())
-                                ourFDContent=m_currentRepository.GetContentOfBlob(currentFileInOurCommit.get(0).getSh1());
-                            if(!currentFileInTheirsCommit.isEmpty()){
-                                theirFDContent=m_currentRepository.GetContentOfBlob(currentFileInTheirsCommit.get(0).getSh1());
+                            String ourFDContent = "";
+                            String theirFDContent = "";
+                            if (!currentFileInOurCommit.isEmpty())
+                                ourFDContent = m_currentRepository.GetContentOfBlob(currentFileInOurCommit.get(0).getSh1());
+                            if (!currentFileInTheirsCommit.isEmpty()) {
+                                theirFDContent = m_currentRepository.GetContentOfBlob(currentFileInTheirsCommit.get(0).getSh1());
                             }
-                            confilct = new MergeConfilct(fd.getName(),ourFDContent,theirFDContent,m_currentRepository.GetContentOfBlob(fd.getSh1()));
+                            confilct = new MergeConfilct(fd.getName(), ourFDContent, theirFDContent, m_currentRepository.GetContentOfBlob(fd.getSh1()));
                             conflictedList.add(confilct);
                         }
                     }
                 }
             }
         }
-        addSonAddedFiles(ourClassifiedFiles,ourFileDetails,mergeList);
-        addSonAddedFiles(theirsClassifiedFiles,theirsFileDetails,mergeList);
+        addSonAddedFiles(ourClassifiedFiles, ourFileDetails, mergeList);
+        addSonAddedFiles(theirsClassifiedFiles, theirsFileDetails, mergeList);
         //span merge list in wc
         spanWCByMergeList(mergeList);
         return conflictedList;
     }
 
-    private void addSonAddedFiles(Map<String, FileStatusCompareAncestor> son,List<FileDetails> sonFilesList,List<FileDetails> mergeList) {
-        for(FileDetails fd: sonFilesList){
-            if(son.get(fd.getName())==FileStatusCompareAncestor.ADDED){
+    private void addSonAddedFiles(Map<String, FileStatusCompareAncestor> son, List<FileDetails> sonFilesList, List<FileDetails> mergeList) {
+        for (FileDetails fd : sonFilesList) {
+            if (son.get(fd.getName()) == FileStatusCompareAncestor.ADDED) {
                 mergeList.add(fd);
             }
         }
@@ -983,16 +985,16 @@ public class RepositoryManager {
 
     private void spanWCByMergeList(List<FileDetails> mergeList) throws IOException {
         DeleteWC();
-        for(FileDetails fd : mergeList){
-            String content = FileUtils.getContentFromZippedFile(m_currentRepository.GetLocation()+OBJECTS_FOLDER+fd.getSh1().getSh1()+".zip");
-           FileUtils.createFoldersByPathAndWriteContent(content,fd.getName());
+        for (FileDetails fd : mergeList) {
+            String content = FileUtils.getContentFromZippedFile(m_currentRepository.GetLocation() + OBJECTS_FOLDER + fd.getSh1().getSh1() + ".zip");
+            FileUtils.createFoldersByPathAndWriteContent(content, fd.getName());
 
         }
     }
 
     public void spanWCsolvedConflictList(List<MergeConfilct> confilctList) throws IOException {
-        for(MergeConfilct confilct : confilctList){
-            if(confilct.getResolveContent()!= null) {
+        for (MergeConfilct confilct : confilctList) {
+            if (confilct.getResolveContent() != null) {
                 FileUtils.createFoldersByPathAndWriteContent(confilct.getResolveContent(), confilct.getPath());
             }
         }
