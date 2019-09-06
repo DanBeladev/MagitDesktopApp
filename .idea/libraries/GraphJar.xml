@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="GraphJar">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/GraphJar" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/GraphJar" recursive="false" />
+  </library>
+</component>
