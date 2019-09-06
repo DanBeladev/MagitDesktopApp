@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact name="Logic:jar">
+    <output-path>$PROJECT_DIR$/artifacts/Logic_jar</output-path>
+    <root id="root">
+      <element id="archive" name="Logic.jar">
+        <element id="module-output" name="Logic" />
+      </element>
+      <element id="library" level="project" name="AncestorFinderJar" />
+    </root>
+  </artifact>
+</component>

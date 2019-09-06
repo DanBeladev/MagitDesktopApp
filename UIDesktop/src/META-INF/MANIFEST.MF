@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Class-Path: fxgraph-0.0.3.jar AncestorFinder.jar
+Main-Class: controllers.MainController
+

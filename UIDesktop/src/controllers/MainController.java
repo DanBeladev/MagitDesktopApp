@@ -34,7 +34,7 @@ public class MainController extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader fxmlLoader=new FXMLLoader();
-        URL url=getClass().getResource("../views/app/App.fxml");
+        URL url=getClass().getResource("/views/app/App.fxml");
         fxmlLoader.setLocation(url);
         Parent root=fxmlLoader.load(url.openStream());
         AppController controller=fxmlLoader.getController();

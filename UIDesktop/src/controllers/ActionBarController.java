@@ -289,7 +289,7 @@ public class ActionBarController {
             conflicts = repositoryManager.MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(branchToMerge));
             for (MergeConfilct conflict : conflicts) {
                 FXMLLoader fxmlLoader = new FXMLLoader();
-                URL url = getClass().getResource("../views/conflictsolver/ConflictSolver.fxml");
+                URL url = getClass().getResource("/views/conflictsolver/ConflictSolver.fxml");
                 fxmlLoader.setLocation(url);
                 GridPane root = fxmlLoader.load(url.openStream());
                 ConflictSolverController conflictSolverController = fxmlLoader.getController();
@@ -315,7 +315,7 @@ public class ActionBarController {
     public void cloneClick() {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
-            fxmlLoader.setLocation(getClass().getResource("../views/clone/CloneRepositoryView.fxml"));
+            fxmlLoader.setLocation(getClass().getResource("/views/clone/CloneRepositoryView.fxml"));
             GridPane gridPane = fxmlLoader.load();
             CloneController cloneController = fxmlLoader.getController();
             cloneController.setAppController(this.mainController);

@@ -1,0 +1,13 @@
+<component name="ArtifactManager">
+  <artifact name="UIDesktop:jar">
+    <output-path>$PROJECT_DIR$/artifacts/UIDesktop_jar</output-path>
+    <root id="root">
+      <element id="archive" name="UIDesktop.jar">
+        <element id="module-output" name="UIDesktop" />
+        <element id="module-output" name="Logic" />
+      </element>
+      <element id="library" level="project" name="GraphJar" />
+      <element id="library" level="project" name="AncestorFinderJar" />
+    </root>
+  </artifact>
+</component>

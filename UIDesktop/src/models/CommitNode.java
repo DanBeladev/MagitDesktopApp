@@ -51,7 +51,7 @@ public class CommitNode extends AbstractCell {
 
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
-            URL url = getClass().getResource("../views/node/commitNode.fxml");
+            URL url = getClass().getResource("/views/node/commitNode.fxml");
             fxmlLoader.setLocation(url);
             GridPane root = fxmlLoader.load(url.openStream());
             ContextMenuCommitNode contextMenuCommitNode = new ContextMenuCommitNode();
