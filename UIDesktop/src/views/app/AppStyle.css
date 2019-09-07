@@ -1,0 +1,8 @@
+.root{
+    -webkit-fx-background-color: black;
+    -moz-fx-background-color: black ;
+    -ms-fx-background-color: black;
+    -o-fx-background-color: black;
+    -khtml-fx-background-color: black;
+    fx-background-color: black;
+}
