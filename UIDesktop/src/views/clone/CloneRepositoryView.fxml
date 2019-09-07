@@ -8,11 +8,11 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="199.0" prefWidth="426.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.CloneController">
+<GridPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="215.0" prefWidth="738.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.CloneController">
   <columnConstraints>
-    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-      <ColumnConstraints hgrow="SOMETIMES" minWidth="1.0" prefWidth="1.0" />
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="500.0" />
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="410.4000244140625" minWidth="10.0" prefWidth="408.39996337890625" />
+      <ColumnConstraints hgrow="SOMETIMES" prefWidth="78.00003662109373" />
   </columnConstraints>
   <rowConstraints>
     <RowConstraints maxHeight="63.0" minHeight="10.0" prefHeight="46.0" vgrow="SOMETIMES" />
@@ -25,8 +25,8 @@
       <TextField fx:id="rrTextField" prefHeight="25.0" prefWidth="192.0" GridPane.columnIndex="1" />
       <Label text="Local repositroy Location:" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
       <TextField fx:id="lrTextField" prefHeight="25.0" prefWidth="192.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-      <Button mnemonicParsing="false" onAction="#addRRPathBtn" prefHeight="25.0" prefWidth="32.0" text="+" GridPane.columnIndex="2" />
-      <Button mnemonicParsing="false" onAction="#addLRPathBtn" prefHeight="25.0" prefWidth="32.0" text="+" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+      <Button alignment="CENTER" mnemonicParsing="false" onAction="#addRRPathBtn" prefHeight="25.0" prefWidth="32.0" text="+" GridPane.columnIndex="2" />
+      <Button alignment="CENTER" mnemonicParsing="false" onAction="#addLRPathBtn" prefHeight="25.0" prefWidth="32.0" text="+" GridPane.columnIndex="2" GridPane.rowIndex="1" />
       <Label text="New repository name:" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
       <TextField fx:id="newRepoNameTextField" prefHeight="25.0" prefWidth="192.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
       <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneClick" prefHeight="25.0" prefWidth="74.0" text="Clone" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">

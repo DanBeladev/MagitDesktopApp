@@ -25,6 +25,7 @@ import java.text.ParseException;
 //todo:: repair resize of all components
 //todo:: hyperlink to repo path
 //todo:: add new logic - Merge and Collaboration
+//todo:: after clone - update lables of repository
 public class MainController extends Application {
 
     public static void main(String[] args){

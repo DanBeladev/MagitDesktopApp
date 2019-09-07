@@ -1,47 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.net.URL?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.text.Font?>
 
-<?import javafx.scene.control.ProgressBar?>
 <GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="83.0" prefWidth="543.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RepoInfoController">
-  <columnConstraints>
-    <ColumnConstraints hgrow="SOMETIMES" maxWidth="176.0" minWidth="10.0" prefWidth="157.0" />
-    <ColumnConstraints hgrow="SOMETIMES" maxWidth="205.0" minWidth="10.0" prefWidth="205.0" />
-      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-  </columnConstraints>
-  <rowConstraints>
-    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-  </rowConstraints>
-   <children>
-      <AnchorPane prefHeight="200.0" prefWidth="200.0">
-         <children>
-            <Label layoutX="9.0" layoutY="6.0" prefHeight="18.0" prefWidth="104.0" text="Repository name:">
-               <font>
-                  <Font name="System Bold" size="12.0" />
-               </font></Label>
-            <Label layoutX="9.0" layoutY="33.0" prefHeight="18.0" prefWidth="30.0" text="Path:">
-               <font>
-                  <Font name="System Bold" size="12.0" />
-               </font></Label>
-            <Label layoutX="9.0" layoutY="61.0" prefHeight="18.0" prefWidth="30.0" text="User:">
-               <font>
-                  <Font name="System Bold" size="12.0" />
-               </font></Label>
-            <Label fx:id="repoPathLabel" layoutX="44.0" layoutY="33.0" prefHeight="17.0" prefWidth="497.0" />
-            <Label fx:id="userLabel" layoutX="54.0" layoutY="61.0" prefHeight="18.0" prefWidth="356.0" />
-         </children>
-      </AnchorPane>
-      <AnchorPane prefHeight="83.0" prefWidth="215.0" GridPane.columnIndex="1">
-         <children>
-            <Label fx:id="reposNameLabel" layoutX="-56.0" layoutY="6.0" prefHeight="18.0" prefWidth="420.0" />
-             <ProgressBar fx:id="taskProgressBar" maxWidth="1.7976931348623157E308" progress="0.0" visible="false" />
-         </children>
-      </AnchorPane>
-      <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="2" />
-   </children>
+    <stylesheets>
+        <URL value="@../app/repoInfoStyle.css" />
+    </stylesheets>
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" maxWidth="236.79998779296875" minWidth="10.0" prefWidth="142.40003662109376" />
+        <ColumnConstraints hgrow="SOMETIMES" maxWidth="269.9999633789062" minWidth="10.0" prefWidth="269.9999633789062" />
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+    </rowConstraints>
+    <children>
+        <AnchorPane prefHeight="200.0" prefWidth="200.0">
+            <children>
+                <Label layoutX="9.0" layoutY="6.0" prefHeight="20.0" prefWidth="130.0" text="Repository name:">
+                    <font>
+                        <Font name="System Bold" size="12.0" />
+                    </font></Label>
+                <Label layoutX="9.0" layoutY="33.0" prefHeight="20.0" prefWidth="42.0" text="Path:">
+                    <font>
+                        <Font name="System Bold" size="12.0" />
+                    </font></Label>
+                <Label layoutX="9.0" layoutY="61.0" prefHeight="20.0" prefWidth="42.0" text="User:">
+                    <font>
+                        <Font name="System Bold" size="12.0" />
+                    </font></Label>
+                <Label fx:id="repoPathLabel" layoutX="62.0" layoutY="33.0" prefHeight="20.0" prefWidth="480.0" />
+                <Label fx:id="userLabel" layoutX="64.0" layoutY="61.0" prefHeight="20.0" prefWidth="346.0" />
+            </children>
+        </AnchorPane>
+        <AnchorPane prefHeight="83.0" prefWidth="215.0" GridPane.columnIndex="1">
+            <children>
+                <Label fx:id="reposNameLabel" layoutX="-20.0" layoutY="6.0" prefHeight="20.0" prefWidth="384.0" />
+                <ProgressBar fx:id="taskProgressBar" maxWidth="1.7976931348623157E308" prefHeight="18.0" prefWidth="188.0" progress="0.0" visible="false" />
+            </children>
+        </AnchorPane>
+        <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="2" />
+    </children>
 </GridPane>
