@@ -2,6 +2,8 @@ package Lib;
 
 import jdk.nashorn.internal.objects.annotations.Constructor;
 
+import java.io.IOException;
+
 public class Blob extends MagitFile {
    private String m_Content;
 
@@ -25,6 +27,13 @@ public class Blob extends MagitFile {
     public FileType GetMagitFileType() {
         return FileType.FILE;
     }
+
+    @Override
+    public void AddToRepository(Repository repository) throws IOException {
+        AddToRepositoryHelper(repository,"blobs");
+        repository.getBlobsMap().put(this.MakeSH1(),this);
+    }
+
     public String getContent() {
         return m_Content;
     }

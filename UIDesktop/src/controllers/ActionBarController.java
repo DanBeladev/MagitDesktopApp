@@ -329,10 +329,19 @@ public class ActionBarController {
         }
 
     }
+
     public void fetchClick(){
         try {
             mainController.getRepositoryManager().FetchRRNewData();
         } catch (RepositoryDoesnotExistException | RepositoryDoesntTrackAfterOtherRepositoryException | IOException | ParseException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void pullClick(){
+        try {
+            mainController.getRepositoryManager().Pull();
+        } catch (BranchDoesNotExistException|RepositoryDoesnotExistException | RepositoryDoesntTrackAfterOtherRepositoryException | ParseException | CommitException | IOException | OpenChangesException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
     }

@@ -1010,12 +1010,17 @@ public class RepositoryManager {
             LoadFromRRMagitFiles(rrRepository.getBlobsMap(),m_currentRepository.getBlobsMap(),m_currentRepository.GetLocation()+MAGIT_FOLDER+"blobs.txt");
             LoadFromRRMagitFiles(rrRepository.getCommitMap(),m_currentRepository.getCommitMap(),m_currentRepository.GetLocation()+MAGIT_FOLDER+"commits.txt");
             LoadFromRRMagitFiles(rrRepository.getFoldersMap(),m_currentRepository.getFoldersMap(),m_currentRepository.GetLocation()+MAGIT_FOLDER+"folders.txt");
+
             List<Branch> RRBranches=new ArrayList<>(rrRepository.getBranchesMap().values());
-            for(Branch branch:RRBranches){
+            for(Branch branch: RRBranches){
                 if(!m_currentRepository.getBranchesMap().containsKey(rrRepository.getName()+"\\"+branch.getName())) {
-                    RemoteBranch rb=new RemoteBranch(rrRepository.getName()+"\\"+branch.getName(),branch.getCommitSH1());
-                    rb.CreateBranchTextFile(m_currentRepository.GetLocation() + BRANCHES_FOLDER);
+                    RemoteBranch rb = new RemoteBranch(rrRepository.getName()+"\\"+branch.getName(),branch.getCommitSH1());
+                    rb.CreateBranchTextFile(m_currentRepository.GetLocation()+BRANCHES_FOLDER);
                     m_currentRepository.getBranchesMap().put(rb.getName(),rb);
+                }
+                else{
+                    Branch b=m_currentRepository.getBranchesMap().get(rrRepository.getName()+"\\"+branch.getName());
+                    b.UpdateSHA1AndBranchFileContent(branch.getCommitSH1(),m_currentRepository.GetLocation()+BRANCHES_FOLDER+rrRepository.getName()+"\\"+branch.getName()+".txt");
                 }
             }
         }
@@ -1030,6 +1035,67 @@ public class RepositoryManager {
                 FileUtils.AppendTextToFile(pathFileToWrite,magitFile.MakeSH1().getSh1());
                 File magitFileZzipFile = FileUtils.CreateTextFile(m_currentRepository.GetLocation() + OBJECTS_FOLDER + magitFile.MakeSH1() + ".txt", magitFile.toString());
                 FileUtils.CreateZipFile(magitFileZzipFile, magitFile.MakeSH1(), m_currentRepository.GetLocation() + OBJECTS_FOLDER);
+                magitFileZzipFile.delete();
+            }
+        }
+    }
+
+    public void Pull() throws RepositoryDoesnotExistException, RepositoryDoesntTrackAfterOtherRepositoryException, ParseException, CommitException, IOException, OpenChangesException, BranchDoesNotExistException {
+        IsCurrentRepositoryInitialize();
+        if(m_currentRepository.getRRLocation()==null){
+            throw new RepositoryDoesntTrackAfterOtherRepositoryException("Current function available only on cloned repositories ");
+        }
+        if(HasOpenChanges()){
+            throw new OpenChangesException("Can't apply this function with open Changes");
+        }
+        Branch activeBranch=m_currentRepository.getActiveBranch();
+        if(activeBranch instanceof RemoteTrackingBranch){
+            Repository rrRepo=new Repository(m_currentRepository.getRRLocation());
+            rrRepo.LoadData();
+            Branch branchInRR=rrRepo.getBranchesMap().get(activeBranch.getName());
+            Commit commit=rrRepo.getCommitMap().get(branchInRR.getCommitSH1());
+            addAllBranchData(commit,rrRepo);
+            ResetHeadBranch(branchInRR.getCommitSH1());
+            Branch RB=m_currentRepository.getBranchesMap().get(rrRepo.getName()+"\\"+activeBranch.getName());
+            RB.UpdateSHA1AndBranchFileContent(branchInRR.getCommitSH1(),m_currentRepository.GetLocation()+BRANCHES_FOLDER+rrRepo.getName()+"\\"+branchInRR.getName()+".txt");
+        }
+        else{
+            throw new BranchDoesNotExistException("Pull is possible only for Remote Tracking branches");
+        }
+
+
+
+    }
+
+    private void addAllBranchData(Commit commit, Repository rrRepo) throws IOException {
+        if(!m_currentRepository.getCommitMap().containsKey(commit)){
+            Folder mainFolder=rrRepo.getFoldersMap().get(commit.getMainFolderSH1());
+            AddCommitData(mainFolder, rrRepo);
+            commit.AddToRepository(m_currentRepository);
+            List<SHA1> prevCommitsSha1=commit.getPrevCommits();
+            for(SHA1 prevCommitSha1:prevCommitsSha1){
+                Commit prevCommit = rrRepo.getCommitMap().get(prevCommitSha1);
+                if(!m_currentRepository.getCommitMap().containsKey(prevCommit)){
+                    addAllBranchData(prevCommit,rrRepo);
+                }
+            }
+
+        }
+    }
+    private void AddCommitData(Folder folder, Repository rrRepo) throws IOException {
+        folder.AddToRepository(m_currentRepository);
+        List<FileDetails> innerFiles=folder.getInnerFiles();
+        for(FileDetails fd: innerFiles){
+            if(fd.getFileType()==FileType.FILE){
+                if(!m_currentRepository.getBlobsMap().containsKey(fd.getSh1())) {
+                    rrRepo.getBlobsMap().get(fd.getSh1()).AddToRepository(m_currentRepository);
+                }
+            }
+            else{
+                if (!m_currentRepository.getFoldersMap().containsKey(fd.getSh1())) {
+                    Folder innerFolder = rrRepo.getFoldersMap().get(fd.getSh1());
+                    AddCommitData(innerFolder, rrRepo);
+                }
             }
         }
     }

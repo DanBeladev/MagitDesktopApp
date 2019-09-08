@@ -44,6 +44,7 @@
          </font>
       </Label>
       <Button mnemonicParsing="false" onAction="#fetchClick" prefHeight="29.0" prefWidth="171.0" text="Fetch" />
+      <Button mnemonicParsing="false" onAction="#pullClick" prefHeight="29.0" prefWidth="171.0" text="Pull" />
    </children>
    <stylesheets>
       <URL value="@ActionBarStyle2.css" />

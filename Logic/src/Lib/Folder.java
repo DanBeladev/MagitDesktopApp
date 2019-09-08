@@ -37,6 +37,12 @@ public class Folder extends MagitFile {
     }
 
     @Override
+    public void AddToRepository(Repository repository) throws IOException {
+        AddToRepositoryHelper(repository,"folders");
+        repository.getFoldersMap().put(this.MakeSH1(),this);
+    }
+
+    @Override
     public FileType GetMagitFileType() {
         return FileType.FOLDER;
     }

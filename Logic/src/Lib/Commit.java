@@ -1,6 +1,7 @@
 package Lib;
 import puk.team.course.magit.ancestor.finder.CommitRepresentative;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -39,6 +40,12 @@ public class Commit extends MagitFile implements CommitRepresentative {
     @Override
     public FileType GetMagitFileType() {
         return FileType.COMMIT;
+    }
+
+    @Override
+    public void AddToRepository(Repository repository) throws IOException {
+        AddToRepositoryHelper(repository,"commits");
+        repository.getCommitMap().put(this.MakeSH1(),this);
     }
 
     @Override
