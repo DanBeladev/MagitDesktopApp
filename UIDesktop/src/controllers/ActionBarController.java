@@ -346,6 +346,14 @@ public class ActionBarController {
         }
     }
 
+    public void pushClick(){
+        try {
+            mainController.getRepositoryManager().Push();
+        } catch (RepositoryDoesntTrackAfterOtherRepositoryException | ParseException | CommitException | IOException | RemoteTrackingBranchException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
     public void commitFilesInfoClick() {
         mainController.commitFilesInformation();
     }

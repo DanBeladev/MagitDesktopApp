@@ -257,6 +257,34 @@ public class Repository {
     public String getRRLocation(){
         return RRLocation;
     }
+
+    public void DeleteWC() {
+        File file = new File(GetLocation());
+        File[] fileList = file.listFiles();
+        for (File f : fileList) {
+            if (!f.getName().equals(".magit")) {
+                if (f.isDirectory()) {
+                    FileUtils.deleteDirectory(f);
+                } else {
+                    f.delete();
+                }
+            }
+        }
+    }
+
+  /*  public void ResetHeadBranch(SHA1 sha1) throws CommitException, ParseException, IOException {
+        if (!getCommitMap().containsKey(sha1)) {
+            throw new CommitException("SHA-1: " + sha1.getSh1() + " doesnt exist");
+        } else if (getActiveBranch().getCommitSH1().equals(sha1)) {
+            throw new CommitException("SHA-1: " + sha1.getSh1() + " already pointed by Head branch");
+        } else {
+            getActiveBranch().setCommitSH1(sha1);
+            FileUtils.WriteToFile(sha1.getSh1(), GetLocation() + BRANCHES_FOLDER + getActiveBranch().getName() + ".txt");
+            Commit commit = getCommitMap().get(getActiveBranch().getCommitSH1());
+            DeleteWC(GetLocation());
+            CheckOutRecursion(GetLocation(), commit.getMainFolderSH1());
+        }
+    }*/
 }
 
 

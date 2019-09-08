@@ -41,8 +41,10 @@ public class CloneController {
     public void cloneClick() {
         if (appController != null) {
             try {
-                appController.getRepositoryManager().CloneRepository(lrTextField.getText()+"\\"+newRepoNameTextField.getText(), rrTextField.getText());
+                appController.getRepositoryManager().CloneRepository(lrTextField.getText()+"\\"+newRepoNameTextField.getText(), rrTextField.getText(),newRepoNameTextField.getText());
                 appController.getIsIsRepoLoadedProperty().set(true);
+                appController.repoPathProperty().set(lrTextField.getText()+ "\\" + newRepoNameTextField.getText());
+                appController.repoNameProperty().set(appController.getRepositoryManager().GetCurrentRepository().getName());
                 secondaryStage.close();
             } catch (RepositoryDoesnotExistException | IOException | RepositorySameToCurrentRepositoryException | ParseException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);

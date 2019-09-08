@@ -8,6 +8,7 @@ import javax.xml.bind.JAXBException;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.*;
+import java.rmi.Remote;
 import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,23 +27,7 @@ public class RepositoryManager {
         m_MagitRepository = null;
     }
 
-/*    public void InitRepository(String name, String path) throws RepositoryAllreadyExistException, IOException {
-//
-        if (new File(path + MAGIT_FOLDER).mkdirs()) {
-            new File(path + OBJECTS_FOLDER).mkdirs();
-            new File(path + BRANCHES_FOLDER).mkdirs();
-            FileUtils.CreateTextFile(path + BRANCHES_FOLDER + "HEAD.txt", "");
-            FileUtils.CreateTextFile(path + MAGIT_FOLDER + "blobs.txt", "");
-            FileUtils.CreateTextFile(path + MAGIT_FOLDER + "folders.txt", "");
-            FileUtils.CreateTextFile(path + MAGIT_FOLDER + "commits.txt", "");
-            FileUtils.CreateTextFile(path + MAGIT_FOLDER + "repository name.txt", name);
-            m_currentRepository = new Repository(name, path);
-        } else {
-            throw new RepositoryAllreadyExistException("the repository in path: " + path + " allready exist");
-        }
-
-    }*/
-    public void CloneRepository(String localRepoLocation, String remoteRepoLocation ) throws RepositoryDoesnotExistException, IOException, RepositorySameToCurrentRepositoryException, ParseException {
+    public void CloneRepository(String localRepoLocation, String remoteRepoLocation, String name) throws RepositoryDoesnotExistException, IOException, RepositorySameToCurrentRepositoryException, ParseException {
         File rootFolderInRR=new File(remoteRepoLocation);
         File rootFolderInLR=new File(localRepoLocation);
         if(!rootFolderInRR.exists() || !rootFolderInRR.isDirectory() || !new File(remoteRepoLocation+"\\.magit").exists()){
@@ -57,6 +42,7 @@ public class RepositoryManager {
         String RRName=FileUtils.ReadContentFromFile(nameOfRRfILE);
         moveBranchesToInnerDirectory(RRName,rootFolderInLR);
         CreateHeadRTB(localRepoLocation,RRName);
+        FileUtils.WriteToFile(name,rootFolderInLR.getPath()+MAGIT_FOLDER+"\\repository name.txt");
         ChangeRepository(localRepoLocation);
         m_currentRepository.setRRLocation(remoteRepoLocation);
         FileUtils.CreateTextFile(m_currentRepository.GetLocation()+MAGIT_FOLDER+"RRLocation.txt",remoteRepoLocation);
@@ -377,23 +363,8 @@ public class RepositoryManager {
             SHA1 commitSH1 = branch.getCommitSH1();
             SHA1 mainFolderSH1 = m_currentRepository.getCommitMap().get(commitSH1).getMainFolderSH1();
             UpdateHeadFileContent(branch.getName());
-            DeleteWC();
+            m_currentRepository.DeleteWC();
             CheckOutRecursion(m_currentRepository.GetLocation(), mainFolderSH1);
-        }
-    }
-
-
-    private void DeleteWC() {
-        File file = new File(m_currentRepository.GetLocation());
-        File[] fileList = file.listFiles();
-        for (File f : fileList) {
-            if (!f.getName().equals(".magit")) {
-                if (f.isDirectory()) {
-                    FileUtils.deleteDirectory(f);
-                } else {
-                    f.delete();
-                }
-            }
         }
     }
 
@@ -486,7 +457,7 @@ public class RepositoryManager {
             m_currentRepository.getActiveBranch().setCommitSH1(sha1);
             FileUtils.WriteToFile(sha1.getSh1(), m_currentRepository.GetLocation() + BRANCHES_FOLDER + m_currentRepository.getActiveBranch().getName() + ".txt");
             Commit commit = m_currentRepository.getCommitMap().get(m_currentRepository.getActiveBranch().getCommitSH1());
-            DeleteWC();
+            m_currentRepository.DeleteWC();
             CheckOutRecursion(m_currentRepository.GetLocation(), commit.getMainFolderSH1());
         }
     }
@@ -537,20 +508,41 @@ public class RepositoryManager {
     private void changeMagitRepositoryToRepository(MagitRepository magitRepository) throws RepositoryAllreadyExistException, IOException, ParseException, BranchDoesNotExistException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException {
         FileUtils.deleteDirectory(magitRepository.getLocation());
         BonusInit(magitRepository.getName(), magitRepository.getLocation());
+        if(magitRepository.getMagitRemoteReference()!=null){
+            String rrLocation=magitRepository.getMagitRemoteReference().getLocation();
+            FileUtils.CreateTextFile(m_currentRepository.GetLocation()+MAGIT_FOLDER+"RRLocation.txt",rrLocation);
+            m_currentRepository.setRRLocation(rrLocation);
+
+        }
         LoadObjectsFolder(magitRepository);
 
     }
 
     private void LoadBranches(MagitRepository magitRepository, Map<String, SHA1> commitIDToCommitSha1) throws IOException, BranchDoesNotExistException, ParseException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException {
         List<MagitSingleBranch> branchesList = magitRepository.getMagitBranches().getMagitSingleBranch();
+        branchesList.stream().filter(v-> v.isIsRemote()).forEach(v->{
+            SHA1 sha1 = commitIDToCommitSha1.get(v.getPointedCommit().getId());
+            RemoteBranch rb=new RemoteBranch(v.getName(),sha1);
+            try {
+                FileUtils.createFoldersByPathAndWriteContent(sha1.getSh1(), m_currentRepository.GetLocation() + BRANCHES_FOLDER + v.getName() + ".txt");
+                m_currentRepository.getBranchesMap().put(v.getName(), rb);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
         for (MagitSingleBranch msb : branchesList) {
-            File branchFile = new File(m_currentRepository.GetLocation() + BRANCHES_FOLDER + msb.getName() + ".txt");
-            branchFile.getPath();
             SHA1 sha1 = commitIDToCommitSha1.get(msb.getPointedCommit().getId());
-            if (sha1 != null) {
-                FileUtils.WriteToFile(sha1.getSh1(), m_currentRepository.GetLocation() + BRANCHES_FOLDER + msb.getName() + ".txt");
-                Branch branch = new Branch(msb.getName(), sha1);
-                m_currentRepository.getBranchesMap().put(branch.getName(), branch);
+            if (!m_currentRepository.getBranchesMap().containsKey(msb.getName())) {
+                if (sha1 != null) {
+                    Branch branch;
+                    FileUtils.WriteToFile(sha1.getSh1(), m_currentRepository.GetLocation() + BRANCHES_FOLDER + msb.getName() + ".txt");
+                    if (msb.isTracking()) {
+                        branch = new RemoteTrackingBranch(msb.getName(), sha1,(RemoteBranch)m_currentRepository.getBranchesMap().get(msb.getTrackingAfter()));
+                    } else {
+                        branch = new Branch(msb.getName(), sha1);
+                    }
+                    m_currentRepository.getBranchesMap().put(branch.getName(), branch);
+                }
             }
         }
         UpdateHeadFileContent(magitRepository.getMagitBranches().getHead());
@@ -681,161 +673,12 @@ public class RepositoryManager {
 
     }
 
-  /*  public void ExportRepositoryToXML(String path) throws XMLException, RepositoryDoesnotExistException {
-        try {
-            Path xmlPath = Paths.get(path);
-
-        } catch (InvalidPathException e) {
-            throw new XMLException("input is invalid path");
-        }
-        XMLChecker.isXMLFile(path);
-
-        if (m_currentRepository != null) {
-            MagitRepository magitRepository = new MagitRepository();
-            magitRepository.setLocation(String.valueOf(Paths.get(m_currentRepository.GetLocation())));
-            magitRepository.setName(m_currentRepository.getName());
-            if (!m_currentRepository.getBranchesMap().isEmpty()) {
-                exportMagitBranches(magitRepository);
-            }
-            if (!m_currentRepository.getCommitMap().isEmpty()) {
-                exportMagitCommits(magitRepository);
-            }
-            XMLChecker.MagitRepositoryToXML(magitRepository, path);
-
-        } else {
-            throw new RepositoryDoesnotExistException("Repository wasn't been loaded");
-        }
-
-    }*/
-
-    private void exportMagitCommits(MagitRepository i_MagitRepository) {
-        Map<SHA1, Commit> commits = m_currentRepository.getCommitMap();
-
-        i_MagitRepository.setMagitCommits(new MagitCommits());
-        i_MagitRepository.setMagitFolders(new MagitFolders());
-        i_MagitRepository.setMagitBlobs(new MagitBlobs());
-        Set<String> sha1TrackerSet = new HashSet<>();
-
-        List<MagitSingleCommit> magitCommits = i_MagitRepository.getMagitCommits().getMagitSingleCommit();
-
-        for (Map.Entry<SHA1, Commit> commitEntry : commits.entrySet()) {
-            if (commitEntry.getKey().getSh1().length() == 40) {
-                MagitSingleCommit magitCommit = new MagitSingleCommit();
-                PrecedingCommits precedingCommits = new PrecedingCommits();
-                List<PrecedingCommits.PrecedingCommit> magitPrecedingCommits = precedingCommits.getPrecedingCommit();
-
-                for (SHA1 precedingCommitSha1 : commitEntry.getValue().getPrevCommits()) {
-                    PrecedingCommits.PrecedingCommit magitPrecedingCommit = new PrecedingCommits.PrecedingCommit();
-                    magitPrecedingCommit.setId(precedingCommitSha1.getSh1());
-                    magitPrecedingCommits.add(magitPrecedingCommit);
-                }
-
-                RootFolder magitRootFolder = new RootFolder();
-                magitRootFolder.setId(commitEntry.getValue().getMainFolderSH1().getSh1());
-                magitCommit.setRootFolder(magitRootFolder);
-
-                magitCommit.setPrecedingCommits(precedingCommits);
-                magitCommit.setMessage(commitEntry.getValue().getMessage());
-                magitCommit.setId(commitEntry.getKey().getSh1());
-                magitCommit.setDateOfCreation(commitEntry.getValue().getWhoUpdated().getName());
-                magitCommit.setAuthor(commitEntry.getValue().getCreateTime().toString());
-
-                magitCommits.add(magitCommit);
-
-
-                MagitSingleFolder magitFolder = new MagitSingleFolder();
-                magitFolder.setName(null);
-                magitFolder.setLastUpdater(commitEntry.getValue().getWhoUpdated().getName());
-                magitFolder.setLastUpdateDate(commitEntry.getValue().getCreateTime().toString());
-                magitFolder.setIsRoot(true);
-                magitFolder.setId(commitEntry.getValue().getMainFolderSH1().getSh1());
-
-                exportMagitFolders(i_MagitRepository, magitFolder, sha1TrackerSet);
-            }
-        }
-    }
 
     public String getMainFolderName() {
         String path = GetCurrentRepository().GetLocation();
         String[] parts = path.split("\\\\");
         return parts[parts.length - 1];
     }
-
-
-    private void exportMagitFolders(MagitRepository i_MagitRepository, MagitSingleFolder i_MagitFolder, Set<String> i_Sha1TrackerSet) {
-        List<MagitSingleFolder> magitFolders = i_MagitRepository.getMagitFolders().getMagitSingleFolder();
-        magitFolders.add(i_MagitFolder);
-        i_Sha1TrackerSet.add(i_MagitFolder.getId());
-
-        MagitSingleFolder.Items items = new MagitSingleFolder.Items();
-        List<Item> itemsList = items.getItem();
-        i_MagitFolder.setItems(items);
-
-        Folder folder = m_currentRepository.getFoldersMap().get(new SHA1(i_MagitFolder.getId()));
-
-        for (FileDetails itemData : folder.getInnerFiles()) {
-            Item item = new Item();
-            item.setType(itemData.getFileType() == FileType.FILE ? "blob" : itemData.getFileType().toString().toLowerCase());
-            item.setId(itemData.getSh1().getSh1());
-            itemsList.add(item);
-
-            if (!i_Sha1TrackerSet.contains(itemData.getSh1().getSh1())) {
-                if (itemData.getFileType().equals(FileType.FOLDER)) {
-                    MagitSingleFolder magitSubFolder = new MagitSingleFolder();
-                    magitSubFolder.setId(itemData.getSh1().getSh1());
-                    magitSubFolder.setIsRoot(false);
-                    magitSubFolder.setLastUpdateDate(itemData.getLastUpdated().toString());
-                    magitSubFolder.setLastUpdater(itemData.getWhoUpdatedLast().getName());
-                    magitSubFolder.setName(itemData.getName());
-
-                    exportMagitFolders(i_MagitRepository, magitSubFolder, i_Sha1TrackerSet);
-                } else {
-                    MagitBlob magitBlob = new MagitBlob();
-                    magitBlob.setName(itemData.getName());
-                    magitBlob.setLastUpdater(itemData.getWhoUpdatedLast().getName());
-                    magitBlob.setLastUpdateDate(itemData.getLastUpdated().toString());
-                    magitBlob.setId(itemData.getSh1().getSh1());
-
-                    exportMagitBlob(i_MagitRepository, magitBlob, i_Sha1TrackerSet);
-                }
-            }
-        }
-    }
-
-    private void exportMagitBlob(MagitRepository i_MagitRepository, MagitBlob i_MagitBlob, Set<String> i_Sha1TrackerSet) {
-        List<MagitBlob> magitBlobs = i_MagitRepository.getMagitBlobs().getMagitBlob();
-        String blobContent = m_currentRepository.getBlobsMap().get(new SHA1(i_MagitBlob.getId())).getContent();
-        i_MagitBlob.setContent(blobContent);
-        magitBlobs.add(i_MagitBlob);
-        i_Sha1TrackerSet.add(i_MagitBlob.getId());
-    }
-
-    /*private void exportMagitBranches(MagitRepository i_MagitRepository) {
-        Map<String, Branch> branches = m_currentRepository.getBranchesMap();
-        i_MagitRepository.setMagitBranches(new MagitBranches());
-        List<MagitSingleBranch> magitBranches = i_MagitRepository.getMagitBranches().getMagitSingleBranch();
-
-        for (Map.Entry<String, Branch> branchEntry : branches.entrySet()) {
-            MagitSingleBranch magitBranch = new MagitSingleBranch();
-            MagitSingleBranch.PointedCommit pointedCommit = new MagitSingleBranch.PointedCommit();
-            try {
-                pointedCommit.setId(branchEntry.getValue().getCommitSH1().getSh1());
-            } catch (NullPointerException e) {
-                pointedCommit.setId("null");
-            }
-            magitBranch.setPointedCommit(pointedCommit);
-            magitBranch.setTrackingAfter(branchEntry.getValue().GetTrakingAfter());
-            magitBranch.setTracking(branchEntry.getValue().IsTracking());
-            magitBranch.setName(branchEntry.getValue().getName());
-            magitBranch.setIsRemote(branchEntry.getValue().IsRemote());
-
-            if (branchEntry.getValue() == m_currentRepository.getActiveBranch()) {
-                i_MagitRepository.getMagitBranches().setHead(magitBranch.getName());
-            }
-
-            magitBranches.add(magitBranch);
-        }
-    }*/
 
     //todo:: check if with there is no open changes
     //todo:: check theris diffrent from ours
@@ -984,7 +827,7 @@ public class RepositoryManager {
     }
 
     private void spanWCByMergeList(List<FileDetails> mergeList) throws IOException {
-        DeleteWC();
+        m_currentRepository.DeleteWC();
         for(FileDetails fd : mergeList){
             String content = FileUtils.getContentFromZippedFile(m_currentRepository.GetLocation()+OBJECTS_FOLDER+fd.getSh1().getSh1()+".zip");
            FileUtils.createFoldersByPathAndWriteContent(content,fd.getName());
@@ -999,6 +842,7 @@ public class RepositoryManager {
             }
         }
     }
+
     public void FetchRRNewData() throws RepositoryDoesnotExistException, RepositoryDoesntTrackAfterOtherRepositoryException, IOException, ParseException {
         IsCurrentRepositoryInitialize();
         if(m_currentRepository.getRRLocation()==null){
@@ -1040,6 +884,7 @@ public class RepositoryManager {
         }
     }
 
+    //todo:: check is no changes without push
     public void Pull() throws RepositoryDoesnotExistException, RepositoryDoesntTrackAfterOtherRepositoryException, ParseException, CommitException, IOException, OpenChangesException, BranchDoesNotExistException {
         IsCurrentRepositoryInitialize();
         if(m_currentRepository.getRRLocation()==null){
@@ -1054,7 +899,7 @@ public class RepositoryManager {
             rrRepo.LoadData();
             Branch branchInRR=rrRepo.getBranchesMap().get(activeBranch.getName());
             Commit commit=rrRepo.getCommitMap().get(branchInRR.getCommitSH1());
-            addAllBranchData(commit,rrRepo);
+            addAllBranchData(commit,rrRepo,m_currentRepository);
             ResetHeadBranch(branchInRR.getCommitSH1());
             Branch RB=m_currentRepository.getBranchesMap().get(rrRepo.getName()+"\\"+activeBranch.getName());
             RB.UpdateSHA1AndBranchFileContent(branchInRR.getCommitSH1(),m_currentRepository.GetLocation()+BRANCHES_FOLDER+rrRepo.getName()+"\\"+branchInRR.getName()+".txt");
@@ -1067,38 +912,220 @@ public class RepositoryManager {
 
     }
 
-    private void addAllBranchData(Commit commit, Repository rrRepo) throws IOException {
-        if(!m_currentRepository.getCommitMap().containsKey(commit)){
-            Folder mainFolder=rrRepo.getFoldersMap().get(commit.getMainFolderSH1());
-            AddCommitData(mainFolder, rrRepo);
-            commit.AddToRepository(m_currentRepository);
+    private void addAllBranchData(Commit commit, Repository dataSupplierRepo, Repository gettingDataRepo) throws IOException {
+        if(!gettingDataRepo.getCommitMap().containsKey(commit)){
+            Folder mainFolder=dataSupplierRepo.getFoldersMap().get(commit.getMainFolderSH1());
+            AddCommitData(mainFolder, dataSupplierRepo,gettingDataRepo);
+            commit.AddToRepository(gettingDataRepo);
             List<SHA1> prevCommitsSha1=commit.getPrevCommits();
             for(SHA1 prevCommitSha1:prevCommitsSha1){
-                Commit prevCommit = rrRepo.getCommitMap().get(prevCommitSha1);
-                if(!m_currentRepository.getCommitMap().containsKey(prevCommit)){
-                    addAllBranchData(prevCommit,rrRepo);
+                Commit prevCommit = dataSupplierRepo.getCommitMap().get(prevCommitSha1);
+                if(!gettingDataRepo.getCommitMap().containsKey(prevCommit)){
+                    addAllBranchData(prevCommit,dataSupplierRepo,gettingDataRepo);
                 }
             }
 
         }
     }
-    private void AddCommitData(Folder folder, Repository rrRepo) throws IOException {
-        folder.AddToRepository(m_currentRepository);
+
+    private void AddCommitData(Folder folder, Repository dataSupplierRepo, Repository gettingDataRepo) throws IOException {
+        folder.AddToRepository(gettingDataRepo);
         List<FileDetails> innerFiles=folder.getInnerFiles();
         for(FileDetails fd: innerFiles){
             if(fd.getFileType()==FileType.FILE){
-                if(!m_currentRepository.getBlobsMap().containsKey(fd.getSh1())) {
-                    rrRepo.getBlobsMap().get(fd.getSh1()).AddToRepository(m_currentRepository);
+                if(!gettingDataRepo.getBlobsMap().containsKey(fd.getSh1())) {
+                    dataSupplierRepo.getBlobsMap().get(fd.getSh1()).AddToRepository(gettingDataRepo);
                 }
             }
             else{
-                if (!m_currentRepository.getFoldersMap().containsKey(fd.getSh1())) {
-                    Folder innerFolder = rrRepo.getFoldersMap().get(fd.getSh1());
-                    AddCommitData(innerFolder, rrRepo);
+                if (!gettingDataRepo.getFoldersMap().containsKey(fd.getSh1())) {
+                    Folder innerFolder = dataSupplierRepo.getFoldersMap().get(fd.getSh1());
+                    AddCommitData(innerFolder, dataSupplierRepo,gettingDataRepo);
                 }
             }
         }
     }
+
+    public void Push() throws CommitException, RepositoryDoesntTrackAfterOtherRepositoryException, IOException, ParseException, RemoteTrackingBranchException {
+        IsRepositoryHasAtLeastOneCommit();
+
+        if(m_currentRepository.getRRLocation()==null){
+            throw new RepositoryDoesntTrackAfterOtherRepositoryException("Current function available only on cloned repositories ");
+        }
+
+        Branch activeBranch=m_currentRepository.getActiveBranch();
+        if(activeBranch instanceof RemoteTrackingBranch){
+            Repository rrRepo=new Repository(m_currentRepository.getRRLocation());
+            rrRepo.LoadData();
+            if(!m_currentRepository.getBranchesMap().get(rrRepo.getName()+"\\"+activeBranch.getName()).getCommitSH1().equals(rrRepo.getBranchesMap().get(activeBranch.getName()).getCommitSH1())){
+                throw new RemoteTrackingBranchException("Remote tracking branch pointed to different commit compare to this branch in Remote repository");
+            }
+            Commit commitPointedByHead=m_currentRepository.getCommitFromMapCommit(m_currentRepository.getActiveBranch().getCommitSH1());
+            addAllBranchData(commitPointedByHead,m_currentRepository,rrRepo);
+            Branch activeInRR=rrRepo.getActiveBranch();
+            if(activeInRR==rrRepo.getBranchesMap().get(activeBranch.getName())){
+                activeInRR.setCommitSH1(activeBranch.getCommitSH1());
+                FileUtils.WriteToFile(activeBranch.getCommitSH1().getSh1(), rrRepo.GetLocation() + BRANCHES_FOLDER + activeInRR.getName() + ".txt");
+                Commit commit = rrRepo.getCommitMap().get(rrRepo.getActiveBranch().getCommitSH1());
+                rrRepo.DeleteWC();
+                CheckOutRecursion(rrRepo.GetLocation(), commit.getMainFolderSH1());
+            }
+            else{
+                Branch remote = rrRepo.getBranchesMap().get(activeBranch.getName());
+                remote.UpdateSHA1AndBranchFileContent(activeBranch.getCommitSH1(),rrRepo.GetLocation()+BRANCHES_FOLDER+activeBranch.getName()+".txt");
+            }
+        }
+
+    }
 }
 
+/*  public void ExportRepositoryToXML(String path) throws XMLException, RepositoryDoesnotExistException {
+        try {
+            Path xmlPath = Paths.get(path);
 
+        } catch (InvalidPathException e) {
+            throw new XMLException("input is invalid path");
+        }
+        XMLChecker.isXMLFile(path);
+
+        if (m_currentRepository != null) {
+            MagitRepository magitRepository = new MagitRepository();
+            magitRepository.setLocation(String.valueOf(Paths.get(m_currentRepository.GetLocation())));
+            magitRepository.setName(m_currentRepository.getName());
+            if (!m_currentRepository.getBranchesMap().isEmpty()) {
+                exportMagitBranches(magitRepository);
+            }
+            if (!m_currentRepository.getCommitMap().isEmpty()) {
+                exportMagitCommits(magitRepository);
+            }
+            XMLChecker.MagitRepositoryToXML(magitRepository, path);
+
+        } else {
+            throw new RepositoryDoesnotExistException("Repository wasn't been loaded");
+        }
+
+    }*/
+
+/*private void exportMagitBranches(MagitRepository i_MagitRepository) {
+        Map<String, Branch> branches = m_currentRepository.getBranchesMap();
+        i_MagitRepository.setMagitBranches(new MagitBranches());
+        List<MagitSingleBranch> magitBranches = i_MagitRepository.getMagitBranches().getMagitSingleBranch();
+
+        for (Map.Entry<String, Branch> branchEntry : branches.entrySet()) {
+            MagitSingleBranch magitBranch = new MagitSingleBranch();
+            MagitSingleBranch.PointedCommit pointedCommit = new MagitSingleBranch.PointedCommit();
+            try {
+                pointedCommit.setId(branchEntry.getValue().getCommitSH1().getSh1());
+            } catch (NullPointerException e) {
+                pointedCommit.setId("null");
+            }
+            magitBranch.setPointedCommit(pointedCommit);
+            magitBranch.setTrackingAfter(branchEntry.getValue().GetTrakingAfter());
+            magitBranch.setTracking(branchEntry.getValue().IsTracking());
+            magitBranch.setName(branchEntry.getValue().getName());
+            magitBranch.setIsRemote(branchEntry.getValue().IsRemote());
+
+            if (branchEntry.getValue() == m_currentRepository.getActiveBranch()) {
+                i_MagitRepository.getMagitBranches().setHead(magitBranch.getName());
+            }
+
+            magitBranches.add(magitBranch);
+        }
+    }*/
+
+
+/*   private void exportMagitCommits(MagitRepository i_MagitRepository) {
+        Map<SHA1, Commit> commits = m_currentRepository.getCommitMap();
+
+        i_MagitRepository.setMagitCommits(new MagitCommits());
+        i_MagitRepository.setMagitFolders(new MagitFolders());
+        i_MagitRepository.setMagitBlobs(new MagitBlobs());
+        Set<String> sha1TrackerSet = new HashSet<>();
+
+        List<MagitSingleCommit> magitCommits = i_MagitRepository.getMagitCommits().getMagitSingleCommit();
+
+        for (Map.Entry<SHA1, Commit> commitEntry : commits.entrySet()) {
+            if (commitEntry.getKey().getSh1().length() == 40) {
+                MagitSingleCommit magitCommit = new MagitSingleCommit();
+                PrecedingCommits precedingCommits = new PrecedingCommits();
+                List<PrecedingCommits.PrecedingCommit> magitPrecedingCommits = precedingCommits.getPrecedingCommit();
+
+                for (SHA1 precedingCommitSha1 : commitEntry.getValue().getPrevCommits()) {
+                    PrecedingCommits.PrecedingCommit magitPrecedingCommit = new PrecedingCommits.PrecedingCommit();
+                    magitPrecedingCommit.setId(precedingCommitSha1.getSh1());
+                    magitPrecedingCommits.add(magitPrecedingCommit);
+                }
+
+                RootFolder magitRootFolder = new RootFolder();
+                magitRootFolder.setId(commitEntry.getValue().getMainFolderSH1().getSh1());
+                magitCommit.setRootFolder(magitRootFolder);
+
+                magitCommit.setPrecedingCommits(precedingCommits);
+                magitCommit.setMessage(commitEntry.getValue().getMessage());
+                magitCommit.setId(commitEntry.getKey().getSh1());
+                magitCommit.setDateOfCreation(commitEntry.getValue().getWhoUpdated().getName());
+                magitCommit.setAuthor(commitEntry.getValue().getCreateTime().toString());
+
+                magitCommits.add(magitCommit);
+
+
+                MagitSingleFolder magitFolder = new MagitSingleFolder();
+                magitFolder.setName(null);
+                magitFolder.setLastUpdater(commitEntry.getValue().getWhoUpdated().getName());
+                magitFolder.setLastUpdateDate(commitEntry.getValue().getCreateTime().toString());
+                magitFolder.setIsRoot(true);
+                magitFolder.setId(commitEntry.getValue().getMainFolderSH1().getSh1());
+
+                exportMagitFolders(i_MagitRepository, magitFolder, sha1TrackerSet);
+            }
+        }
+    }
+*/
+ /*   private void exportMagitFolders(MagitRepository i_MagitRepository, MagitSingleFolder i_MagitFolder, Set<String> i_Sha1TrackerSet) {
+        List<MagitSingleFolder> magitFolders = i_MagitRepository.getMagitFolders().getMagitSingleFolder();
+        magitFolders.add(i_MagitFolder);
+        i_Sha1TrackerSet.add(i_MagitFolder.getId());
+
+        MagitSingleFolder.Items items = new MagitSingleFolder.Items();
+        List<Item> itemsList = items.getItem();
+        i_MagitFolder.setItems(items);
+
+        Folder folder = m_currentRepository.getFoldersMap().get(new SHA1(i_MagitFolder.getId()));
+
+        for (FileDetails itemData : folder.getInnerFiles()) {
+            Item item = new Item();
+            item.setType(itemData.getFileType() == FileType.FILE ? "blob" : itemData.getFileType().toString().toLowerCase());
+            item.setId(itemData.getSh1().getSh1());
+            itemsList.add(item);
+
+            if (!i_Sha1TrackerSet.contains(itemData.getSh1().getSh1())) {
+                if (itemData.getFileType().equals(FileType.FOLDER)) {
+                    MagitSingleFolder magitSubFolder = new MagitSingleFolder();
+                    magitSubFolder.setId(itemData.getSh1().getSh1());
+                    magitSubFolder.setIsRoot(false);
+                    magitSubFolder.setLastUpdateDate(itemData.getLastUpdated().toString());
+                    magitSubFolder.setLastUpdater(itemData.getWhoUpdatedLast().getName());
+                    magitSubFolder.setName(itemData.getName());
+
+                    exportMagitFolders(i_MagitRepository, magitSubFolder, i_Sha1TrackerSet);
+                } else {
+                    MagitBlob magitBlob = new MagitBlob();
+                    magitBlob.setName(itemData.getName());
+                    magitBlob.setLastUpdater(itemData.getWhoUpdatedLast().getName());
+                    magitBlob.setLastUpdateDate(itemData.getLastUpdated().toString());
+                    magitBlob.setId(itemData.getSh1().getSh1());
+
+                    exportMagitBlob(i_MagitRepository, magitBlob, i_Sha1TrackerSet);
+                }
+            }
+        }
+    }
+*/
+ /*   private void exportMagitBlob(MagitRepository i_MagitRepository, MagitBlob i_MagitBlob, Set<String> i_Sha1TrackerSet) {
+        List<MagitBlob> magitBlobs = i_MagitRepository.getMagitBlobs().getMagitBlob();
+        String blobContent = m_currentRepository.getBlobsMap().get(new SHA1(i_MagitBlob.getId())).getContent();
+        i_MagitBlob.setContent(blobContent);
+        magitBlobs.add(i_MagitBlob);
+        i_Sha1TrackerSet.add(i_MagitBlob.getId());
+    }
+    */
