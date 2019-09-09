@@ -36,12 +36,14 @@ public class FileUtils {
 
     public static String ReadContentFromFile(File f) throws IOException {
         String content = "";
+        String done="";
         try {
             content = new String(Files.readAllBytes(Paths.get(f.getPath())));
+            done=content.replace("\r","");
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return content;
+        return done;
     }
 
     public static void CreateZipFile(File file, SHA1 sha1, String location) throws IOException {
@@ -199,8 +201,8 @@ public class FileUtils {
                 content = content + line;
                 line = br.readLine();
                 if (line != null) {
-                    line = "\r\n" + line;
-                    //line='\n\'+line;
+                    //line = "\r\n" + line;
+                    line='\n'+line;
                 }
             }
 

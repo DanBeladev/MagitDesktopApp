@@ -50,7 +50,7 @@ public class ConflictSolverController {
     @FXML
     public void goNextAndResolve(){
         String almostFinal=finalTextArea.getText();
-        String finalText=almostFinal.replace("\n","\r\n");
+        String finalText=almostFinal.replace("\r","");
         mergeConfilct.resolveConflict(finalText);
         stage.close();
     }

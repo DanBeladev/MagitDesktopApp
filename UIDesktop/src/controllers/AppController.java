@@ -54,6 +54,7 @@ public class AppController {
     private SimpleStringProperty userName;
     private SimpleStringProperty repoName;
     private SimpleBooleanProperty isRepoLoadedProperty;
+    private SimpleBooleanProperty isClonedRepository;
     private RepositoryManager repositoryManager;
     private Graph commitTree;
     private Map<SHA1, ICell> nodesMap = new HashMap<>();
@@ -64,6 +65,7 @@ public class AppController {
         repoName = new SimpleStringProperty();
         repositoryManager = new RepositoryManager();
         isRepoLoadedProperty = new SimpleBooleanProperty();
+        isClonedRepository=new SimpleBooleanProperty();
         commitTree = new Graph();
 
     }
@@ -88,6 +90,7 @@ public class AppController {
         //commitTree.getCanvas()
         
         isRepoLoadedProperty.set(false);
+        isClonedRepository.set(false);
 
         //todo::remove block
        /*//===============================
@@ -135,6 +138,14 @@ public class AppController {
     public void setRepository(String path) throws RepositorySameToCurrentRepositoryException, RepositoryDoesnotExistException, ParseException, IOException {
         this.repositoryManager.ChangeRepository(path);
     }
+    public SimpleBooleanProperty isIsClonedRepository() {
+        return isClonedRepository;
+    }
+
+    public void setIsClonedRepository(boolean isClonedRepository) {
+        this.isClonedRepository.set(isClonedRepository);
+    }
+
 
     public RepositoryManager getRepositoryManager() {
         return repositoryManager;

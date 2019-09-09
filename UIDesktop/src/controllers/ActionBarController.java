@@ -62,6 +62,15 @@ public class ActionBarController {
     @FXML
     private Button mergeBtn;
 
+    @FXML
+    private Button fetchBtn;
+
+    @FXML
+    private Button pullBtn;
+
+    @FXML
+    private Button pushBtn;
+
     private Stage primaryStage;
     private AppController mainController;
 
@@ -73,6 +82,7 @@ public class ActionBarController {
     public void setMainController(AppController controller) {
         this.mainController = controller;
         bindNodeDisabledToBoolProperty(mainController.getIsIsRepoLoadedProperty(), commitBtn, branchesListBtn, commitsTreeBtn, commitContentBtn, deleteBranchBtn, newBranchBtn, mergeBtn, showStatusBtn, resetBranchbtn, checkoutBtn);
+        bindNodeDisabledToBoolProperty(mainController.isIsClonedRepository(),fetchBtn,pullBtn,pushBtn);
     }
 
 
@@ -87,6 +97,9 @@ public class ActionBarController {
             mainController.repoPathProperty().set(path);
             mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
             mainController.getIsIsRepoLoadedProperty().set(true);
+            if(!mainController.getRepositoryManager().GetCurrentRepository().getRRLocation().equals("")){
+                mainController.setIsClonedRepository(true);
+            }
 
         } catch
         (RepositorySameToCurrentRepositoryException | RepositoryDoesnotExistException | ParseException | IOException e) {
@@ -116,8 +129,6 @@ public class ActionBarController {
         fileChooser.setTitle("Choose XML File");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML files", "*.xml"));
         File selectedFile = fileChooser.showOpenDialog(primaryStage);
-
-
         if (selectedFile != null) {
             mainController.topInfoComponentController.getTaskProgressBar().setVisible(true);
             LoadXmlTask task = new LoadXmlTask(mainController.getRepositoryManager(), selectedFile,
@@ -144,6 +155,9 @@ public class ActionBarController {
                                         mainController.getIsIsRepoLoadedProperty().set(true);
                                         mainController.repoNameProperty().set(currentRepo.getName());
                                         mainController.repoPathProperty().set(currentRepo.GetLocation());
+                                        if(currentRepo.getRRLocation()!=null){
+                                            mainController.setIsClonedRepository(true);
+                                        }
                                     });
                                 } catch (Exception e) {
                                     ArrayList<String> errors = new ArrayList<>();
@@ -160,13 +174,9 @@ public class ActionBarController {
                             mainController.topInfoComponentController.getTaskProgressBar().setVisible(false);
                         }
                     }),
-
                     this::displayErrors);
-
-
             mainController.topInfoComponentController.getTaskProgressBar().progressProperty().bind(task.progressProperty());
             new Thread(task).start();
-
         }
     }
 
@@ -176,7 +186,7 @@ public class ActionBarController {
             File selectedFile = GUIUtils.getFolderByDirectoryChooser("choose folder", primaryStage);
             if (selectedFile != null) {
                 try {
-                    mainController.getRepositoryManager().BonusInit(result, selectedFile.getAbsolutePath() + "\\" + result);
+                    mainController.getRepositoryManager().BonusInit(result, selectedFile.getAbsolutePath() + "\\" + result,0);
                     mainController.repoPathProperty().set(selectedFile.getAbsolutePath() + "\\" + result);
                     mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
                     mainController.getIsIsRepoLoadedProperty().set(true);
@@ -324,6 +334,8 @@ public class ActionBarController {
             stage.setScene(new Scene(gridPane));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
+            mainController.setIsClonedRepository(true);
+
         } catch (IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
