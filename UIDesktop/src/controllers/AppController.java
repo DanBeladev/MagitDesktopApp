@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.collections.MapChangeListener;
 import javafx.event.EventHandler;
@@ -351,8 +352,10 @@ public class AppController {
         scrollPane.setContent(canvas);
         BorderPane borderPane = (BorderPane) primaryStage.getScene().lookup("#root");
         borderPane.setCenter(scrollPane);
-        commitTree.getUseViewportGestures().set(false);
-        commitTree.getUseNodeGestures().set(false);
+        Platform.runLater(()-> {
+            commitTree.getUseViewportGestures().set(false);
+            commitTree.getUseNodeGestures().set(false);
+        });
     }
 
     //todo:: show leaf content of tree view

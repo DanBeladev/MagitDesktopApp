@@ -19,7 +19,6 @@ public class CommitTreeLayout implements Layout {
         List<CommitNode> cellsDrawed=new ArrayList<>();
         int startX = 10;
         int startY = 50;
-        int every4rdNode = 1;
         Map<CommitNode,Integer> nodeToXValue=new HashMap<>();
         for (ICell cell : cells) {
             CommitNode c = (CommitNode) cell;
@@ -48,16 +47,12 @@ public class CommitTreeLayout implements Layout {
                     nodei=nodeis.get(0);
                     nodes=nodei.getCellParents().stream().filter(v->v!=c).collect(Collectors.toList()).get(0);
                 }
-                //List<ICell> list=cellsDrawed.stream().filter(v->v.getCellChildren().contains(cellChildrenThatDrawed.get(0))).collect(Collectors.toList());
                 if(nodei==null || !cellsDrawed.contains(nodes)) {
                     int x = nodeToXValue.get(cellChildrenThatDrawed.get(0));
                     graph.getGraphic(c).relocate(x, startY);
                     nodeToXValue.put(c, x);
                 }
                 else{
-                    /*int x=nodeToXValue.get(list.get(0))+50;
-                    graph.getGraphic(c).relocate(x, startY);
-                    nodeToXValue.put(c, x);*/
                     graph.getGraphic(c).relocate(startX, startY);
                     nodeToXValue.put(c,startX);
                     startX=startX+50;
