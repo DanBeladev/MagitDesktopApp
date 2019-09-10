@@ -186,7 +186,7 @@ public class ActionBarController {
             File selectedFile = GUIUtils.getFolderByDirectoryChooser("choose folder", primaryStage);
             if (selectedFile != null) {
                 try {
-                    mainController.getRepositoryManager().BonusInit(result, selectedFile.getAbsolutePath() + "\\" + result,0);
+                    mainController.getRepositoryManager().BonusInit(result, selectedFile.getAbsolutePath() + "\\" + result,false);
                     mainController.repoPathProperty().set(selectedFile.getAbsolutePath() + "\\" + result);
                     mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
                     mainController.getIsIsRepoLoadedProperty().set(true);

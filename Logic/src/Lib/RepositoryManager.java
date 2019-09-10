@@ -74,7 +74,7 @@ public class RepositoryManager {
         }
     }
 
-    public void BonusInit(String name, String path, int flag) throws IOException {
+    public void BonusInit(String name, String path, boolean isLoadedFromXML) throws IOException {
 
         if (new File(path).mkdirs()) {
             new File(path + MAGIT_FOLDER).mkdirs();
@@ -87,7 +87,7 @@ public class RepositoryManager {
             FileUtils.CreateTextFile(path + MAGIT_FOLDER + "commits.txt", "");
             FileUtils.CreateTextFile(path + MAGIT_FOLDER + "repository name.txt", name);
             m_currentRepository = new Repository(name, path);
-            if(flag==1) {
+            if(!isLoadedFromXML) {
                 Branch b = new Branch();
                 b.setName("master");
                 m_currentRepository.setActiveBranch(b);
@@ -509,7 +509,7 @@ public class RepositoryManager {
 
     private void changeMagitRepositoryToRepository(MagitRepository magitRepository) throws RepositoryAllreadyExistException, IOException, ParseException, BranchDoesNotExistException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException {
         FileUtils.deleteDirectory(magitRepository.getLocation());
-        BonusInit(magitRepository.getName(), magitRepository.getLocation(),0);
+        BonusInit(magitRepository.getName(), magitRepository.getLocation(),true);
         if(magitRepository.getMagitRemoteReference()!=null && magitRepository.getMagitRemoteReference().getName()!=null){
             String rrLocation=magitRepository.getMagitRemoteReference().getLocation();
             FileUtils.CreateTextFile(m_currentRepository.GetLocation()+MAGIT_FOLDER+"RRLocation.txt",rrLocation);
