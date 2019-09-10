@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommitNode extends AbstractCell {
-
     private String timestamp;
     private String committer;
     private String message;
@@ -146,6 +145,10 @@ public class CommitNode extends AbstractCell {
 
     public void concatPointedBranches(String BranchToAdd, Boolean isActive) {
         pointedBranches.add(new Pair<>(BranchToAdd, isActive));
+    }
+
+    public String getTimestamp() {
+        return timestamp;
     }
 
 
