@@ -85,7 +85,7 @@ public class ActionBarController {
     public void setMainController(AppController controller) {
         this.mainController = controller;
         bindNodeDisabledToBoolProperty(mainController.getIsIsRepoLoadedProperty(), commitBtn, branchesListBtn, commitsTreeBtn, commitContentBtn, deleteBranchBtn, newBranchBtn, mergeBtn, showStatusBtn, resetBranchbtn, checkoutBtn);
-        bindNodeDisabledToBoolProperty(mainController.isIsClonedRepository(),fetchBtn,pullBtn,pushBtn);
+        bindNodeDisabledToBoolProperty(mainController.isIsClonedRepository(), fetchBtn, pullBtn, pushBtn);
     }
 
 
@@ -100,7 +100,7 @@ public class ActionBarController {
             mainController.repoPathProperty().set(path);
             mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
             mainController.getIsIsRepoLoadedProperty().set(true);
-            if(mainController.getRepositoryManager().GetCurrentRepository().getRRLocation()!=null){
+            if (mainController.getRepositoryManager().GetCurrentRepository().getRRLocation() != null) {
                 mainController.setIsClonedRepository(true);
             }
 
@@ -158,7 +158,7 @@ public class ActionBarController {
                                         mainController.getIsIsRepoLoadedProperty().set(true);
                                         mainController.repoNameProperty().set(currentRepo.getName());
                                         mainController.repoPathProperty().set(currentRepo.GetLocation());
-                                        if(currentRepo.getRRLocation()!=null){
+                                        if (currentRepo.getRRLocation() != null) {
                                             mainController.setIsClonedRepository(true);
                                         }
                                     });
@@ -189,7 +189,7 @@ public class ActionBarController {
             File selectedFile = GUIUtils.getFolderByDirectoryChooser("choose folder", primaryStage);
             if (selectedFile != null) {
                 try {
-                    mainController.getRepositoryManager().BonusInit(result, selectedFile.getAbsolutePath() + "\\" + result,false);
+                    mainController.getRepositoryManager().BonusInit(result, selectedFile.getAbsolutePath() + "\\" + result, false);
                     mainController.repoPathProperty().set(selectedFile.getAbsolutePath() + "\\" + result);
                     mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
                     mainController.getIsIsRepoLoadedProperty().set(true);
@@ -227,58 +227,78 @@ public class ActionBarController {
         try {
             List<List<String>> lst = mainController.getRepositoryManager().ShowStatus();
             mainController.showStatus(lst);
-        } catch (IOException | ParseException | CommitException e) {
+        }catch (ParseException |CommitException| IOException| RepositoryDoesnotExistException e){
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
+
     }
 
     //todo:: to return this message
     public void createNewBranchClick() {
         try {
-            FXMLLoader fxmlLoader=new FXMLLoader();
+            FXMLLoader fxmlLoader = new FXMLLoader();
             fxmlLoader.setLocation(getClass().getResource("/views/newbranch/NewBranch.fxml"));
-            GridPane root=fxmlLoader.load();
-            Scene scene=new Scene(root);
-            Stage stageForCreate=new Stage();
+            GridPane root = fxmlLoader.load();
+            Scene scene = new Scene(root);
+            Stage stageForCreate = new Stage();
             stageForCreate.setScene(scene);
-            NewBranchController newBranchController=fxmlLoader.getController();
+            NewBranchController newBranchController = fxmlLoader.getController();
             newBranchController.setAppController(mainController);
-            newBranchController.insertValuesToComboBox(mainController.getRepositoryManager().GetCurrentRepository().getCommitMap().keySet().stream().map(v->v.getSh1()).collect(Collectors.toList()));
+            newBranchController.insertValuesToComboBox(mainController.getRepositoryManager().GetCurrentRepository().getCommitMap().keySet().stream().map(v -> v.getSh1()).collect(Collectors.toList()));
             newBranchController.setSecondaryStage(stageForCreate);
             stageForCreate.initModality(Modality.APPLICATION_MODAL);
             stageForCreate.showAndWait();
 
-        } catch ( IOException e) {
+        } catch (IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
     public void showBrancheListClick() {
-        List<BranchDetails> branchDetailsList = mainController.getRepositoryManager().ShowBranches();
+        List<BranchDetails> branchDetailsList = null;
+        try {
+            branchDetailsList = mainController.getRepositoryManager().ShowBranches();
+        } catch (RepositoryDoesnotExistException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
         mainController.showBranchesList(branchDetailsList);
     }
 
     public void deleteBranchClick() {
-        List<BranchDetails> branchesList = mainController.getRepositoryManager().ShowBranches();
+        List<BranchDetails> branchesList = null;
+        try {
+            branchesList = mainController.getRepositoryManager().ShowBranches();
+        } catch (RepositoryDoesnotExistException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
         mainController.deleteBranch(branchesList);
     }
 
     public void checkOutBtnClick() {
-        List<BranchDetails> branchesList = mainController.getRepositoryManager().ShowBranches();
+        List<BranchDetails> branchesList = null;
+        try {
+            branchesList = mainController.getRepositoryManager().ShowBranches();
+        } catch (RepositoryDoesnotExistException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
         mainController.checkOut(branchesList);
     }
 
     public void resetBranchClick() {
-        List<SHA1> commitsList = mainController.getRepositoryManager().getCurrentRepositoryAllCommitsSHA1();
+        List<SHA1> commitsList = null;
+        try {
+            commitsList = mainController.getRepositoryManager().getCurrentRepositoryAllCommitsSHA1();
+        } catch (RepositoryDoesnotExistException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
         mainController.resetBranch(commitsList);
     }
 
     public void commitsTreeClick() {
         try {
             mainController.getRepositoryManager().IsRepositoryHasAtLeastOneCommit();
-        } catch (CommitException e) {
+        } catch (CommitException | RepositoryDoesnotExistException e) {
             GUIUtils.popUpMessage("Repository without commits to draw", Alert.AlertType.INFORMATION);
-            return;
         }
         mainController.createCommitsGraphForRepository();
         mainController.drawCommitsTree();
@@ -287,8 +307,8 @@ public class ActionBarController {
     public void refresh() {
         try {
             mainController.getRepositoryManager().IsRepositoryHasAtLeastOneCommit();
-        } catch (CommitException e) {
-            return;
+        } catch (CommitException | RepositoryDoesnotExistException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
         mainController.createCommitsGraphForRepository();
         mainController.drawCommitsTree();
@@ -308,7 +328,7 @@ public class ActionBarController {
         }
         try {
             List<MergeConfilct> conflicts = null;
-            conflicts = repositoryManager.MergeHeadBranchWithOtherBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(branchToMerge));
+            conflicts = repositoryManager.MergeHeadBranchWithOtherBranch(branchToMerge);
             for (MergeConfilct conflict : conflicts) {
                 FXMLLoader fxmlLoader = new FXMLLoader();
                 URL url = getClass().getResource("/views/conflictsolver/ConflictSolver.fxml");
@@ -354,7 +374,7 @@ public class ActionBarController {
 
     }
 
-    public void fetchClick(){
+    public void fetchClick() {
         try {
             mainController.getRepositoryManager().FetchRRNewData();
         } catch (RepositoryDoesnotExistException | RepositoryDoesntTrackAfterOtherRepositoryException | IOException | ParseException e) {
@@ -362,18 +382,20 @@ public class ActionBarController {
         }
     }
 
-    public void pullClick(){
+    public void pullClick() {
         try {
             mainController.getRepositoryManager().Pull();
-        } catch (BranchDoesNotExistException|RepositoryDoesnotExistException | RepositoryDoesntTrackAfterOtherRepositoryException | ParseException | CommitException | IOException | OpenChangesException e) {
+        } catch (BranchDoesNotExistException | RepositoryDoesnotExistException | RepositoryDoesntTrackAfterOtherRepositoryException | ParseException | CommitException | IOException | OpenChangesException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
-    public void pushClick(){
+    public void pushClick() {
         try {
             mainController.getRepositoryManager().Push();
-        } catch (RepositoryDoesntTrackAfterOtherRepositoryException | ParseException | CommitException | IOException | RemoteTrackingBranchException e) {
+        } catch (RepositoryDoesntTrackAfterOtherRepositoryException | ParseException | CommitException | IOException | RemoteTrackingBranchException | OpenChangesException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        } catch (RepositoryDoesnotExistException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
     }

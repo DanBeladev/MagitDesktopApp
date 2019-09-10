@@ -7,6 +7,7 @@ import Lib.RemoteBranch;
 import Lib.SHA1;
 import MagitExceptions.BranchNameIsAllreadyExistException;
 import MagitExceptions.CommitException;
+import MagitExceptions.OpenChangesException;
 import MagitExceptions.RepositoryDoesnotExistException;
 import com.fxgraph.cells.AbstractCell;
 import com.fxgraph.graph.Graph;
@@ -91,7 +92,7 @@ public class CommitNode extends AbstractCell {
             try {
                 appController.getRepositoryManager().ResetHeadBranch(new SHA1(sha1));
                 GUIUtils.popUpMessage("Head branch was changed successfully", Alert.AlertType.INFORMATION);
-            } catch (IOException | ParseException | CommitException e) {
+            } catch (IOException | ParseException | CommitException | RepositoryDoesnotExistException | OpenChangesException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
             }
         }, null, null);

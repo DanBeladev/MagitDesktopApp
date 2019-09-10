@@ -66,7 +66,7 @@ public class AppController {
         repoName = new SimpleStringProperty();
         repositoryManager = new RepositoryManager();
         isRepoLoadedProperty = new SimpleBooleanProperty();
-        isClonedRepository=new SimpleBooleanProperty();
+        isClonedRepository = new SimpleBooleanProperty();
         commitTree = new Graph();
 
     }
@@ -89,7 +89,7 @@ public class AppController {
         //commitTree.getCanvas().getProperties().addListener(new MapChangeListener<Object, Object>() {
 
         //commitTree.getCanvas()
-        
+
         isRepoLoadedProperty.set(false);
         isClonedRepository.set(false);
 
@@ -139,6 +139,7 @@ public class AppController {
     public void setRepository(String path) throws RepositorySameToCurrentRepositoryException, RepositoryDoesnotExistException, ParseException, IOException {
         this.repositoryManager.ChangeRepository(path);
     }
+
     public SimpleBooleanProperty isIsClonedRepository() {
         return isClonedRepository;
     }
@@ -164,7 +165,7 @@ public class AppController {
         return isRepoLoadedProperty;
     }
 
-    public void showStatus(List<List<String>> lst) throws IOException {
+    public void showStatus(List<List<String>> lst) {
         BorderPane borderPane = (BorderPane) primaryStage.getScene().lookup("#root");
         GridPane gridPane = GridPaneBuilder.buildGridPane(4, 3, 50, 50);
         gridPane.setPrefSize(30, 30);
@@ -230,7 +231,7 @@ public class AppController {
                 repositoryManager.DeleteBranch(comboBox.getSelectionModel().getSelectedItem());
                 GUIUtils.popUpMessage("branch deleted sucssesfully", Alert.AlertType.INFORMATION);
                 this.deleteBranch(repositoryManager.ShowBranches());
-            } catch (HeadBranchDeletedExcption | BranchDoesNotExistException | BranchFileDoesNotExistInFolderException ex) {
+            } catch (HeadBranchDeletedExcption | BranchDoesNotExistException | BranchFileDoesNotExistInFolderException | RepositoryDoesnotExistException ex) {
                 GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.ERROR);
             }
         });
@@ -239,56 +240,42 @@ public class AppController {
     }
 
     public void checkOut(List<BranchDetails> branchesList) {
-        try {
-            if (repositoryManager.HasOpenChanges()) {
+        String[] branchesName = branchesList.stream().map(BranchDetails::getName).toArray(String[]::new);
+        ComboBox<String> comboBox = new ComboBox<>();
+        comboBox.setPrefSize(150, 10);
+        comboBox.setItems(FXCollections.observableArrayList(branchesName));
+        comboBox.getSelectionModel().select("Choose branch");
+
+        Label order = new Label("Choose branch to checkout");
+        PopUpWindowWithBtn.popUpWindow(100, 300, "Checkout", (v) -> {
+            try {
+                repositoryManager.CheckOut(comboBox.getSelectionModel().getSelectedItem());
+                GUIUtils.popUpMessage("Successful checkout", Alert.AlertType.INFORMATION);
+            } catch (OpenChangesException e){
                 Optional<ButtonType> result = GUIUtils.popUpMessage("You have open changes, would you like to continue and ignore changes or stop and commit your open changes ?", Alert.AlertType.CONFIRMATION);
                 if (result.get() != ButtonType.OK) {
                     return;
                 }
-            }
-            String[] branchesName = branchesList.stream().map(BranchDetails::getName).toArray(String[]::new);
-            ComboBox<String> comboBox = new ComboBox<>();
-            comboBox.setPrefSize(150, 10);
-            comboBox.setItems(FXCollections.observableArrayList(branchesName));
-            comboBox.getSelectionModel().select("Choose branch");
-
-            Label order = new Label("Choose branch to checkout");
-            PopUpWindowWithBtn.popUpWindow(100, 300, "Checkout", (v) -> {
-                try {
-                    repositoryManager.CheckOut(comboBox.getSelectionModel().getSelectedItem());
-                    GUIUtils.popUpMessage("Successful checkout", Alert.AlertType.INFORMATION);
-                } catch (BranchDoesNotExistException | IOException | ParseException | BranchIsAllReadyOnWCException e) {
-                    GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
-                } catch(CheckoutToRemoteBranchException e){
-                    String message=e.getMessage()+"\n Would you like to create Remote Tracking Branch instead?";
-                    Optional<ButtonType> result =GUIUtils.popUpMessage(message, Alert.AlertType.CONFIRMATION);
-                    if (result.get() == ButtonType.OK) {
-                        String remoteBranchName =comboBox.getSelectionModel().getSelectedItem();
-                        String [] araayNameOfRTB = remoteBranchName.split("\\\\");
-                        String nameOfRTB = araayNameOfRTB[araayNameOfRTB.length-1];
-                        try {
-                            repositoryManager.CreateNewRemoteTrackingBranch(nameOfRTB,(RemoteBranch)repositoryManager.GetCurrentRepository().getBranchesMap().get(remoteBranchName));
-                        } catch (BranchNameIsAllreadyExistException |CommitException|IOException| RepositoryDoesnotExistException ex) {
-                           GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.ERROR);
-                        }
+            } catch (BranchDoesNotExistException | IOException | ParseException | BranchIsAllReadyOnWCException | RepositoryDoesnotExistException | CommitException e) {
+                GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+            } catch (CheckoutToRemoteBranchException e) {
+                String message = e.getMessage() + "\n Would you like to create Remote Tracking Branch instead?";
+                Optional<ButtonType> result = GUIUtils.popUpMessage(message, Alert.AlertType.CONFIRMATION);
+                if (result.get() == ButtonType.OK) {
+                    String remoteBranchName = comboBox.getSelectionModel().getSelectedItem();
+                    String[] araayNameOfRTB = remoteBranchName.split("\\\\");
+                    String nameOfRTB = araayNameOfRTB[araayNameOfRTB.length - 1];
+                    try {
+                        repositoryManager.CreateNewRemoteTrackingBranch(nameOfRTB, (RemoteBranch) repositoryManager.GetCurrentRepository().getBranchesMap().get(remoteBranchName));
+                    } catch (BranchNameIsAllreadyExistException | CommitException | IOException | RepositoryDoesnotExistException ex) {
+                        GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.ERROR);
                     }
                 }
-
-            }, new Object(), order, comboBox);
-        } catch (IOException | ParseException | CommitException e) {
-            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
-        }
-
+            }
+        }, new Object(), order, comboBox);
     }
 
     public void resetBranch(List<SHA1> commitsSHA1) {
-        try {
-            if (repositoryManager.HasOpenChanges()) {
-                Optional<ButtonType> result = GUIUtils.popUpMessage("You have open changes, would you like to continue and ignore changes ?", Alert.AlertType.CONFIRMATION);
-                if (result.get() != ButtonType.OK) {
-                    return;
-                }
-            }
             String[] commitsArray = commitsSHA1.stream().map(SHA1::getSh1).toArray(String[]::new);
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setPrefSize(150, 10);
@@ -299,16 +286,15 @@ public class AppController {
                 try {
                     repositoryManager.ResetHeadBranch(new SHA1(comboBox.getSelectionModel().getSelectedItem()));
                     GUIUtils.popUpMessage("Successful reset", Alert.AlertType.INFORMATION);
-                } catch (CommitException | ParseException | IOException e) {
+                } catch (CommitException | ParseException | IOException | RepositoryDoesnotExistException e) {
                     GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+                } catch (OpenChangesException e) {
+                    Optional<ButtonType> result = GUIUtils.popUpMessage("You have open changes, would you like to continue and ignore changes ?", Alert.AlertType.CONFIRMATION);
+                    if (result.get() != ButtonType.OK) {
+                        return;
+                    }
                 }
             }, new Object(), order, comboBox);
-
-
-        } catch (IOException | ParseException | CommitException e) {
-            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
-        }
-
     }
 
 
@@ -319,10 +305,15 @@ public class AppController {
 
         final Repository currentRepo = repositoryManager.GetCurrentRepository();
 
-        List<SHA1> commitsSha1 = repositoryManager.getCurrentRepositoryAllCommitsSHA1();
+        List<SHA1> commitsSha1 = null;
+        try {
+            commitsSha1 = repositoryManager.getCurrentRepositoryAllCommitsSHA1();
+        } catch (RepositoryDoesnotExistException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
         for (SHA1 commitSha1 : commitsSha1) {
             Commit commit = currentRepo.getCommitFromMapCommit(commitSha1);
-            ICell cell = new CommitNode(commit.getCreateTime().toString(), commit.getWhoUpdated().getName(), commit.getMessage(), commitSha1.getSh1(),this);
+            ICell cell = new CommitNode(commit.getCreateTime().toString(), commit.getWhoUpdated().getName(), commit.getMessage(), commitSha1.getSh1(), this);
             model.addCell(cell);
             nodesMap.put(commitSha1, cell);
         }
@@ -337,7 +328,7 @@ public class AppController {
 
         currentRepo.getBranchesMap().forEach((k, v) -> {
             ICell commitNode = nodesMap.get(currentRepo.getCommitSha1ByBranchName(k));
-            ((CommitNode)commitNode).concatPointedBranches(k, currentRepo.getActiveBranch().getName().equals(k));
+            ((CommitNode) commitNode).concatPointedBranches(k, currentRepo.getActiveBranch().getName().equals(k));
         });
         commitTree.endUpdate();
         commitTree.layout(new CommitTreeLayout());
@@ -352,7 +343,7 @@ public class AppController {
         scrollPane.setContent(canvas);
         BorderPane borderPane = (BorderPane) primaryStage.getScene().lookup("#root");
         borderPane.setCenter(scrollPane);
-        Platform.runLater(()-> {
+        Platform.runLater(() -> {
             commitTree.getUseViewportGestures().set(false);
             commitTree.getUseNodeGestures().set(false);
         });
@@ -361,7 +352,12 @@ public class AppController {
     //todo:: show leaf content of tree view
     public void commitFilesInformation() {
         BorderPane borderPane = (BorderPane) primaryStage.getScene().lookup("#root");
-        String[] commitsArray = repositoryManager.getCurrentRepositoryAllCommitsSHA1().stream().map(SHA1::getSh1).toArray(String[]::new);
+        String[] commitsArray = new String[0];
+        try {
+            commitsArray = repositoryManager.getCurrentRepositoryAllCommitsSHA1().stream().map(SHA1::getSh1).toArray(String[]::new);
+        } catch (RepositoryDoesnotExistException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
         ComboBox<String> comboBox = new ComboBox<>();
         comboBox.setPrefSize(Region.USE_COMPUTED_SIZE, 10);
         comboBox.setItems(FXCollections.observableArrayList(commitsArray));
@@ -391,14 +387,19 @@ public class AppController {
         TreeView<ViewMagitFile> treeView = new TreeView<>();
         Folder mainFolder = getRepositoryManager().GetCurrentRepository().getFoldersMap().get(commit.getMainFolderSH1());
         //String nameMainFolder = repositoryManager.getMainFolderName();
-        ViewMagitFile viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfFolder(mainFolder.MakeSH1()), repositoryManager.getMainFolderName());
+        ViewMagitFile viewMagitFile = null;
+        try {
+            viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfFolder(mainFolder.MakeSH1()), repositoryManager.getMainFolderName());
+        } catch (RepositoryDoesnotExistException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
         TreeItem<ViewMagitFile> root = new TreeItem<>(viewMagitFile);
         buildTreeViewOfCommitFilesRec(mainFolder, root);
         treeView.setRoot(root);
         EventHandler<MouseEvent> mouseEventHandle = (MouseEvent event) -> {
             Node node = event.getPickResult().getIntersectedNode();
             if (node instanceof TreeCell) {
-                if (event.getClickCount() == 2 &&treeView.getSelectionModel().getSelectedItem()!= null && (treeView.getSelectionModel().getSelectedItem()).isLeaf()) {
+                if (event.getClickCount() == 2 && treeView.getSelectionModel().getSelectedItem() != null && (treeView.getSelectionModel().getSelectedItem()).isLeaf()) {
                     TextArea textArea = new TextArea(treeView.getSelectionModel().getSelectedItem().getValue().getM_Content());
                     PopUpWindowWithBtn.popUpWindow(200, 200, "O.K", (v) -> {
                     }, new Object(), textArea);
@@ -417,7 +418,7 @@ public class AppController {
         imageView.setFitWidth(25);
         imageView.setImage(FOLDER_ICON);
         treeItem.setGraphic(imageView);
-        List<FileDetails> list= folder.getInnerFiles();
+        List<FileDetails> list = folder.getInnerFiles();
         list.forEach(fileDetails -> {
             System.out.println(fileDetails.getName());
             if (fileDetails.getFileType() == FileType.FOLDER) {

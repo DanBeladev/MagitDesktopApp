@@ -3,6 +3,7 @@ package Consumers;
 import Lib.Commit;
 import Lib.SHA1;
 import MagitExceptions.CommitException;
+import MagitExceptions.RepositoryDoesnotExistException;
 import controllers.AppController;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -27,7 +28,12 @@ public class ShowDeltaBiConsumer implements BiConsumer <AppController,List<SHA1>
             parent = appController.getRepositoryManager().GetCurrentRepository().getCommitFromMapCommit(sha1List.get(0));
         }
         try {
-            List<List<String>> deltas = appController.getRepositoryManager().compareTwoCommits(current, parent);
+            List<List<String>> deltas = null;
+            try {
+                deltas = appController.getRepositoryManager().compareTwoCommits(current, parent);
+            } catch (RepositoryDoesnotExistException e) {
+                GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+            }
             ListView<String> addedListView = ListViewBuilder.buildListView("Added:", 400, 400);
             ListView<String> changedListView = ListViewBuilder.buildListView("Changed:", 400, 400);
             ListView<String> deletedListView = ListViewBuilder.buildListView("Deleted:", 400, 400);

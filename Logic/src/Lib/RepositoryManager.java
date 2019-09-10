@@ -1,4 +1,5 @@
 package Lib;
+
 import MagitExceptions.*;
 import puk.team.course.magit.ancestor.finder.AncestorFinder;
 import resources.generated.*;
@@ -28,41 +29,40 @@ public class RepositoryManager {
     }
 
     public void CloneRepository(String localRepoLocation, String remoteRepoLocation, String name) throws RepositoryDoesnotExistException, IOException, RepositorySameToCurrentRepositoryException, ParseException {
-        File rootFolderInRR=new File(remoteRepoLocation);
-        File rootFolderInLR=new File(localRepoLocation);
-        if(!rootFolderInRR.exists() || !rootFolderInRR.isDirectory() || !new File(remoteRepoLocation+"\\.magit").exists()){
+        File rootFolderInRR = new File(remoteRepoLocation);
+        File rootFolderInLR = new File(localRepoLocation);
+        if (!rootFolderInRR.exists() || !rootFolderInRR.isDirectory() || !new File(remoteRepoLocation + "\\.magit").exists()) {
             throw new RepositoryDoesnotExistException("the given remote repository doesn't exist");
         }
         try {
             FileUtils.CopyDirectory(rootFolderInRR, rootFolderInLR);
-        }catch (FileAlreadyExistsException e){
-            throw new FileAlreadyExistsException("file: "+ e.getMessage()+" already exist");
+        } catch (FileAlreadyExistsException e) {
+            throw new FileAlreadyExistsException("file: " + e.getMessage() + " already exist");
         }
-        File nameOfRRfILE=new File(rootFolderInRR.getPath()+MAGIT_FOLDER+"\\repository name.txt");
-        String RRName=FileUtils.ReadContentFromFile(nameOfRRfILE);
-        moveBranchesToInnerDirectory(RRName,rootFolderInLR);
-        CreateHeadRTB(localRepoLocation,RRName);
-        FileUtils.WriteToFile(name,rootFolderInLR.getPath()+MAGIT_FOLDER+"\\repository name.txt");
+        File nameOfRRfILE = new File(rootFolderInRR.getPath() + MAGIT_FOLDER + "\\repository name.txt");
+        String RRName = FileUtils.ReadContentFromFile(nameOfRRfILE);
+        moveBranchesToInnerDirectory(RRName, rootFolderInLR);
+        CreateHeadRTB(localRepoLocation, RRName);
+        FileUtils.WriteToFile(name, rootFolderInLR.getPath() + MAGIT_FOLDER + "\\repository name.txt");
         ChangeRepository(localRepoLocation);
         m_currentRepository.setRRLocation(remoteRepoLocation);
-        FileUtils.CreateTextFile(m_currentRepository.GetLocation()+MAGIT_FOLDER+"RRLocation.txt",remoteRepoLocation);
-
+        FileUtils.CreateTextFile(m_currentRepository.GetLocation() + MAGIT_FOLDER + "RRLocation.txt", remoteRepoLocation);
     }
 
     private void CreateHeadRTB(String LRLocation, String RRName) throws IOException {
-        String activeBranchName = FileUtils.ReadContentFromFile(new File(LRLocation+BRANCHES_FOLDER+"HEAD.txt"));
-        String content = FileUtils.ReadContentFromFile(new File(LRLocation+BRANCHES_FOLDER+RRName+"\\"+activeBranchName+".txt"));
-        FileUtils.CreateTextFile(LRLocation+BRANCHES_FOLDER+activeBranchName+".txt",content);
+        String activeBranchName = FileUtils.ReadContentFromFile(new File(LRLocation + BRANCHES_FOLDER + "HEAD.txt"));
+        String content = FileUtils.ReadContentFromFile(new File(LRLocation + BRANCHES_FOLDER + RRName + "\\" + activeBranchName + ".txt"));
+        FileUtils.CreateTextFile(LRLocation + BRANCHES_FOLDER + activeBranchName + ".txt", content);
     }
 
     private void moveBranchesToInnerDirectory(String rrName, File rootFolderInLR) throws IOException {
-        File newDirectoryForBranches=new File(rootFolderInLR+BRANCHES_FOLDER+"\\"+rrName);
-        if(newDirectoryForBranches.mkdir()){
-            File[] branches=new File(rootFolderInLR+BRANCHES_FOLDER).listFiles();
+        File newDirectoryForBranches = new File(rootFolderInLR + BRANCHES_FOLDER + "\\" + rrName);
+        if (newDirectoryForBranches.mkdir()) {
+            File[] branches = new File(rootFolderInLR + BRANCHES_FOLDER).listFiles();
             if (branches != null) {
-                for(File file:branches){
-                    if(!file.isDirectory()){
-                        if(!file.getName().equals("HEAD.txt")) {
+                for (File file : branches) {
+                    if (!file.isDirectory()) {
+                        if (!file.getName().equals("HEAD.txt")) {
                             Files.copy(Paths.get(file.getPath()), Paths.get(rootFolderInLR + BRANCHES_FOLDER + "\\" + rrName + "\\" + file.getName()));
                             if (!file.delete()) {
                                 throw new IOException("error in clone progress");
@@ -87,7 +87,7 @@ public class RepositoryManager {
             FileUtils.CreateTextFile(path + MAGIT_FOLDER + "commits.txt", "");
             FileUtils.CreateTextFile(path + MAGIT_FOLDER + "repository name.txt", name);
             m_currentRepository = new Repository(name, path);
-            if(!isLoadedFromXML) {
+            if (!isLoadedFromXML) {
                 Branch b = new Branch();
                 b.setName("master");
                 m_currentRepository.setActiveBranch(b);
@@ -99,203 +99,14 @@ public class RepositoryManager {
     }
 
     public void MakeCommit(String message, Commit anotherPrevCommit) throws IOException, ParseException, RepositoryDoesnotExistException, CommitException {
-        if (m_currentRepository == null) {
-            throw new RepositoryDoesnotExistException("You have to initialize repository before making commit");
-        }
-        if (!m_currentRepository.getCommitMap().isEmpty() && !HasOpenChanges()) {
-            throw new CommitException("You have no changes in yours WC compared to your previous commit ");
-        }
-        Commit newCommit = new Commit(message);
-        FileDetails rootFolderDetails = MoveWCtoObjectFolder(m_currentRepository.GetLocation(), 0);
-
-        newCommit.SetDetailsToCommitByGivenRootFolderAndUser(rootFolderDetails, m_User);
-        if (m_currentRepository.getCommitMap().isEmpty()) {
-            m_currentRepository.getActiveBranch().setCommitSH1(newCommit.MakeSH1());
-            FileUtils.WriteToFile(newCommit.MakeSH1().getSh1(), m_currentRepository.GetLocation() + BRANCHES_FOLDER + "master.txt");
-            m_currentRepository.getActiveBranch().CreateBranchTextFile(m_currentRepository.GetLocation() + BRANCHES_FOLDER);
-        } else {
-            newCommit.AddPrevCommit(m_currentRepository.getActiveBranch().getCommitSH1());
-            if(anotherPrevCommit!=null){
-                newCommit.AddPrevCommit(anotherPrevCommit.MakeSH1());
-            }
-            m_currentRepository.getActiveBranch().UpdateSHA1AndBranchFileContent(newCommit.MakeSH1(), m_currentRepository.GetLocation() + BRANCHES_FOLDER + m_currentRepository.getActiveBranch().getName() + ".txt");
-        }
-        File commitFile = FileUtils.CreateTextFile(m_currentRepository.GetLocation() + OBJECTS_FOLDER + newCommit.MakeSH1() + ".txt", newCommit.toString());
-        FileUtils.CreateZipFile(commitFile, newCommit.MakeSH1(), m_currentRepository.GetLocation() + OBJECTS_FOLDER);
-        FileUtils.AppendTextToFile(m_currentRepository.GetLocation() + MAGIT_FOLDER + "commits.txt", newCommit.MakeSH1().getSh1());
-        commitFile.delete();
-        m_currentRepository.getCommitMap().put(newCommit.MakeSH1(), newCommit);
-
-    }
-
-    private void UpdateHeadFileContent(String name) throws IOException {
-        FileUtils.WriteToFile(name, m_currentRepository.GetLocation() + BRANCHES_FOLDER + "HEAD.txt");
+        IsCurrentRepositoryInitialize();
+        m_currentRepository.MakeCommit(message, anotherPrevCommit, m_User);
     }
 
 
-    public List<List<String>> ShowStatus() throws IOException, ParseException, CommitException {
-        if (m_currentRepository.getCommitMap().isEmpty()) {
-            throw new CommitException("You have to do at least one commit before Show Status method");
-        }
-        m_currentRepository.clearDeltaLists();
-
-
-        List<List<String>> listOfLists = new ArrayList<>();
-        GetAllCurrentCommitsFiles().forEach(v -> m_currentRepository.getDeletedList().add(v));
-        MoveWCtoObjectFolder(m_currentRepository.GetLocation(), 1);
-        if (!m_currentRepository.getChangedList().isEmpty() || !m_currentRepository.getDeletedList().isEmpty() || !m_currentRepository.getAddedList().isEmpty()) {
-            m_currentRepository.getChangedList().add(m_currentRepository.GetLocation());
-        }
-        listOfLists.add(m_currentRepository.getAddedList());
-        listOfLists.add(m_currentRepository.getChangedList());
-        listOfLists.add(m_currentRepository.getDeletedList());
-        return listOfLists;
-
-
-    }
-
-    public boolean HasOpenChanges() throws IOException, ParseException, CommitException {
-        boolean hasChanges = false;
-        List<List<String>> openChangesList = ShowStatus();
-        for (List<String> list : openChangesList) {
-            if (!list.isEmpty()) {
-                hasChanges = true;
-            }
-        }
-        return hasChanges;
-    }
-
-    private FileDetails MoveWCtoObjectFolder(String path, int ver) throws IOException, ParseException {
-        List<FileDetails> subFiles = new ArrayList<>();
-        FileDetails fileDetails;
-        File file = new File(path);
-        File[] filesInFile = file.listFiles();
-        for (File f : filesInFile) {
-            if (!f.getName().equals(".magit")) {
-                if (f.isDirectory()) {
-                    fileDetails = MoveWCtoObjectFolder(path + "\\" + f.getName(), ver);
-                    subFiles.add(fileDetails);
-
-                } else {
-                    String content = FileUtils.ReadContentFromFile(f);
-                    SHA1 Sh1 = new SHA1();
-                    Sh1.MakeSH1FromContent(content);
-                    fileDetails = new FileDetails();
-                    if (!m_currentRepository.getBlobsMap().containsKey(Sh1) && ver == 0) {
-                        Blob b = new Blob(content);
-                        PutInMapNewMagitFileAndAddToObjectFolderAndInitFileDetails(b, f, fileDetails);
-                    } else {
-                        if (!m_currentRepository.getCommitMap().isEmpty()) {
-                            fileDetails = CheckInCommit(path + "\\" + f.getName(), Sh1, ver);
-                        }
-                        if (fileDetails == null || m_currentRepository.getCommitMap().isEmpty()) {
-                            fileDetails = new FileDetails();
-                            fileDetails.SetDetails(f.getName(), Sh1, FileType.FILE, m_User);
-                        }
-                    }
-                    subFiles.add(fileDetails);
-                }
-            }
-        }
-
-        fileDetails = new FileDetails();
-        Folder folder = new Folder(subFiles);
-        SHA1 folderSh1 = folder.MakeSH1();
-        if (!m_currentRepository.getFoldersMap().containsKey(folderSh1) && ver == 0) {
-            PutInMapNewMagitFileAndAddToObjectFolderAndInitFileDetails(folder, file, fileDetails);
-        } else {
-            if (!m_currentRepository.getCommitMap().isEmpty()) {
-                fileDetails = CheckInCommit(path, folderSh1, ver);
-            }
-            if (fileDetails == null || m_currentRepository.getCommitMap().isEmpty()) {
-                fileDetails = new FileDetails();
-                fileDetails.SetDetails(file.getName(), folderSh1, FileType.FOLDER, m_User);
-            }
-
-        }
-
-        return fileDetails;
-    }
-
-    private void PutInMapNewMagitFileAndAddToObjectFolderAndInitFileDetails(MagitFile mf, File file, FileDetails fileDetails) throws IOException {
-        File tmpfile;
-        if (mf.GetMagitFileType() == FileType.FOLDER) {
-            FileUtils.AppendTextToFile(m_currentRepository.GetLocation() + MAGIT_FOLDER + "folders.txt", mf.MakeSH1().getSh1());
-            m_currentRepository.getFoldersMap().put(mf.MakeSH1(), (Folder) mf);
-            tmpfile = ((Folder) mf).CreateTextFileRepresentFolder(m_currentRepository.GetLocation() +
-                    OBJECTS_FOLDER + file.getName() + ".txt");
-        } else {
-            FileUtils.AppendTextToFile(m_currentRepository.GetLocation() + MAGIT_FOLDER + "blobs.txt", mf.MakeSH1().getSh1());
-            m_currentRepository.getBlobsMap().put(mf.MakeSH1(), (Blob) mf);
-            tmpfile = new File(m_currentRepository.GetLocation() + OBJECTS_FOLDER + mf.MakeSH1().getSh1() + ".txt");
-            FileUtils.WriteToFile((((Blob) mf).getContent()), m_currentRepository.GetLocation() + OBJECTS_FOLDER + mf.MakeSH1().getSh1() + ".txt");
-        }
-        FileUtils.CreateZipFile(tmpfile, mf.MakeSH1(), m_currentRepository.GetLocation() + OBJECTS_FOLDER);
-        tmpfile.delete();
-        fileDetails.SetDetails(file.getName(), mf.MakeSH1(), mf.GetMagitFileType(), m_User);
-    }
-
-    private FileDetails CheckInCommit(String path, SHA1 sha1, int ver) throws IOException, ParseException {
-        String innerPath = m_currentRepository.GetLocation();
-        if (!path.equals(innerPath)) {
-            innerPath = path.substring(m_currentRepository.GetLocation().length() + 1);
-        } else {
-            String[] tmp = m_currentRepository.GetLocation().split("\\\\");
-            innerPath = tmp[tmp.length - 1];
-            if (ver == 1) {
-                return null;
-            }
-        }
-        String[] array = innerPath.split("\\\\");
-        List<FileDetails> rootFolderDetails = GetRootFolderFileDetailsFromCurrentCommit();
-        return CheckInCommitRecursion(array, rootFolderDetails, sha1, ver, path);
-    }
-
-    private FileDetails CheckInCommitRecursion(String[] innerPath, List<FileDetails> folderDetails, SHA1 sh1, int ver, String fullPath) throws IOException, ParseException {
-        m_currentRepository.getDeletedList().removeIf(v -> v.equals(fullPath));
-        String tmp = innerPath[0];
-        folderDetails = folderDetails.stream().filter((value) -> value.getName().equals(tmp)).collect(Collectors.toList());
-        if (innerPath.length == 1 || (folderDetails.isEmpty())) {
-            if (folderDetails.isEmpty() || !folderDetails.get(0).getSh1().getSh1().equals(sh1.getSh1())) {
-                if (ver == 1) {
-                    if (folderDetails.isEmpty()) {
-                        m_currentRepository.getAddedList().add(fullPath);
-                    } else {
-                        m_currentRepository.getChangedList().add(fullPath);
-                    }
-                }
-                return null;
-            } else {
-                return folderDetails.get(0);
-            }
-        }
-        innerPath = Arrays.copyOfRange(innerPath, 1, innerPath.length);
-        String content = FileUtils.getContentFromZippedFile(m_currentRepository.GetLocation() + OBJECTS_FOLDER + folderDetails.get(0).getSh1().getSh1() + ".zip");
-        folderDetails = FileUtils.ParseFolderTextFileToFileDetailsList(content);
-        return CheckInCommitRecursion(innerPath, folderDetails, sh1, ver, fullPath);
-    }
-
-    private List<FileDetails> GetRootFolderFileDetailsFromCurrentCommit() throws IOException, ParseException {
-        File file = GetCommitOfHeadBranch();
-        String content = FileUtils.ReadContentFromFile(file);
-        content = content.substring(0, 40);
-        String commitFolderContent = FileUtils.getContentFromZippedFile(m_currentRepository.GetLocation() + OBJECTS_FOLDER + content + ".zip");
-        String RootFolderContent = FileUtils.getContentFromZippedFile(m_currentRepository.GetLocation() + OBJECTS_FOLDER + commitFolderContent.substring(0, 40) + ".zip");
-        return FileUtils.ParseFolderTextFileToFileDetailsList(RootFolderContent);
-    }
-
-    public void DeleteBranch(String name) throws HeadBranchDeletedExcption, BranchDoesNotExistException, BranchFileDoesNotExistInFolderException {
-        if (m_currentRepository.getActiveBranch().getName().equals(name)) {
-            throw new HeadBranchDeletedExcption("The branch: " + name + " is Head branch, you can't delete it");
-        } else if (!m_currentRepository.getBranchesMap().containsKey(name)) {
-            throw new BranchDoesNotExistException("The branch: " + name + " does not exist");
-        } else {
-            m_currentRepository.getBranchesMap().remove(name);
-            File BranchFile = new File(m_currentRepository.GetLocation() + BRANCHES_FOLDER + name + ".txt");
-            if (!BranchFile.delete()) {
-                throw new BranchFileDoesNotExistInFolderException("the file:" + name + ".txt did'nt found");
-            }
-        }
+    public void DeleteBranch(String name) throws HeadBranchDeletedExcption, BranchDoesNotExistException, BranchFileDoesNotExistInFolderException, RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
+        m_currentRepository.DeleteBranch(name);
     }
 
     public void ChangeRepository(String path) throws RepositoryDoesnotExistException, IOException, ParseException, RepositorySameToCurrentRepositoryException {
@@ -310,100 +121,32 @@ public class RepositoryManager {
         }
     }
 
-    public void CreateNewBranch(String name,SHA1 commitSH1ToPoint) throws BranchNameIsAllreadyExistException, IOException, CommitException, RepositoryDoesnotExistException {
+    public void CreateNewBranch(String name, SHA1 commitSH1ToPoint) throws BranchNameIsAllreadyExistException, IOException, CommitException, RepositoryDoesnotExistException {
         IsCurrentRepositoryInitialize();
-        if (m_currentRepository.getCommitMap().isEmpty()) {
-            throw new CommitException("you don't have any commits so you can't make new branch");
-        }
-        if (m_currentRepository.getBranchesMap().containsKey(name)) {
-            throw new BranchNameIsAllreadyExistException("The name: " + name + " is already exist");
-        } else {
-            //File file = GetCommitOfHeadBranch();
-            Branch newBranch = new Branch(name, commitSH1ToPoint/*new SHA1(FileUtils.ReadContentFromFile(file))*/);
-            newBranch.CreateBranchTextFile(m_currentRepository.GetLocation() + BRANCHES_FOLDER);
-            m_currentRepository.getBranchesMap().put(name, newBranch);
-        }
+        m_currentRepository.CreateNewBranch(name, commitSH1ToPoint);
     }
 
-    public void CreateNewRemoteTrackingBranch(String name,RemoteBranch remoteBranch) throws RepositoryDoesnotExistException, CommitException, BranchNameIsAllreadyExistException, IOException {
+    public void CreateNewRemoteTrackingBranch(String name, RemoteBranch remoteBranch) throws RepositoryDoesnotExistException, CommitException, BranchNameIsAllreadyExistException, IOException {
         IsCurrentRepositoryInitialize();
-        if (m_currentRepository.getCommitMap().isEmpty()) {
-            throw new CommitException("you don't have any commits so you can't make new branch");
-        }
-        if (m_currentRepository.getBranchesMap().containsKey(name)) {
-            throw new BranchNameIsAllreadyExistException("The name: " + name + " is already exist");
-        } else{
-            Branch remoteTrackingBranch = new RemoteTrackingBranch(name,remoteBranch.getCommitSH1(),remoteBranch);
-            remoteTrackingBranch.CreateBranchTextFile(m_currentRepository.GetLocation() + BRANCHES_FOLDER);
-            m_currentRepository.getBranchesMap().put(name, remoteTrackingBranch);
-        }
+        m_currentRepository.CreateNewRemoteTrackingBranch(name, remoteBranch);
     }
 
-    private File GetCommitOfHeadBranch() throws IOException {
-        File file = new File(m_currentRepository.GetLocation() + BRANCHES_FOLDER + "HEAD.txt");
-        if (!file.exists()) {
-            throw new FileNotFoundException("HEAD file is not exist");
-        } else {
-            String fileName = FileUtils.ReadContentFromFile(file);
-            file = new File(m_currentRepository.GetLocation() + BRANCHES_FOLDER + fileName + ".txt");
-        }
-        return file;
+
+    public void CheckOut(String name) throws BranchDoesNotExistException, IOException, ParseException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException, RepositoryDoesnotExistException, CommitException, OpenChangesException {
+        IsCurrentRepositoryInitialize();
+        m_currentRepository.CheckOut(name,m_User);
     }
 
-    public void CheckOut(String name) throws BranchDoesNotExistException, IOException, ParseException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException {
-        Branch branch;
-        if (!m_currentRepository.getBranchesMap().containsKey(name)) {
-            throw new BranchDoesNotExistException("The branch: " + name + " does'nt exist");
-        } else if (m_currentRepository.getActiveBranch() != null && m_currentRepository.getActiveBranch().getName().equals(name)) {
-            throw new BranchIsAllReadyOnWCException("The Branch: " + name + " is already Head branch");
-        } else {
-            branch = m_currentRepository.getBranchesMap().get(name);
-            if(branch instanceof RemoteBranch){
-                throw new CheckoutToRemoteBranchException("not available to do checkout to remote branch");
-            }
-            m_currentRepository.setActiveBranch(branch);
-            SHA1 commitSH1 = branch.getCommitSH1();
-            SHA1 mainFolderSH1 = m_currentRepository.getCommitMap().get(commitSH1).getMainFolderSH1();
-            UpdateHeadFileContent(branch.getName());
-            m_currentRepository.DeleteWC();
-            CheckOutRecursion(m_currentRepository.GetLocation(), mainFolderSH1);
-        }
+    public List<List<String>> ShowStatus() throws ParseException, CommitException, IOException, RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
+        return m_currentRepository.ShowStatus(m_User);
+    }
+    public List<CommitDetails> ShowActiveBranchHistory() throws CommitException, RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
+        return m_currentRepository.ShowActiveBranchHistory();
     }
 
-    private void CheckOutRecursion(String path, SHA1 mainFolderSH1) throws IOException, ParseException {
-        String content = FileUtils.getContentFromZippedFile(m_currentRepository.GetLocation() + OBJECTS_FOLDER + mainFolderSH1.getSh1() + ".zip");
-        List<FileDetails> fileDetailsList = FileUtils.ParseFolderTextFileToFileDetailsList(content);
-        for (FileDetails fileDetails : fileDetailsList) {
-            if (fileDetails.getFileType() == FileType.FILE) {
-                FileUtils.UnzipFile(m_currentRepository.GetLocation() + OBJECTS_FOLDER + fileDetails.getSh1() + ".zip", path, fileDetails.getName());
-            } else {
-                boolean isCreated = new File(path + "\\" + fileDetails.getName()).mkdirs();
-                if (isCreated) {
-                    CheckOutRecursion(path + "\\" + fileDetails.getName(), fileDetails.getSh1());
-                }
 
-            }
-        }
-    }
-
-    public List<CommitDetails> ShowActiveBranchHistory() throws CommitException {
-        IsRepositoryHasAtLeastOneCommit();
-        List<CommitDetails> commitDetailsList = new LinkedList<>();
-        Branch activeBranch = new Branch(m_currentRepository.getActiveBranch());
-        CommitDetails details;
-        if (!m_currentRepository.getCommitMap().isEmpty()) {
-            while (activeBranch.getCommitSH1() != null) {
-                details = new CommitDetails(m_currentRepository.getCommitMap().get(activeBranch.getCommitSH1()));
-                commitDetailsList.add(details);
-                if (!m_currentRepository.getCommitMap().get(activeBranch.getCommitSH1()).getPrevCommits().isEmpty()) {
-                    activeBranch.setCommitSH1(m_currentRepository.getCommitMap().get(activeBranch.getCommitSH1()).getPrevCommits().get(0));
-                } else {
-                    activeBranch.setCommitSH1(null);
-                }
-            }
-        }
-        return commitDetailsList;
-    }
 
     public User GetUser() {
         return m_User;
@@ -417,80 +160,18 @@ public class RepositoryManager {
         m_User = user;
     }
 
-    public List<BranchDetails> ShowBranches() {
-        List<BranchDetails> list = new ArrayList<>();
-        m_currentRepository.getBranchesMap().entrySet().stream().forEach((value) -> {
-            list.add(new BranchDetails(value.getValue(), m_currentRepository.getCommitMap().get(value.getValue().getCommitSH1()), m_currentRepository.getActiveBranch() == value.getValue()));
-        });
-        return list;
+    public List<BranchDetails> ShowBranches() throws RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
+        return m_currentRepository.ShowBranches();
     }
 
-    private List<FileDetails> ShowAllCommitFiles(SHA1 commitSha1) throws ParseException {
-        Commit commit = m_currentRepository.getCommitMap().get(commitSha1);
-        Folder folder = m_currentRepository.getFoldersMap().get(commit.getMainFolderSH1());
-        String folderPathName = m_currentRepository.GetLocation();
-
-        List<FileDetails> commitFiles = new ArrayList<>();
-        showALLCommitFilesRecursion(commitFiles, folder, folderPathName);
-
-        commitFiles.add(new FileDetails(folderPathName, commit.getMainFolderSH1(), FileType.FOLDER, new User(commit.getWhoUpdated().getName()), new OurDate(commit.getCreateTime())));
-        return commitFiles;
-    }
-
-    private void showALLCommitFilesRecursion(List<FileDetails> commitFiles, Folder folder, String fullPathName) {
-        for (FileDetails fd : folder.getInnerFiles()) {
-            FileDetails fdToReturn = new FileDetails(fd);
-            String path = fullPathName + "\\" + fd.getName();
-            if (fd.getFileType() == FileType.FOLDER) {
-                folder = m_currentRepository.getFoldersMap().get(fd.getSh1());
-                showALLCommitFilesRecursion(commitFiles, folder, path);
-            }
-            fdToReturn.setName(path);
-            commitFiles.add(fdToReturn);
-        }
-    }
-
-    public void ResetHeadBranch(SHA1 sha1) throws CommitException, ParseException, IOException {
-        if (!m_currentRepository.getCommitMap().containsKey(sha1)) {
-            throw new CommitException("SHA-1: " + sha1.getSh1() + " doesnt exist");
-        } else if (m_currentRepository.getActiveBranch().getCommitSH1().equals(sha1)) {
-            throw new CommitException("SHA-1: " + sha1.getSh1() + " already pointed by Head branch");
-        } else {
-            m_currentRepository.getActiveBranch().setCommitSH1(sha1);
-            FileUtils.WriteToFile(sha1.getSh1(), m_currentRepository.GetLocation() + BRANCHES_FOLDER + m_currentRepository.getActiveBranch().getName() + ".txt");
-            Commit commit = m_currentRepository.getCommitMap().get(m_currentRepository.getActiveBranch().getCommitSH1());
-            m_currentRepository.DeleteWC();
-            CheckOutRecursion(m_currentRepository.GetLocation(), commit.getMainFolderSH1());
-        }
+    public void ResetHeadBranch(SHA1 sha1) throws CommitException, ParseException, IOException, RepositoryDoesnotExistException, OpenChangesException {
+        IsCurrentRepositoryInitialize();
+        m_currentRepository.ResetHeadBranch(sha1,m_User);
     }
 
     public Repository GetCurrentRepository() {
         return m_currentRepository;
-    }
-
-    private List<String> GetAllCurrentCommitsFiles() throws IOException, ParseException {
-        List<String> filesInCommit = new ArrayList<>();
-        List<FileDetails> rootFolderDetails = GetRootFolderFileDetailsFromCurrentCommit();
-        String path = m_currentRepository.GetLocation();
-        GetAllCurrentCommitsFilesRec(rootFolderDetails, filesInCommit, path);
-        return filesInCommit;
-
-    }
-
-    private void GetAllCurrentCommitsFilesRec(List<FileDetails> folderDetails, List<String> FilesInCommit, String path) {
-        folderDetails.forEach((val) -> {
-            String innerPath = path + "\\" + val.getName();
-            FilesInCommit.add(innerPath);
-            if (val.getFileType() == FileType.FOLDER) {
-                try {
-                    String data = FileUtils.getContentFromZippedFile(m_currentRepository.GetLocation() + OBJECTS_FOLDER + val.getSh1() + ".zip");
-                    List<FileDetails> innerFolder = FileUtils.ParseFolderTextFileToFileDetailsList(data);
-                    GetAllCurrentCommitsFilesRec(innerFolder, FilesInCommit, innerPath);
-                } catch (IOException | ParseException e) {
-                    e.getMessage();
-                }
-            }
-        });
     }
 
     public List<String> CheckXml(String path) throws NoSuchMethodException, XMLException, IllegalAccessException, JAXBException, IOException, InvocationTargetException {
@@ -507,12 +188,12 @@ public class RepositoryManager {
         return f.exists();
     }
 
-    private void changeMagitRepositoryToRepository(MagitRepository magitRepository) throws RepositoryAllreadyExistException, IOException, ParseException, BranchDoesNotExistException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException {
+    private void changeMagitRepositoryToRepository(MagitRepository magitRepository) throws RepositoryAllreadyExistException, IOException, ParseException, BranchDoesNotExistException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException, CommitException, OpenChangesException {
         FileUtils.deleteDirectory(magitRepository.getLocation());
-        BonusInit(magitRepository.getName(), magitRepository.getLocation(),true);
-        if(magitRepository.getMagitRemoteReference()!=null && magitRepository.getMagitRemoteReference().getName()!=null){
-            String rrLocation=magitRepository.getMagitRemoteReference().getLocation();
-            FileUtils.CreateTextFile(m_currentRepository.GetLocation()+MAGIT_FOLDER+"RRLocation.txt",rrLocation);
+        BonusInit(magitRepository.getName(), magitRepository.getLocation(), true);
+        if (magitRepository.getMagitRemoteReference() != null && magitRepository.getMagitRemoteReference().getName() != null) {
+            String rrLocation = magitRepository.getMagitRemoteReference().getLocation();
+            FileUtils.CreateTextFile(m_currentRepository.GetLocation() + MAGIT_FOLDER + "RRLocation.txt", rrLocation);
             m_currentRepository.setRRLocation(rrLocation);
 
         }
@@ -520,11 +201,11 @@ public class RepositoryManager {
 
     }
 
-    private void LoadBranches(MagitRepository magitRepository, Map<String, SHA1> commitIDToCommitSha1) throws IOException, BranchDoesNotExistException, ParseException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException {
+    private void LoadBranches(MagitRepository magitRepository, Map<String, SHA1> commitIDToCommitSha1) throws IOException, BranchDoesNotExistException, ParseException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException, CommitException, OpenChangesException {
         List<MagitSingleBranch> branchesList = magitRepository.getMagitBranches().getMagitSingleBranch();
-        branchesList.stream().filter(v-> v.isIsRemote()).forEach(v->{
+        branchesList.stream().filter(v -> v.isIsRemote()).forEach(v -> {
             SHA1 sha1 = commitIDToCommitSha1.get(v.getPointedCommit().getId());
-            RemoteBranch rb=new RemoteBranch(v.getName(),sha1);
+            RemoteBranch rb = new RemoteBranch(v.getName(), sha1);
             try {
                 FileUtils.createFoldersByPathAndWriteContent(sha1.getSh1(), m_currentRepository.GetLocation() + BRANCHES_FOLDER + v.getName() + ".txt");
                 m_currentRepository.getBranchesMap().put(v.getName(), rb);
@@ -539,7 +220,7 @@ public class RepositoryManager {
                     Branch branch;
                     FileUtils.WriteToFile(sha1.getSh1(), m_currentRepository.GetLocation() + BRANCHES_FOLDER + msb.getName() + ".txt");
                     if (msb.isTracking()) {
-                        branch = new RemoteTrackingBranch(msb.getName(), sha1,(RemoteBranch)m_currentRepository.getBranchesMap().get(msb.getTrackingAfter()));
+                        branch = new RemoteTrackingBranch(msb.getName(), sha1, (RemoteBranch) m_currentRepository.getBranchesMap().get(msb.getTrackingAfter()));
                     } else {
                         branch = new Branch(msb.getName(), sha1);
                     }
@@ -547,10 +228,10 @@ public class RepositoryManager {
                 }
             }
         }
-        UpdateHeadFileContent(magitRepository.getMagitBranches().getHead());
+        m_currentRepository.UpdateHeadFileContent(magitRepository.getMagitBranches().getHead());
         m_currentRepository.setActiveBranch(null);
         if (m_currentRepository.getBranchesMap().get(magitRepository.getMagitBranches().getHead()).getCommitSH1() != null) {
-            CheckOut(magitRepository.getMagitBranches().getHead());
+            m_currentRepository.CheckOut(magitRepository.getMagitBranches().getHead(),m_User);
         } else {
             Branch b = new Branch();
             b.setName("master");
@@ -559,7 +240,7 @@ public class RepositoryManager {
         }
     }
 
-    private void LoadObjectsFolder(MagitRepository magitRepository) throws IOException, ParseException, BranchDoesNotExistException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException {
+    private void LoadObjectsFolder(MagitRepository magitRepository) throws IOException, ParseException, BranchDoesNotExistException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException, CommitException, OpenChangesException {
         List<MagitSingleFolder> folderList = magitRepository.getMagitFolders().getMagitSingleFolder();
         List<MagitSingleFolder> rootFolders = folderList.stream().filter(MagitSingleFolder::isIsRoot).collect(Collectors.toList());
         Map<String, FileDetails> folderIDToFileDetails = new HashMap<>();
@@ -630,7 +311,7 @@ public class RepositoryManager {
     private Blob LoadBlob(MagitBlob magitBlob) throws IOException {
         SHA1 sha1 = new SHA1();
         Blob b;
-        String cont=magitBlob.getContent().replace("\r","");
+        String cont = magitBlob.getContent().replace("\r", "");
         sha1.MakeSH1FromContent(cont);
         if (!m_currentRepository.getBlobsMap().containsKey(sha1)) {
             FileUtils.CreateZipFile(cont, magitBlob.getName(), m_currentRepository.GetLocation() + OBJECTS_FOLDER);
@@ -643,15 +324,13 @@ public class RepositoryManager {
         return b;
     }
 
-    public void LoadXML() throws BranchIsAllReadyOnWCException, IOException, BranchDoesNotExistException, ParseException, RepositoryAllreadyExistException, CheckoutToRemoteBranchException {
+    public void LoadXML() throws BranchIsAllReadyOnWCException, IOException, BranchDoesNotExistException, ParseException, RepositoryAllreadyExistException, CheckoutToRemoteBranchException, CommitException, OpenChangesException {
         changeMagitRepositoryToRepository(m_MagitRepository);
     }
 
-    public List<SHA1> getCurrentRepositoryAllCommitsSHA1() {
-        List<SHA1> commitSha1List = new ArrayList<>(m_currentRepository.getCommitMap().keySet());
-        commitSha1List.sort(Comparator.comparing(v -> m_currentRepository.getCommitMap().get(v).getCreateTime().getDate()));
-        Collections.reverse(commitSha1List);
-        return commitSha1List;
+    public List<SHA1> getCurrentRepositoryAllCommitsSHA1() throws RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
+        return m_currentRepository.getCurrentRepositoryAllCommitsSHA1();
     }
 
     public MagitRepository GetMagitRepository() {
@@ -664,326 +343,51 @@ public class RepositoryManager {
         }
     }
 
-    public void IsRepositoryHasAtLeastOneCommit() throws CommitException {
-        try {
-            IsCurrentRepositoryInitialize();
-            if (m_currentRepository.getCommitMap().isEmpty()) {
-                throw new CommitException("Error: you don't have any commits in your current repository");
-            }
-        } catch (RepositoryDoesnotExistException e) {
-            throw new CommitException(e.getMessage());
-        }
+    public void IsRepositoryHasAtLeastOneCommit() throws CommitException, RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
+        m_currentRepository.IsRepositoryHasAtLeastOneCommit();
 
     }
 
 
-    public String getMainFolderName() {
-        String path = GetCurrentRepository().GetLocation();
-        String[] parts = path.split("\\\\");
-        return parts[parts.length - 1];
+    public String getMainFolderName() throws RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
+        return m_currentRepository.getMainFolderName();
     }
 
     //todo:: check if with there is no open changes
     //todo:: check theris diffrent from ours
-    public List<MergeConfilct> MergeHeadBranchWithOtherBranch(Branch their) throws ParseException, IOException, OpenChangesException, BranchDoesNotExistException, FFException, CommitException {
-        if(HasOpenChanges()){
-            throw new OpenChangesException("You have open changes on your working copy");
-        }
-        if(their == m_currentRepository.getActiveBranch()){
-            throw new BranchDoesNotExistException("Impossible merge HEAD branch with itself, You have to choose another branch");
-        }
-        AncestorFinder ancestorFinder = new AncestorFinder((v) -> m_currentRepository.getCommitFromCommitsMap(new SHA1(v)));
-        String activeBranchCommitSH1=m_currentRepository.getActiveBranch().getCommitSH1().getSh1();
-        String theirBranchCommitSH1 = their.getCommitSH1().getSh1();
-        String ancestorSha1 = ancestorFinder.traceAncestor(activeBranchCommitSH1,theirBranchCommitSH1 );
-        if(ancestorSha1.equals(activeBranchCommitSH1) || ancestorSha1.equals(theirBranchCommitSH1))
-        {
-            handleFastForwardMerge(ancestorSha1, m_currentRepository.getActiveBranch(),their);
-        }
-        List<FileDetails> ourFileDetails = ShowAllCommitFiles(m_currentRepository.getActiveBranch().getCommitSH1());
-        List<FileDetails> theirFileDetails = ShowAllCommitFiles(their.getCommitSH1());
-        List<FileDetails> ancestorFileDetails = ShowAllCommitFiles(new SHA1(ancestorSha1));
-        Map<String, FileStatusCompareAncestor> ourFilesCompareAncestor = new HashMap<>();
-        Map<String, FileStatusCompareAncestor> theirFilesCompareAncestor = new HashMap<>();
-
-        for (FileDetails file : ancestorFileDetails) {
-            if (file.getFileType() == FileType.FILE) {
-                ClassifyFilesForSons(file, ourFileDetails, ourFilesCompareAncestor);
-                ClassifyFilesForSons(file, theirFileDetails, theirFilesCompareAncestor);
-            }
-        }
-        handleWithAddedFile(ourFileDetails,ourFilesCompareAncestor);
-        handleWithAddedFile(theirFileDetails,theirFilesCompareAncestor);
-        return MergeTwoSons(ancestorFileDetails, ourFilesCompareAncestor, theirFilesCompareAncestor, ourFileDetails, theirFileDetails);
+    public List<MergeConfilct> MergeHeadBranchWithOtherBranch(String their) throws ParseException, IOException, OpenChangesException, BranchDoesNotExistException, FFException, CommitException, RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
+        return m_currentRepository.MergeHeadBranchWithOtherBranch(their,m_User);
     }
 
-    private void handleFastForwardMerge( String ancestorSha1, Branch activeBranch, Branch theirBranch) throws  IOException, ParseException, FFException, CommitException {
-        if(ancestorSha1.equals(activeBranch.getCommitSH1().getSh1())) {
-            ResetHeadBranch(theirBranch.getCommitSH1());
-        }
-            throw new FFException("Fast Forward Merge");
 
+    public List<List<String>> compareTwoCommits(Commit current, Commit parent) throws CommitException, ParseException, RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
+        return m_currentRepository.compareTwoCommits(current, parent);
     }
 
-    private void handleWithAddedFile(List<FileDetails> fileDetailsList, Map<String,FileStatusCompareAncestor> compareToAncestor){
-        for(FileDetails fd:fileDetailsList){
-            if(!compareToAncestor.containsKey(fd.getName()) && fd.getFileType()==FileType.FILE){
-                compareToAncestor.put(fd.getName(),FileStatusCompareAncestor.ADDED);
-            }
-        }
-    }
-
-    private void ClassifyFilesForSons(FileDetails file, List<FileDetails> sonFilesDetails, Map<String, FileStatusCompareAncestor> sonFilesMap) {
-        List<FileDetails> givenFileInSon = sonFilesDetails.stream().filter(v -> v.getName().equals(file.getName())).collect(Collectors.toList());
-        if (givenFileInSon.size() == 0) {
-            sonFilesMap.put(file.getName(), FileStatusCompareAncestor.DELETED);
-        } else {
-            if (givenFileInSon.get(0).getSh1().equals(file.getSh1())) {
-                sonFilesMap.put(file.getName(), FileStatusCompareAncestor.SAME);
-            } else {
-                sonFilesMap.put(file.getName(), FileStatusCompareAncestor.CHANGED);
-            }
-        }
-    }
-    //todo:: handle case two added files with diffrent content but with same name
-    private List<MergeConfilct> MergeTwoSons(List<FileDetails> ancestorFilesList, Map<String, FileStatusCompareAncestor> ourClassifiedFiles, Map<String, FileStatusCompareAncestor> theirsClassifiedFiles, List<FileDetails> ourFileDetails, List<FileDetails> theirsFileDetails) throws IOException {
-        List<FileDetails> mergeList = new ArrayList<>();
-        List<MergeConfilct> conflictedList = new ArrayList<>();
-        MergeConfilct confilct;
-        for (FileDetails fd : ancestorFilesList) {
-            List<FileDetails> currentFileInOurCommit=ourFileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList());
-            List<FileDetails> currentFileInTheirsCommit=theirsFileDetails.stream().filter(v -> v.getName().equals(fd.getName())).collect(Collectors.toList());
-            if (fd.getFileType() == FileType.FILE) {
-                if (ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.SAME && theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.SAME) {
-                    mergeList.add(fd);
-                } else if (theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.SAME && ourClassifiedFiles.get(fd.getName()) != FileStatusCompareAncestor.SAME) {
-                    if (ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.CHANGED) {
-                        mergeList.add(currentFileInOurCommit.get(0));
-                    }
-                } else if (theirsClassifiedFiles.get(fd.getName()) != FileStatusCompareAncestor.SAME && ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.SAME) {
-                    if (theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.CHANGED) {
-                        mergeList.add(currentFileInTheirsCommit.get(0));
-                    }
-                } else {
-                    if (!(theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.DELETED && ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.DELETED)) {
-                        if (theirsClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.CHANGED && ourClassifiedFiles.get(fd.getName()) == FileStatusCompareAncestor.CHANGED &&
-                                currentFileInOurCommit.get(0).getSh1().equals(currentFileInTheirsCommit.get(0).getSh1())){
-                            mergeList.add(currentFileInOurCommit.get(0));
-                        } else {
-                            String ourFDContent="";
-                            String theirFDContent="";
-                            if(!currentFileInOurCommit.isEmpty())
-                                ourFDContent=m_currentRepository.GetContentOfBlob(currentFileInOurCommit.get(0).getSh1());
-                            if(!currentFileInTheirsCommit.isEmpty()){
-                                theirFDContent=m_currentRepository.GetContentOfBlob(currentFileInTheirsCommit.get(0).getSh1());
-                            }
-                            confilct = new MergeConfilct(fd.getName(),ourFDContent,theirFDContent,m_currentRepository.GetContentOfBlob(fd.getSh1()));
-                            conflictedList.add(confilct);
-                        }
-                    }
-                }
-            }
-        }
-        addSonAddedFiles(ourClassifiedFiles,ourFileDetails,mergeList);
-        addSonAddedFiles(theirsClassifiedFiles,theirsFileDetails,mergeList);
-        //span merge list in wc
-        spanWCByMergeList(mergeList);
-        return conflictedList;
-    }
-
-    private void addSonAddedFiles(Map<String, FileStatusCompareAncestor> son,List<FileDetails> sonFilesList,List<FileDetails> mergeList) {
-        for(FileDetails fd: sonFilesList){
-            if(son.get(fd.getName())==FileStatusCompareAncestor.ADDED){
-                mergeList.add(fd);
-            }
-        }
-    }
-
-    public List<List<String>> compareTwoCommits(Commit current, Commit parent) throws CommitException, ParseException {
-        m_currentRepository.clearDeltaLists();
-        if (current == null || parent == null) {
-            throw new CommitException("Error: commit without parent to compare");
-        }
-        List<FileDetails> currentCommitDetails = ShowAllCommitFiles(current.MakeSH1());
-        List<FileDetails> otherCommitDetails = ShowAllCommitFiles(parent.MakeSH1());
-
-        for (FileDetails fileDetails : currentCommitDetails) {
-            List<FileDetails> sameFiles = otherCommitDetails.stream().filter(v -> v.getName().equals(fileDetails.getName())).collect(Collectors.toList());
-            if (sameFiles.isEmpty()) {
-                m_currentRepository.getAddedList().add(fileDetails.getName());
-            } else {
-                if (!sameFiles.get(0).getSh1().equals(fileDetails.getSh1())) {
-                    m_currentRepository.getChangedList().add(fileDetails.getName());
-                }
-                otherCommitDetails.remove(sameFiles.get(0));
-            }
-        }
-
-        for (FileDetails fileDetailsInOtherList : otherCommitDetails) {
-            m_currentRepository.getDeletedList().add(fileDetailsInOtherList.getName());
-        }
-        List<List<String>> deltas = new ArrayList<>();
-        deltas.add(m_currentRepository.getAddedList());
-        deltas.add(m_currentRepository.getChangedList());
-        deltas.add(m_currentRepository.getDeletedList());
-        return deltas;
-    }
-
-    private void spanWCByMergeList(List<FileDetails> mergeList) throws IOException {
-        m_currentRepository.DeleteWC();
-        for(FileDetails fd : mergeList){
-            String content = FileUtils.getContentFromZippedFile(m_currentRepository.GetLocation()+OBJECTS_FOLDER+fd.getSh1().getSh1()+".zip");
-           FileUtils.createFoldersByPathAndWriteContent(content,fd.getName());
-
-        }
-    }
-
-    public void spanWCsolvedConflictList(List<MergeConfilct> confilctList) throws IOException {
-        for(MergeConfilct confilct : confilctList){
-            if(confilct.getResolveContent()!= null) {
-                FileUtils.createFoldersByPathAndWriteContent(confilct.getResolveContent(), confilct.getPath());
-            }
-        }
+    public void spanWCsolvedConflictList(List<MergeConfilct> confilctList) throws IOException, RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
+        m_currentRepository.spanWCsolvedConflictList(confilctList);
     }
 
     public void FetchRRNewData() throws RepositoryDoesnotExistException, RepositoryDoesntTrackAfterOtherRepositoryException, IOException, ParseException {
         IsCurrentRepositoryInitialize();
-        if(m_currentRepository.getRRLocation()==null){
-            throw new RepositoryDoesntTrackAfterOtherRepositoryException("Current function available only on cloned repositories ");
-        }
-        else{
-            Repository rrRepository=new Repository(m_currentRepository.getRRLocation());
-            rrRepository.LoadData();
-            LoadFromRRMagitFiles(rrRepository.getBlobsMap(),m_currentRepository.getBlobsMap(),m_currentRepository.GetLocation()+MAGIT_FOLDER+"blobs.txt");
-            LoadFromRRMagitFiles(rrRepository.getCommitMap(),m_currentRepository.getCommitMap(),m_currentRepository.GetLocation()+MAGIT_FOLDER+"commits.txt");
-            LoadFromRRMagitFiles(rrRepository.getFoldersMap(),m_currentRepository.getFoldersMap(),m_currentRepository.GetLocation()+MAGIT_FOLDER+"folders.txt");
-
-            List<Branch> RRBranches=new ArrayList<>(rrRepository.getBranchesMap().values());
-            for(Branch branch: RRBranches){
-                if(!m_currentRepository.getBranchesMap().containsKey(rrRepository.getName()+"\\"+branch.getName())) {
-                    RemoteBranch rb = new RemoteBranch(rrRepository.getName()+"\\"+branch.getName(),branch.getCommitSH1());
-                    rb.CreateBranchTextFile(m_currentRepository.GetLocation()+BRANCHES_FOLDER);
-                    m_currentRepository.getBranchesMap().put(rb.getName(),rb);
-                }
-                else{
-                    Branch b=m_currentRepository.getBranchesMap().get(rrRepository.getName()+"\\"+branch.getName());
-                    b.UpdateSHA1AndBranchFileContent(branch.getCommitSH1(),m_currentRepository.GetLocation()+BRANCHES_FOLDER+rrRepository.getName()+"\\"+branch.getName()+".txt");
-                }
-            }
-        }
+        m_currentRepository.FetchRRNewData();
     }
 
-    private<T extends MagitFile> void LoadFromRRMagitFiles(Map<SHA1,T> mapInRR, Map<SHA1,T> mapInLR, String pathFileToWrite) throws IOException {
-        List<T> list=new ArrayList<>(mapInRR.values());
-        for(T magitFile:list){
-            if(!mapInLR.containsKey(magitFile.MakeSH1()))
-            {
-                mapInLR.put(magitFile.MakeSH1(),magitFile);
-                FileUtils.AppendTextToFile(pathFileToWrite,magitFile.MakeSH1().getSh1());
-                File magitFileZzipFile = FileUtils.CreateTextFile(m_currentRepository.GetLocation() + OBJECTS_FOLDER + magitFile.MakeSH1() + ".txt", magitFile.toString());
-                FileUtils.CreateZipFile(magitFileZzipFile, magitFile.MakeSH1(), m_currentRepository.GetLocation() + OBJECTS_FOLDER);
-                magitFileZzipFile.delete();
-            }
-        }
-    }
 
     //todo:: check is no changes without push
     public void Pull() throws RepositoryDoesnotExistException, RepositoryDoesntTrackAfterOtherRepositoryException, ParseException, CommitException, IOException, OpenChangesException, BranchDoesNotExistException {
         IsCurrentRepositoryInitialize();
-        if(m_currentRepository.getRRLocation()==null){
-            throw new RepositoryDoesntTrackAfterOtherRepositoryException("Current function available only on cloned repositories ");
-        }
-        if(HasOpenChanges()){
-            throw new OpenChangesException("Can't apply this function with open Changes");
-        }
-        Branch activeBranch=m_currentRepository.getActiveBranch();
-        if(activeBranch instanceof RemoteTrackingBranch){
-            if(!activeBranch.getCommitSH1().equals(((RemoteTrackingBranch) activeBranch).getFollowAfter().getCommitSH1())){
-                throw new OpenChangesException("Impossible to do pull with Local changes on RTB without push");
-            }
-            Repository rrRepo=new Repository(m_currentRepository.getRRLocation());
-            rrRepo.LoadData();
-            Branch branchInRR=rrRepo.getBranchesMap().get(activeBranch.getName());
-            Commit commit=rrRepo.getCommitMap().get(branchInRR.getCommitSH1());
-            addAllBranchData(commit,rrRepo,m_currentRepository);
-            ResetHeadBranch(branchInRR.getCommitSH1());
-            Branch RB=m_currentRepository.getBranchesMap().get(rrRepo.getName()+"\\"+activeBranch.getName());
-            RB.UpdateSHA1AndBranchFileContent(branchInRR.getCommitSH1(),m_currentRepository.GetLocation()+BRANCHES_FOLDER+rrRepo.getName()+"\\"+branchInRR.getName()+".txt");
-        }
-        else{
-            throw new BranchDoesNotExistException("Pull is possible only for Remote Tracking branches");
-        }
-
-
-
-
+        m_currentRepository.Pull(m_User);
     }
 
-    private void addAllBranchData(Commit commit, Repository dataSupplierRepo, Repository gettingDataRepo) throws IOException {
-        if(!gettingDataRepo.getCommitMap().containsKey(commit)){
-            Folder mainFolder=dataSupplierRepo.getFoldersMap().get(commit.getMainFolderSH1());
-            AddCommitData(mainFolder, dataSupplierRepo,gettingDataRepo);
-            commit.AddToRepository(gettingDataRepo);
-            List<SHA1> prevCommitsSha1=commit.getPrevCommits();
-            for(SHA1 prevCommitSha1:prevCommitsSha1){
-                Commit prevCommit = dataSupplierRepo.getCommitMap().get(prevCommitSha1);
-                if(!gettingDataRepo.getCommitMap().containsKey(prevCommit)){
-                    addAllBranchData(prevCommit,dataSupplierRepo,gettingDataRepo);
-                }
-            }
-
-        }
-    }
-
-    private void AddCommitData(Folder folder, Repository dataSupplierRepo, Repository gettingDataRepo) throws IOException {
-        folder.AddToRepository(gettingDataRepo);
-        List<FileDetails> innerFiles=folder.getInnerFiles();
-        for(int i = 0 ; i < innerFiles.size() ;i++){
-            if(innerFiles.get(i).getFileType()==FileType.FILE){
-                if(!gettingDataRepo.getBlobsMap().containsKey(innerFiles.get(i).getSh1())) {
-                    dataSupplierRepo.getBlobsMap().get(innerFiles.get(i).getSh1()).AddToRepository(gettingDataRepo);
-                }
-            }
-            else{
-                if (!gettingDataRepo.getFoldersMap().containsKey(innerFiles.get(i).getSh1())) {
-                    Folder innerFolder = dataSupplierRepo.getFoldersMap().get(innerFiles.get(i).getSh1());
-                    AddCommitData(innerFolder, dataSupplierRepo,gettingDataRepo);
-                }
-            }
-        }
-    }
-
-    public void Push() throws CommitException, RepositoryDoesntTrackAfterOtherRepositoryException, IOException, ParseException, RemoteTrackingBranchException {
+    public void Push() throws CommitException, RepositoryDoesntTrackAfterOtherRepositoryException, IOException, ParseException, RemoteTrackingBranchException, RepositoryDoesnotExistException, OpenChangesException {
         IsRepositoryHasAtLeastOneCommit();
-
-        if(m_currentRepository.getRRLocation()==null){
-            throw new RepositoryDoesntTrackAfterOtherRepositoryException("Current function available only on cloned repositories ");
-        }
-
-        Branch activeBranch=m_currentRepository.getActiveBranch();
-        if(activeBranch instanceof RemoteTrackingBranch){
-            Repository rrRepo=new Repository(m_currentRepository.getRRLocation());
-            rrRepo.LoadData();
-            if(!m_currentRepository.getBranchesMap().get(rrRepo.getName()+"\\"+activeBranch.getName()).getCommitSH1().equals(rrRepo.getBranchesMap().get(activeBranch.getName()).getCommitSH1())){
-                throw new RemoteTrackingBranchException("Remote tracking branch pointed to different commit compare to this branch in Remote repository");
-            }
-            Commit commitPointedByHead=m_currentRepository.getCommitFromMapCommit(m_currentRepository.getActiveBranch().getCommitSH1());
-            addAllBranchData(commitPointedByHead,m_currentRepository,rrRepo);
-            Branch activeInRR=rrRepo.getActiveBranch();
-            if(activeInRR==rrRepo.getBranchesMap().get(activeBranch.getName())){
-                activeInRR.setCommitSH1(activeBranch.getCommitSH1());
-                FileUtils.WriteToFile(activeBranch.getCommitSH1().getSh1(), rrRepo.GetLocation() + BRANCHES_FOLDER + activeInRR.getName() + ".txt");
-                Commit commit = rrRepo.getCommitMap().get(rrRepo.getActiveBranch().getCommitSH1());
-                rrRepo.DeleteWC();
-                CheckOutRecursion(rrRepo.GetLocation(), commit.getMainFolderSH1());
-            }
-            else{
-                Branch remote = rrRepo.getBranchesMap().get(activeBranch.getName());
-                remote.UpdateSHA1AndBranchFileContent(activeBranch.getCommitSH1(),rrRepo.GetLocation()+BRANCHES_FOLDER+activeBranch.getName()+".txt");
-            }
-            m_currentRepository.getBranchesMap().get(rrRepo.getName()+"\\"+activeBranch.getName()).UpdateSHA1AndBranchFileContent(activeBranch.getCommitSH1(),m_currentRepository.GetLocation()+BRANCHES_FOLDER+rrRepo.getName()+"\\"+activeBranch.getName()+".txt");
-        }
-
+        m_currentRepository.Push(m_User);
     }
 }
 
