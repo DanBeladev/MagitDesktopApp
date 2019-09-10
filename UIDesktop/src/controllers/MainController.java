@@ -19,13 +19,9 @@ import java.net.URL;
 import java.text.ParseException;
 
 //todo:: to notify in README that you have to click on the icons in tree view for let it work
-//TODO:: mark active branch in commit tree
-//todo:: xml to task
 //todo:: make commit tree to be home page
 //todo:: repair resize of all components
 //todo:: hyperlink to repo path
-//todo:: add new logic - Merge and Collaboration
-//todo:: after clone - update lables of repository
 public class MainController extends Application {
 
     public static void main(String[] args){

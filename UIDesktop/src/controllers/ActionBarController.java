@@ -8,6 +8,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -19,6 +20,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import models.ListViewBuilder;
+import models.PopUpWindowWithBtn;
 import sun.security.provider.SHA;
 import utils.GUIUtils;
 
@@ -29,6 +31,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ActionBarController {
 
@@ -97,7 +100,7 @@ public class ActionBarController {
             mainController.repoPathProperty().set(path);
             mainController.repoNameProperty().set(mainController.getRepositoryManager().GetCurrentRepository().getName());
             mainController.getIsIsRepoLoadedProperty().set(true);
-            if(!mainController.getRepositoryManager().GetCurrentRepository().getRRLocation().equals("")){
+            if(mainController.getRepositoryManager().GetCurrentRepository().getRRLocation()!=null){
                 mainController.setIsClonedRepository(true);
             }
 
@@ -229,14 +232,23 @@ public class ActionBarController {
         }
     }
 
+    //todo:: to return this message
     public void createNewBranchClick() {
         try {
-            String name = GUIUtils.getTextInput("Create new branch", "Enter branch name:", "Name", "");
-            if (name != null) {
-                mainController.getRepositoryManager().CreateNewBranch(name);
-                GUIUtils.popUpMessage(name + " added successfully", Alert.AlertType.INFORMATION);
-            }
-        } catch (RepositoryDoesnotExistException | CommitException | IOException | BranchNameIsAllreadyExistException e) {
+            FXMLLoader fxmlLoader=new FXMLLoader();
+            fxmlLoader.setLocation(getClass().getResource("/views/newbranch/NewBranch.fxml"));
+            GridPane root=fxmlLoader.load();
+            Scene scene=new Scene(root);
+            Stage stageForCreate=new Stage();
+            stageForCreate.setScene(scene);
+            NewBranchController newBranchController=fxmlLoader.getController();
+            newBranchController.setAppController(mainController);
+            newBranchController.insertValuesToComboBox(mainController.getRepositoryManager().GetCurrentRepository().getCommitMap().keySet().stream().map(v->v.getSh1()).collect(Collectors.toList()));
+            newBranchController.setSecondaryStage(stageForCreate);
+            stageForCreate.initModality(Modality.APPLICATION_MODAL);
+            stageForCreate.showAndWait();
+
+        } catch ( IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
     }

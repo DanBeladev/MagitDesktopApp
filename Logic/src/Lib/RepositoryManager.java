@@ -310,7 +310,7 @@ public class RepositoryManager {
         }
     }
 
-    public void CreateNewBranch(String name) throws BranchNameIsAllreadyExistException, IOException, CommitException, RepositoryDoesnotExistException {
+    public void CreateNewBranch(String name,SHA1 commitSH1ToPoint) throws BranchNameIsAllreadyExistException, IOException, CommitException, RepositoryDoesnotExistException {
         IsCurrentRepositoryInitialize();
         if (m_currentRepository.getCommitMap().isEmpty()) {
             throw new CommitException("you don't have any commits so you can't make new branch");
@@ -318,8 +318,8 @@ public class RepositoryManager {
         if (m_currentRepository.getBranchesMap().containsKey(name)) {
             throw new BranchNameIsAllreadyExistException("The name: " + name + " is already exist");
         } else {
-            File file = GetCommitOfHeadBranch();
-            Branch newBranch = new Branch(name, new SHA1(FileUtils.ReadContentFromFile(file)));
+            //File file = GetCommitOfHeadBranch();
+            Branch newBranch = new Branch(name, commitSH1ToPoint/*new SHA1(FileUtils.ReadContentFromFile(file))*/);
             newBranch.CreateBranchTextFile(m_currentRepository.GetLocation() + BRANCHES_FOLDER);
             m_currentRepository.getBranchesMap().put(name, newBranch);
         }
