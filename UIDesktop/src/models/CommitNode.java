@@ -100,6 +100,7 @@ public class CommitNode extends AbstractCell {
         MenuItem commitFilesItem = contextMenuCommitNode.createMenuItem("Reset head branch to here", (v, w) -> {
             try {
                 appController.getRepositoryManager().ResetHeadBranch(new SHA1(sha1));
+                appController.refresh();
                 GUIUtils.popUpMessage("Head branch was changed successfully", Alert.AlertType.INFORMATION);
             } catch (IOException | ParseException | CommitException | RepositoryDoesnotExistException | OpenChangesException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
@@ -142,6 +143,7 @@ public class CommitNode extends AbstractCell {
                 try {
                     appController.getRepositoryManager().CreateNewRemoteTrackingBranch(rtbName, (RemoteBranch)RB);
                     GUIUtils.popUpMessage("Remote Tracking Branch: " + rtbName + " added successfully", Alert.AlertType.INFORMATION);
+                    appController.refresh();
                 } catch (RepositoryDoesnotExistException | CommitException | BranchNameIsAllreadyExistException | IOException ex) {
                  GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.ERROR);
                 }
@@ -155,6 +157,7 @@ public class CommitNode extends AbstractCell {
             String branchName = GUIUtils.getTextInput("Create new branch", "Please insert branch name", "Name: ", "");
             try {
                 appController.getRepositoryManager().CreateNewBranch(branchName, new SHA1(sha1));
+                appController.refresh();
             } catch (BranchNameIsAllreadyExistException | IOException | CommitException | RepositoryDoesnotExistException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
             }

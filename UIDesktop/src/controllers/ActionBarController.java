@@ -215,7 +215,7 @@ public class ActionBarController {
             try {
                 mainController.getRepositoryManager().MakeCommit(commitMsg, null);
                 GUIUtils.popUpMessage("Commit added successfully", Alert.AlertType.CONFIRMATION);
-                refresh();
+                mainController.refresh();
             } catch (IOException | ParseException | RepositoryDoesnotExistException | CommitException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
             }
@@ -247,6 +247,7 @@ public class ActionBarController {
             newBranchController.setSecondaryStage(stageForCreate);
             stageForCreate.initModality(Modality.APPLICATION_MODAL);
             stageForCreate.showAndWait();
+            mainController.refresh();
 
         } catch (IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
@@ -296,23 +297,12 @@ public class ActionBarController {
     public void commitsTreeClick() {
         try {
             mainController.getRepositoryManager().IsRepositoryHasAtLeastOneCommit();
-            //mainController.createCommitsGraphForRepository();
-            mainController.createDefaultCommitsGraphForRepository();
             mainController.drawCommitsTree();
         } catch (CommitException | RepositoryDoesnotExistException e) {
             GUIUtils.popUpMessage("Repository without commits to draw", Alert.AlertType.INFORMATION);
         }
     }
 
-    public void refresh() {
-        try {
-            mainController.getRepositoryManager().IsRepositoryHasAtLeastOneCommit();
-        } catch (CommitException | RepositoryDoesnotExistException e) {
-            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
-        }
-        mainController.createCommitsGraphForRepository();
-        mainController.drawCommitsTree();
-    }
 
     private void bindNodeDisabledToBoolProperty(BooleanProperty booleanProperty, Node... nodes) {
         for (Node node : nodes) {
@@ -329,59 +319,13 @@ public class ActionBarController {
         try {
             List<MergeConfilct> conflicts = null;
             conflicts = repositoryManager.MergeHeadBranchWithOtherBranch(branchToMerge);
-           mainController.handleConflicts(conflicts,branchToMerge);
-         /*   for (MergeConfilct conflict : conflicts) {
-                FXMLLoader fxmlLoader = new FXMLLoader();
-                URL url = getClass().getResource("/views/conflictsolver/ConflictSolver.fxml");
-                fxmlLoader.setLocation(url);
-                GridPane root = fxmlLoader.load(url.openStream());
-                ConflictSolverController conflictSolverController = fxmlLoader.getController();
-                conflictSolverController.setMergeConfilct(conflict);
-                Stage secStage = new Stage();
-                secStage.setScene(new Scene(root));
-                conflictSolverController.setStage(secStage);
-                conflictSolverController.setAncestorTextArea(conflict.getAncestorContent());
-                conflictSolverController.setOursTextArea(conflict.getOurContent());
-                conflictSolverController.setTheirsTextArea(conflict.getTheirsContent());
-                secStage.showAndWait();
-            }
-            repositoryManager.spanWCsolvedConflictList(conflicts);
-            String message = GUIUtils.getTextInput("Commit", "Enter commit message", "message:", "");
-            repositoryManager.MakeCommit(message, repositoryManager.GetCurrentRepository().getCommitFromCommitsMap(repositoryManager.GetCurrentRepository().getBranchesMap().get(branchToMerge).getCommitSH1()));*/
+            mainController.handleConflicts(conflicts, branchToMerge);
         } catch (BranchDoesNotExistException | OpenChangesException | RepositoryDoesnotExistException | CommitException | ParseException | IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         } catch (FFException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.INFORMATION);
         }
     }
-
-    /*public void handleConflicts(List<MergeConfilct> conflicts, String branchToMerge) {
-        RepositoryManager repositoryManager = mainController.getRepositoryManager();
-        try {
-            for (MergeConfilct conflict : conflicts) {
-                FXMLLoader fxmlLoader = new FXMLLoader();
-                URL url = getClass().getResource("/views/conflictsolver/ConflictSolver.fxml");
-                fxmlLoader.setLocation(url);
-                GridPane root = fxmlLoader.load(url.openStream());
-                ConflictSolverController conflictSolverController = fxmlLoader.getController();
-                conflictSolverController.setMergeConfilct(conflict);
-                Stage secStage = new Stage();
-                secStage.setScene(new Scene(root));
-                conflictSolverController.setStage(secStage);
-                conflictSolverController.setAncestorTextArea(conflict.getAncestorContent());
-                conflictSolverController.setOursTextArea(conflict.getOurContent());
-                conflictSolverController.setTheirsTextArea(conflict.getTheirsContent());
-                secStage.showAndWait();
-            }
-                repositoryManager.spanWCsolvedConflictList(conflicts);
-                String message = GUIUtils.getTextInput("Commit", "Enter commit message", "message:", "");
-                repositoryManager.MakeCommit(message, repositoryManager.GetCurrentRepository().getCommitFromCommitsMap(repositoryManager.GetCurrentRepository().getBranchesMap().get(branchToMerge).getCommitSH1()));
-
-        } catch (CommitException | ParseException | IOException | RepositoryDoesnotExistException e) {
-            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.INFORMATION);
-        }
-    }*/
-
 
     public void cloneClick() {
         try {
@@ -406,6 +350,7 @@ public class ActionBarController {
     public void fetchClick() {
         try {
             mainController.getRepositoryManager().FetchRRNewData();
+            mainController.refresh();
         } catch (RepositoryDoesnotExistException | RepositoryDoesntTrackAfterOtherRepositoryException | IOException | ParseException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -414,6 +359,7 @@ public class ActionBarController {
     public void pullClick() {
         try {
             mainController.getRepositoryManager().Pull();
+            mainController.refresh();
         } catch (BranchDoesNotExistException | RepositoryDoesnotExistException | RepositoryDoesntTrackAfterOtherRepositoryException | ParseException | CommitException | IOException | OpenChangesException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }

@@ -230,6 +230,7 @@ public class AppController {
             try {
                 repositoryManager.DeleteBranch(comboBox.getSelectionModel().getSelectedItem());
                 GUIUtils.popUpMessage("branch deleted sucssesfully", Alert.AlertType.INFORMATION);
+                refresh();
                 this.deleteBranch(repositoryManager.ShowBranches());
             } catch (HeadBranchDeletedExcption | BranchDoesNotExistException | BranchFileDoesNotExistInFolderException | RepositoryDoesnotExistException ex) {
                 GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.ERROR);
@@ -257,6 +258,7 @@ public class AppController {
                 }
                 repositoryManager.CheckOut(comboBox.getSelectionModel().getSelectedItem());
                 GUIUtils.popUpMessage("Successful checkout", Alert.AlertType.INFORMATION);
+                refresh();
             } catch (BranchDoesNotExistException | IOException | ParseException | BranchIsAllReadyOnWCException | RepositoryDoesnotExistException | CommitException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
             } catch (CheckoutToRemoteBranchException e) {
@@ -287,6 +289,7 @@ public class AppController {
                 try {
                     repositoryManager.ResetHeadBranch(new SHA1(comboBox.getSelectionModel().getSelectedItem()));
                     GUIUtils.popUpMessage("Successful reset", Alert.AlertType.INFORMATION);
+                    refresh();
                 } catch (CommitException | ParseException | IOException | RepositoryDoesnotExistException e) {
                     GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
                 } catch (OpenChangesException e) {
@@ -385,16 +388,43 @@ public class AppController {
 
 
     public void drawCommitsTree() {
+        this.createCommitsGraphForRepository();
         PannableCanvas canvas = commitTree.getCanvas();
+        CheckBox cb=new CheckBox();
+        cb.setSelected(true);
+        cb.setText("Show all commits");
+        cb.setMnemonicParsing(false);
         ScrollPane scrollPane = new ScrollPane();
+        canvas.setLayoutY(cb.getLayoutY()+20);
         scrollPane.setPrefHeight(100);
         scrollPane.setPrefWidth(100);
-        scrollPane.setContent(canvas);
         BorderPane borderPane = (BorderPane) primaryStage.getScene().lookup("#root");
+        AnchorPane anchorPane=new AnchorPane();
+        anchorPane.setPrefSize(Region.USE_COMPUTED_SIZE,Region.USE_COMPUTED_SIZE);
+        anchorPane.getChildren().addAll(cb,canvas);
+        scrollPane.setContent(anchorPane);
         borderPane.setCenter(scrollPane);
         Platform.runLater(() -> {
             commitTree.getUseViewportGestures().set(false);
             commitTree.getUseNodeGestures().set(false);
+        });
+        cb.setOnAction((e)->{
+            if(cb.isSelected()){
+                this.createCommitsGraphForRepository();
+            }
+            else{
+                this.createDefaultCommitsGraphForRepository();
+            }
+            PannableCanvas canva = commitTree.getCanvas();
+            canva.setLayoutY(cb.getLayoutY()+20);
+            anchorPane.getChildren().clear();
+            anchorPane.getChildren().addAll(cb,canva);
+            scrollPane.setContent(anchorPane);
+            Platform.runLater(() -> {
+                commitTree.getUseViewportGestures().set(false);
+                commitTree.getUseNodeGestures().set(false);
+            });
+
         });
     }
 
@@ -411,7 +441,6 @@ public class AppController {
         comboBox.setPrefSize(Region.USE_COMPUTED_SIZE, 10);
         comboBox.setItems(FXCollections.observableArrayList(commitsArray));
         comboBox.getSelectionModel().select("Choose commit SHA-1");
-        //comboBox.getSelectionModel().select(0);
         GridPane gridPane = GridPaneBuilder.buildGridPane(6, 3, 20, 50);
         gridPane.add(comboBox, 1, 0, 2, 2);
         gridPane.setMinWidth(10);
@@ -430,6 +459,14 @@ public class AppController {
         gridPane.add(comboBox, 1, 0, 2, 2);
         gridPane.add(treeView, 1, 2, 1, 3);
         borderPane.setCenter(gridPane);
+    }
+    public void refresh() {
+        try {
+            repositoryManager.IsRepositoryHasAtLeastOneCommit();
+        } catch (CommitException | RepositoryDoesnotExistException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+        }
+        drawCommitsTree();
     }
 
     public TreeView<ViewMagitFile> buildTreeViewOfCommitFiles(Commit commit) {
@@ -487,6 +524,7 @@ public class AppController {
             }
         });
     }
+
     public void handleConflicts(List<MergeConfilct> conflicts, String branchToMerge) {
         RepositoryManager repositoryManager = getRepositoryManager();
         try {
@@ -506,25 +544,12 @@ public class AppController {
                 secStage.showAndWait();
             }
             repositoryManager.spanWCsolvedConflictList(conflicts);
+
             String message = GUIUtils.getTextInput("Commit", "Enter commit message", "message:", "");
             repositoryManager.MakeCommit(message, repositoryManager.GetCurrentRepository().getCommitFromCommitsMap(repositoryManager.GetCurrentRepository().getBranchesMap().get(branchToMerge).getCommitSH1()));
-
+            refresh();
         } catch (CommitException | ParseException | IOException | RepositoryDoesnotExistException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.INFORMATION);
         }
     }
-/*
-    public void updateGraph() {
-        Commit commitToAdd = repositoryManager.getCommitFromCurrentRepositoryMapCommit(repositoryManager.GetCurrentRepository().getActiveBranch().getCommitSH1());
-        ICell newCell = new CommitNode(commitToAdd.getCreateTime().toString(),commitToAdd.getWhoUpdated().getName(),commitToAdd.getMessage(),commitToAdd.MakeSH1().getSh1());
-        nodesMap.put(commitToAdd.MakeSH1(),newCell);
-        //commitTree.beginUpdate();
-        Model model = commitTree.getModel();
-        model.addCell(newCell);
-        for(SHA1 parentSh1 : commitToAdd.getPrevCommits()){
-            model.addEdge(newCell,nodesMap.get(parentSh1));
-        }
-        model.endUpdate();
-        commitTree.layout(new CommitTreeLayout());
-    }*/
 }
