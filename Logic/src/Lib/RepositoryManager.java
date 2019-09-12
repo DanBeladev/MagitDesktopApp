@@ -132,7 +132,7 @@ public class RepositoryManager {
     }
 
 
-    public void CheckOut(String name) throws BranchDoesNotExistException, IOException, ParseException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException, RepositoryDoesnotExistException, CommitException, OpenChangesException {
+    public void CheckOut(String name) throws BranchDoesNotExistException, IOException, ParseException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException, RepositoryDoesnotExistException {
         IsCurrentRepositoryInitialize();
         m_currentRepository.CheckOut(name,m_User);
     }
@@ -168,6 +168,10 @@ public class RepositoryManager {
     public void ResetHeadBranch(SHA1 sha1) throws CommitException, ParseException, IOException, RepositoryDoesnotExistException, OpenChangesException {
         IsCurrentRepositoryInitialize();
         m_currentRepository.ResetHeadBranch(sha1,m_User);
+    }
+
+    public boolean HasOpenChanges() throws ParseException, CommitException, IOException {
+        return m_currentRepository.HasOpenChanges(m_User);
     }
 
     public Repository GetCurrentRepository() {
@@ -337,7 +341,7 @@ public class RepositoryManager {
         return m_MagitRepository;
     }
 
-    private void IsCurrentRepositoryInitialize() throws RepositoryDoesnotExistException {
+    public void IsCurrentRepositoryInitialize() throws RepositoryDoesnotExistException {
         if (m_currentRepository == null) {
             throw new RepositoryDoesnotExistException("Error: not initialize \"current repository\"");
         }
@@ -388,6 +392,15 @@ public class RepositoryManager {
     public void Push() throws CommitException, RepositoryDoesntTrackAfterOtherRepositoryException, IOException, ParseException, RemoteTrackingBranchException, RepositoryDoesnotExistException, OpenChangesException {
         IsRepositoryHasAtLeastOneCommit();
         m_currentRepository.Push(m_User);
+    }
+    public String GetCurrentRepositoryName() throws RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
+        return m_currentRepository.getName();
+    }
+
+    public String GetRRLocation() throws RepositoryDoesnotExistException {
+        IsCurrentRepositoryInitialize();
+        return m_currentRepository.getRRLocation();
     }
 }
 

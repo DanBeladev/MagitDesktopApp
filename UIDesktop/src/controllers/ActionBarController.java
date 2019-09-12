@@ -146,7 +146,6 @@ public class ActionBarController {
                                     return;
                                 }
                             }
-
                             new Thread(() -> {
                                 try {
                                     repoManager.LoadXML();
@@ -297,11 +296,12 @@ public class ActionBarController {
     public void commitsTreeClick() {
         try {
             mainController.getRepositoryManager().IsRepositoryHasAtLeastOneCommit();
+            //mainController.createCommitsGraphForRepository();
+            mainController.createDefaultCommitsGraphForRepository();
+            mainController.drawCommitsTree();
         } catch (CommitException | RepositoryDoesnotExistException e) {
             GUIUtils.popUpMessage("Repository without commits to draw", Alert.AlertType.INFORMATION);
         }
-        mainController.createCommitsGraphForRepository();
-        mainController.drawCommitsTree();
     }
 
     public void refresh() {

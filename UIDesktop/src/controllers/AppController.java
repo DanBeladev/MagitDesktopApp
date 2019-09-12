@@ -13,6 +13,7 @@ import models.PopUpWindowWithBtn;
 import Lib.*;
 import MagitExceptions.*;
 import models.BranchDetailsView;
+import sun.security.provider.SHA;
 import utils.GUIUtils;
 import com.fxgraph.edges.Edge;
 import com.fxgraph.graph.Graph;
@@ -153,10 +154,6 @@ public class AppController {
         return repositoryManager;
     }
 
-    public String getUserName() {
-        return userName.get();
-    }
-
     public SimpleStringProperty getUserNameProperty() {
         return userName;
     }
@@ -249,13 +246,14 @@ public class AppController {
         Label order = new Label("Choose branch to checkout");
         PopUpWindowWithBtn.popUpWindow(100, 300, "Checkout", (v) -> {
             try {
+                if(repositoryManager.HasOpenChanges()){
+                    Optional<ButtonType> result=GUIUtils.popUpMessage("You have open changes. Would you like to continue and loose current WC?", Alert.AlertType.CONFIRMATION);
+                    if (result.get() != ButtonType.OK){
+                        return;
+                    }
+                }
                 repositoryManager.CheckOut(comboBox.getSelectionModel().getSelectedItem());
                 GUIUtils.popUpMessage("Successful checkout", Alert.AlertType.INFORMATION);
-            } catch (OpenChangesException e){
-                Optional<ButtonType> result = GUIUtils.popUpMessage("You have open changes, would you like to continue and ignore changes or stop and commit your open changes ?", Alert.AlertType.CONFIRMATION);
-                if (result.get() != ButtonType.OK) {
-                    return;
-                }
             } catch (BranchDoesNotExistException | IOException | ParseException | BranchIsAllReadyOnWCException | RepositoryDoesnotExistException | CommitException e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
             } catch (CheckoutToRemoteBranchException e) {
@@ -302,7 +300,7 @@ public class AppController {
         commitTree = new Graph();
         final Model model = commitTree.getModel();
         commitTree.beginUpdate();
-
+        nodesMap.clear();
         final Repository currentRepo = repositoryManager.GetCurrentRepository();
 
         List<SHA1> commitsSha1 = null;
@@ -325,7 +323,6 @@ public class AppController {
                 model.addEdge(edge);
             }
         }
-
         currentRepo.getBranchesMap().forEach((k, v) -> {
             ICell commitNode = nodesMap.get(currentRepo.getCommitSha1ByBranchName(k));
             ((CommitNode) commitNode).concatPointedBranches(k, currentRepo.getActiveBranch().getName().equals(k));
@@ -334,6 +331,55 @@ public class AppController {
         commitTree.layout(new CommitTreeLayout());
 
     }
+    public void createDefaultCommitsGraphForRepository() {
+        commitTree = new Graph();
+        final Model model = commitTree.getModel();
+        commitTree.beginUpdate();
+        nodesMap.clear();
+        final Repository currentRepo = repositoryManager.GetCurrentRepository();
+        List<Commit> commits=new ArrayList<>();
+        Collection<Branch> branchesList=currentRepo.getBranchesMap().values();
+        for(Branch branch: branchesList){
+            Commit commit=repositoryManager.GetCurrentRepository().getCommitFromCommitsMap(branch.getCommitSH1());
+            createCellForCommits(commits,commit);
+        }
+        commits.sort(Comparator.comparing(v->v.getCreateTime().getDate()));
+        Collections.reverse(commits);
+        for(Commit commit:commits){
+            ICell cell = new CommitNode(commit.getCreateTime().toString(), commit.getWhoUpdated().getName(), commit.getMessage(),commit.getSha1(), this);
+            model.addCell(cell);
+            nodesMap.put(commit.MakeSH1(), cell);
+        }
+        for (Commit commit:commits){
+            List<SHA1> prevCommits = commit.getPrevCommits();
+            for (SHA1 sha1 : prevCommits) {
+                final Edge edge = new Edge(nodesMap.get(commit.MakeSH1()), nodesMap.get(sha1));
+                model.addEdge(edge);
+            }
+        }
+        currentRepo.getBranchesMap().forEach((k, v) -> {
+            ICell commitNode = nodesMap.get(currentRepo.getCommitSha1ByBranchName(k));
+            ((CommitNode) commitNode).concatPointedBranches(k, currentRepo.getActiveBranch().getName().equals(k));
+        });
+        commitTree.endUpdate();
+        commitTree.layout(new CommitTreeLayout());
+    }
+
+    private void createCellForCommits(List<Commit> commits,Commit commit) {
+        if(commit==null){
+            return;
+        }
+        else{
+            if(!commits.contains(commit)){
+                commits.add(commit);
+            }
+            for(SHA1 prevCommitSha1:commit.getPrevCommits()){
+                Commit prevCommit=repositoryManager.GetCurrentRepository().getCommitFromMapCommit(prevCommitSha1);
+                createCellForCommits(commits,prevCommit);
+            }
+        }
+    }
+
 
     public void drawCommitsTree() {
         PannableCanvas canvas = commitTree.getCanvas();

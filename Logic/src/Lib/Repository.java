@@ -562,11 +562,8 @@ public class Repository {
         }
     }
 
-    public void CheckOut(String name, User user) throws BranchDoesNotExistException, IOException, ParseException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException, CommitException, OpenChangesException {
+    public void CheckOut(String name, User user) throws BranchDoesNotExistException, IOException, ParseException, BranchIsAllReadyOnWCException, CheckoutToRemoteBranchException {
         Branch branch;
-        if (HasOpenChanges(user)) {
-            throw new OpenChangesException("you have open changes");
-        }
         if (!getBranchesMap().containsKey(name)) {
             throw new BranchDoesNotExistException("The branch: " + name + " does'nt exist");
         } else if (getActiveBranch() != null && getActiveBranch().getName().equals(name)) {
