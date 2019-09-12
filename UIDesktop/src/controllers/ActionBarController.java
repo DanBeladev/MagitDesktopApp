@@ -226,7 +226,7 @@ public class ActionBarController {
         try {
             List<List<String>> lst = mainController.getRepositoryManager().ShowStatus();
             mainController.showStatus(lst);
-        }catch (ParseException |CommitException| IOException| RepositoryDoesnotExistException e){
+        } catch (ParseException | CommitException | IOException | RepositoryDoesnotExistException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
 
@@ -329,7 +329,8 @@ public class ActionBarController {
         try {
             List<MergeConfilct> conflicts = null;
             conflicts = repositoryManager.MergeHeadBranchWithOtherBranch(branchToMerge);
-            for (MergeConfilct conflict : conflicts) {
+           mainController.handleConflicts(conflicts,branchToMerge);
+         /*   for (MergeConfilct conflict : conflicts) {
                 FXMLLoader fxmlLoader = new FXMLLoader();
                 URL url = getClass().getResource("/views/conflictsolver/ConflictSolver.fxml");
                 fxmlLoader.setLocation(url);
@@ -346,13 +347,41 @@ public class ActionBarController {
             }
             repositoryManager.spanWCsolvedConflictList(conflicts);
             String message = GUIUtils.getTextInput("Commit", "Enter commit message", "message:", "");
-            repositoryManager.MakeCommit(message, repositoryManager.GetCurrentRepository().getCommitFromCommitsMap(repositoryManager.GetCurrentRepository().getBranchesMap().get(branchToMerge).getCommitSH1()));
+            repositoryManager.MakeCommit(message, repositoryManager.GetCurrentRepository().getCommitFromCommitsMap(repositoryManager.GetCurrentRepository().getBranchesMap().get(branchToMerge).getCommitSH1()));*/
         } catch (BranchDoesNotExistException | OpenChangesException | RepositoryDoesnotExistException | CommitException | ParseException | IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         } catch (FFException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.INFORMATION);
         }
     }
+
+    /*public void handleConflicts(List<MergeConfilct> conflicts, String branchToMerge) {
+        RepositoryManager repositoryManager = mainController.getRepositoryManager();
+        try {
+            for (MergeConfilct conflict : conflicts) {
+                FXMLLoader fxmlLoader = new FXMLLoader();
+                URL url = getClass().getResource("/views/conflictsolver/ConflictSolver.fxml");
+                fxmlLoader.setLocation(url);
+                GridPane root = fxmlLoader.load(url.openStream());
+                ConflictSolverController conflictSolverController = fxmlLoader.getController();
+                conflictSolverController.setMergeConfilct(conflict);
+                Stage secStage = new Stage();
+                secStage.setScene(new Scene(root));
+                conflictSolverController.setStage(secStage);
+                conflictSolverController.setAncestorTextArea(conflict.getAncestorContent());
+                conflictSolverController.setOursTextArea(conflict.getOurContent());
+                conflictSolverController.setTheirsTextArea(conflict.getTheirsContent());
+                secStage.showAndWait();
+            }
+                repositoryManager.spanWCsolvedConflictList(conflicts);
+                String message = GUIUtils.getTextInput("Commit", "Enter commit message", "message:", "");
+                repositoryManager.MakeCommit(message, repositoryManager.GetCurrentRepository().getCommitFromCommitsMap(repositoryManager.GetCurrentRepository().getBranchesMap().get(branchToMerge).getCommitSH1()));
+
+        } catch (CommitException | ParseException | IOException | RepositoryDoesnotExistException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.INFORMATION);
+        }
+    }*/
+
 
     public void cloneClick() {
         try {

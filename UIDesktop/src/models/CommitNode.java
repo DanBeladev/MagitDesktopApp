@@ -1,17 +1,12 @@
 package models;
 
 import Consumers.ShowDeltaBiConsumer;
-import Lib.Branch;
-import Lib.Commit;
-import Lib.RemoteBranch;
-import Lib.SHA1;
-import MagitExceptions.BranchNameIsAllreadyExistException;
-import MagitExceptions.CommitException;
-import MagitExceptions.OpenChangesException;
-import MagitExceptions.RepositoryDoesnotExistException;
+import Lib.*;
+import MagitExceptions.*;
 import com.fxgraph.cells.AbstractCell;
 import com.fxgraph.graph.Graph;
 import com.fxgraph.graph.IEdge;
+import controllers.ActionBarController;
 import controllers.AppController;
 import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXMLLoader;
@@ -80,10 +75,24 @@ public class CommitNode extends AbstractCell {
     }
 
     private void chainMerge(ContextMenuCommitNode contextMenuCommitNode) {
-        MenuItem commitFilesItem = contextMenuCommitNode.createMenuItem("Merge", (v, w) -> {
-            System.out.println("i merge");
-        }, null, null);
-        contextMenuCommitNode.mainMenuCreator(commitFilesItem);
+        Menu merge = new Menu("Merge with HEAD");
+        Repository currentRepo = appController.getRepositoryManager().GetCurrentRepository();
+        List<Branch> allBranchesOnCommit =  currentRepo.getBranchesMap().values().stream().filter(v->v.getCommitSH1().getSh1().equals(sha1) && v != currentRepo.getActiveBranch()).collect(Collectors.toList());
+
+        for(Branch branch : allBranchesOnCommit){
+            MenuItem branchToAdd = new MenuItem(branch.getName());
+            branchToAdd.setOnAction((e)->{
+                try {
+                    //ActionBarController ac = appController;
+                    appController.handleConflicts(currentRepo.MergeHeadBranchWithOtherBranch(branch.getName(),appController.getRepositoryManager().GetUser()),branch.getName());
+                    GUIUtils.popUpMessage("Merge head branch: " + currentRepo.getActiveBranch().getName() + " with: "+ branch.getName() +" done successfully", Alert.AlertType.INFORMATION);
+                } catch (ParseException | IOException | OpenChangesException | BranchDoesNotExistException | FFException | CommitException ex) {
+                    GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.ERROR);
+                }
+            });
+            merge.getItems().add(branchToAdd);
+        }
+        contextMenuCommitNode.mainMenuCreator(merge);
     }
 
 

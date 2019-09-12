@@ -5,7 +5,9 @@ import javafx.beans.InvalidationListener;
 import javafx.collections.MapChangeListener;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import models.GridPaneBuilder;
 import models.ListViewBuilder;
@@ -36,6 +38,7 @@ import utils.ViewMagitFile;
 import javax.swing.tree.TreeNode;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -483,6 +486,32 @@ public class AppController {
                 subTreeItem.setGraphic(imageView2);
             }
         });
+    }
+    public void handleConflicts(List<MergeConfilct> conflicts, String branchToMerge) {
+        RepositoryManager repositoryManager = getRepositoryManager();
+        try {
+            for (MergeConfilct conflict : conflicts) {
+                FXMLLoader fxmlLoader = new FXMLLoader();
+                URL url = getClass().getResource("/views/conflictsolver/ConflictSolver.fxml");
+                fxmlLoader.setLocation(url);
+                GridPane root = fxmlLoader.load(url.openStream());
+                ConflictSolverController conflictSolverController = fxmlLoader.getController();
+                conflictSolverController.setMergeConfilct(conflict);
+                Stage secStage = new Stage();
+                secStage.setScene(new Scene(root));
+                conflictSolverController.setStage(secStage);
+                conflictSolverController.setAncestorTextArea(conflict.getAncestorContent());
+                conflictSolverController.setOursTextArea(conflict.getOurContent());
+                conflictSolverController.setTheirsTextArea(conflict.getTheirsContent());
+                secStage.showAndWait();
+            }
+            repositoryManager.spanWCsolvedConflictList(conflicts);
+            String message = GUIUtils.getTextInput("Commit", "Enter commit message", "message:", "");
+            repositoryManager.MakeCommit(message, repositoryManager.GetCurrentRepository().getCommitFromCommitsMap(repositoryManager.GetCurrentRepository().getBranchesMap().get(branchToMerge).getCommitSH1()));
+
+        } catch (CommitException | ParseException | IOException | RepositoryDoesnotExistException e) {
+            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.INFORMATION);
+        }
     }
 /*
     public void updateGraph() {
