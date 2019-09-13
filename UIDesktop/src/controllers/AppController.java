@@ -337,6 +337,7 @@ public class AppController {
         commitTree.layout(new CommitTreeLayout());
 
     }
+
     public void createDefaultCommitsGraphForRepository() {
         commitTree = new Graph();
         final Model model = commitTree.getModel();
@@ -460,6 +461,7 @@ public class AppController {
         gridPane.add(treeView, 1, 2, 1, 3);
         borderPane.setCenter(gridPane);
     }
+
     public void refresh() {
         try {
             repositoryManager.IsRepositoryHasAtLeastOneCommit();

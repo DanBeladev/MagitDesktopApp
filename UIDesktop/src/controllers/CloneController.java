@@ -52,15 +52,18 @@ public class CloneController {
 
         }
     }
+
     public void setAppController(AppController appController) {
         this.appController = appController;
     }
+
     public void addLRPathBtn(){
         File selectedFile = GUIUtils.getFolderByDirectoryChooser("choose folder",secondaryStage);
         if(selectedFile!=null){
             lrTextField.setText(selectedFile.getPath());
         }
     }
+
     public void addRRPathBtn(){
         File selectedFile = GUIUtils.getFolderByDirectoryChooser("choose folder", secondaryStage);
         if(selectedFile!=null){
@@ -80,4 +83,5 @@ public class CloneController {
                cloneBtn.setDisable(false);
            }
     }
+
 }

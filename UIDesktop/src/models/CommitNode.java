@@ -60,6 +60,7 @@ public class CommitNode extends AbstractCell {
             chainResetHeadBranch(contextMenuCommitNode);
             chainCreateNewBranch(contextMenuCommitNode);
             chainMerge(contextMenuCommitNode);
+            chainDeleteBranch(contextMenuCommitNode);
             root.setOnMouseClicked((v) -> contextMenuCommitNode.getContextMenu().show(root, v.getScreenX(), v.getScreenY()));
             commitNodeController = fxmlLoader.getController();
             commitNodeController.setCommitMessage(message);
@@ -77,15 +78,16 @@ public class CommitNode extends AbstractCell {
     private void chainMerge(ContextMenuCommitNode contextMenuCommitNode) {
         Menu merge = new Menu("Merge with HEAD");
         Repository currentRepo = appController.getRepositoryManager().GetCurrentRepository();
-        List<Branch> allBranchesOnCommit =  currentRepo.getBranchesMap().values().stream().filter(v->v.getCommitSH1().getSh1().equals(sha1) && v != currentRepo.getActiveBranch()).collect(Collectors.toList());
-
-        for(Branch branch : allBranchesOnCommit){
+        List<Branch> allBranchesOnCommit = currentRepo.getBranchesMap().values().stream().filter(v -> v.getCommitSH1().getSh1().equals(sha1) && v != currentRepo.getActiveBranch()).collect(Collectors.toList());
+        if(allBranchesOnCommit.isEmpty()){
+            merge.setDisable(true);
+        }
+        for (Branch branch : allBranchesOnCommit) {
             MenuItem branchToAdd = new MenuItem(branch.getName());
-            branchToAdd.setOnAction((e)->{
+            branchToAdd.setOnAction((e) -> {
                 try {
-                    //ActionBarController ac = appController;
-                    appController.handleConflicts(currentRepo.MergeHeadBranchWithOtherBranch(branch.getName(),appController.getRepositoryManager().GetUser()),branch.getName());
-                    GUIUtils.popUpMessage("Merge head branch: " + currentRepo.getActiveBranch().getName() + " with: "+ branch.getName() +" done successfully", Alert.AlertType.INFORMATION);
+                    appController.handleConflicts(currentRepo.MergeHeadBranchWithOtherBranch(branch.getName(), appController.getRepositoryManager().GetUser()), branch.getName());
+                    GUIUtils.popUpMessage("Merge head branch: " + currentRepo.getActiveBranch().getName() + " with: " + branch.getName() + " done successfully", Alert.AlertType.INFORMATION);
                 } catch (ParseException | IOException | OpenChangesException | BranchDoesNotExistException | FFException | CommitException ex) {
                     GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.ERROR);
                 }
@@ -94,7 +96,6 @@ public class CommitNode extends AbstractCell {
         }
         contextMenuCommitNode.mainMenuCreator(merge);
     }
-
 
     private void chainResetHeadBranch(ContextMenuCommitNode contextMenuCommitNode) {
         MenuItem commitFilesItem = contextMenuCommitNode.createMenuItem("Reset head branch to here", (v, w) -> {
@@ -132,20 +133,23 @@ public class CommitNode extends AbstractCell {
         //////////////////////////////////////////////////////////////////////////////////
         /*create new rtb branch*/
         //////////////////////////////////////////////////////////////////////////////////
-        List<Branch> RBonCommit =  appController.getRepositoryManager().GetCurrentRepository().getBranchesMap().values().stream().filter(v->v.getCommitSH1().getSh1().equals(sha1) && v instanceof RemoteBranch).collect(Collectors.toList());
-        for(Branch RB : RBonCommit){
+        List<Branch> RBonCommit = appController.getRepositoryManager().GetCurrentRepository().getBranchesMap().values().stream().filter(v -> v.getCommitSH1().getSh1().equals(sha1) && v instanceof RemoteBranch).collect(Collectors.toList());
+        if(RBonCommit.isEmpty()){
+            createRTBbranch.setDisable(true);
+        }
+        for (Branch RB : RBonCommit) {
             List<String> remoteBranchesNamesList = new ArrayList<>();
             remoteBranchesNamesList.add(RB.getName());
             MenuItem RBMenuItem = new MenuItem(RB.getName());
             String[] rbSpliter = RB.getName().split("\\\\");
-            String rtbName = rbSpliter[rbSpliter.length-1];
-            RBMenuItem.setOnAction((e)-> {
+            String rtbName = rbSpliter[rbSpliter.length - 1];
+            RBMenuItem.setOnAction((e) -> {
                 try {
-                    appController.getRepositoryManager().CreateNewRemoteTrackingBranch(rtbName, (RemoteBranch)RB);
+                    appController.getRepositoryManager().CreateNewRemoteTrackingBranch(rtbName, (RemoteBranch) RB);
                     GUIUtils.popUpMessage("Remote Tracking Branch: " + rtbName + " added successfully", Alert.AlertType.INFORMATION);
                     appController.refresh();
                 } catch (RepositoryDoesnotExistException | CommitException | BranchNameIsAllreadyExistException | IOException ex) {
-                 GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.ERROR);
+                    GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.ERROR);
                 }
             });
             createRTBbranch.getItems().add(RBMenuItem);
@@ -170,13 +174,42 @@ public class CommitNode extends AbstractCell {
     private void chainShowDeltaToMenu(ContextMenuCommitNode contextMenuCommitNode) {
         Menu differenceCommitMenu = new Menu("Show delta with prev commit");
         contextMenuCommitNode.mainMenuCreator(differenceCommitMenu);
-        for (SHA1 sha : appController.getRepositoryManager().GetCurrentRepository().getCommitFromMapCommit(new SHA1(sha1)).getPrevCommits()) {
+        List<SHA1> prevCommmits = appController.getRepositoryManager().GetCurrentRepository().getCommitFromMapCommit(new SHA1(sha1)).getPrevCommits();
+        if(prevCommmits.isEmpty()){
+            differenceCommitMenu.setDisable(true);
+        }
+        for (SHA1 sha : prevCommmits) {
             List<SHA1> shaList = new ArrayList<>();
             shaList.add(sha);
             shaList.add(new SHA1(sha1));
             MenuItem subMenu = contextMenuCommitNode.createMenuItem(sha.getSh1(), new ShowDeltaBiConsumer(), appController, shaList);
             contextMenuCommitNode.addSubMenuItem(differenceCommitMenu, subMenu);
         }
+    }
+
+    private void chainDeleteBranch(ContextMenuCommitNode contextMenuCommitNode) {
+        Menu deleteBranch = new Menu("Delete branch");
+        Repository currentRepo = appController.getRepositoryManager().GetCurrentRepository();
+        List<Branch> allBranchesOnCommit = currentRepo.getBranchesMap().values().stream().filter(v -> v.getCommitSH1().getSh1().equals(sha1) && v != currentRepo.getActiveBranch() && !(v instanceof RemoteBranch)).collect(Collectors.toList());
+        if(allBranchesOnCommit.isEmpty()){
+            deleteBranch.setDisable(true);
+        }
+        for (Branch branch : allBranchesOnCommit) {
+            MenuItem branchToDelete = new MenuItem(branch.getName());
+            branchToDelete.setOnAction((e) -> {
+                try {
+                    appController.getRepositoryManager().DeleteBranch(branch.getName());
+                    GUIUtils.popUpMessage(branch.getName()+" deleted successfully",Alert.AlertType.INFORMATION);
+                    appController.refresh();
+                } catch (HeadBranchDeletedExcption | BranchFileDoesNotExistInFolderException | RepositoryDoesnotExistException | BranchDoesNotExistException ex) {
+                    GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.ERROR);
+                }
+
+            });
+            deleteBranch.getItems().add(branchToDelete);
+        }
+        contextMenuCommitNode.mainMenuCreator(deleteBranch);
+
     }
 
 

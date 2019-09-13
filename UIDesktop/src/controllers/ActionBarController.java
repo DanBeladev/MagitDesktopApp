@@ -103,7 +103,7 @@ public class ActionBarController {
             if (mainController.getRepositoryManager().GetCurrentRepository().getRRLocation() != null) {
                 mainController.setIsClonedRepository(true);
             }
-
+            mainController.refresh();
         } catch
         (RepositorySameToCurrentRepositoryException | RepositoryDoesnotExistException | ParseException | IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
@@ -187,6 +187,7 @@ public class ActionBarController {
         if (result != null) {
             File selectedFile = GUIUtils.getFolderByDirectoryChooser("choose folder", primaryStage);
             if (selectedFile != null) {
+
                 try {
                     mainController.getRepositoryManager().BonusInit(result, selectedFile.getAbsolutePath() + "\\" + result, false);
                     mainController.repoPathProperty().set(selectedFile.getAbsolutePath() + "\\" + result);
@@ -340,7 +341,6 @@ public class ActionBarController {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
             mainController.setIsClonedRepository(true);
-
         } catch (IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
