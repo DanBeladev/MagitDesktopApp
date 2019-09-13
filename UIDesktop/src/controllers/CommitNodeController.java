@@ -44,7 +44,7 @@ public class CommitNodeController {
                 text.setStyle("-fx-font-weight: bold");
             }
             branches.getChildren().add(text);
-            branches.getChildren().add(new Text("&"));
+            branches.getChildren().add(new Text(" & "));
         }
         branches.getChildren().remove(branches.getChildren().size() -1 );
     }

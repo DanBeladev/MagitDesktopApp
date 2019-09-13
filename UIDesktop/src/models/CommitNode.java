@@ -78,7 +78,7 @@ public class CommitNode extends AbstractCell {
     private void chainMerge(ContextMenuCommitNode contextMenuCommitNode) {
         Menu merge = new Menu("Merge with HEAD");
         Repository currentRepo = appController.getRepositoryManager().GetCurrentRepository();
-        List<Branch> allBranchesOnCommit = currentRepo.getBranchesMap().values().stream().filter(v -> v.getCommitSH1().getSh1().equals(sha1) && v != currentRepo.getActiveBranch()).collect(Collectors.toList());
+        List<Branch> allBranchesOnCommit = currentRepo.getBranchesMap().values().stream().filter(v -> v.getCommitSH1().getSh1().equals(sha1) && !(v instanceof RemoteBranch) && v != currentRepo.getActiveBranch()).collect(Collectors.toList());
         if(allBranchesOnCommit.isEmpty()){
             merge.setDisable(true);
         }
@@ -129,11 +129,12 @@ public class CommitNode extends AbstractCell {
         Menu newBranchMenu = new Menu("Create new branch here");
         Menu createRTBbranch = new Menu("Create Remote Tracking Branch");
         newBranchMenu.getItems().add(createRTBbranch);
+        Repository currentRepo = appController.getRepositoryManager().GetCurrentRepository();
 
         //////////////////////////////////////////////////////////////////////////////////
         /*create new rtb branch*/
         //////////////////////////////////////////////////////////////////////////////////
-        List<Branch> RBonCommit = appController.getRepositoryManager().GetCurrentRepository().getBranchesMap().values().stream().filter(v -> v.getCommitSH1().getSh1().equals(sha1) && v instanceof RemoteBranch).collect(Collectors.toList());
+        List<Branch> RBonCommit = currentRepo.getBranchesMap().values().stream().filter(v -> v.getCommitSH1().getSh1().equals(sha1) && v instanceof RemoteBranch).collect(Collectors.toList());
         if(RBonCommit.isEmpty()){
             createRTBbranch.setDisable(true);
         }
@@ -143,6 +144,9 @@ public class CommitNode extends AbstractCell {
             MenuItem RBMenuItem = new MenuItem(RB.getName());
             String[] rbSpliter = RB.getName().split("\\\\");
             String rtbName = rbSpliter[rbSpliter.length - 1];
+            if(currentRepo.getBranchesMap().containsKey(rtbName)){
+                RBMenuItem.setDisable(true);
+            }
             RBMenuItem.setOnAction((e) -> {
                 try {
                     appController.getRepositoryManager().CreateNewRemoteTrackingBranch(rtbName, (RemoteBranch) RB);
