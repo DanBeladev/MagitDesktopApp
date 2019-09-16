@@ -962,6 +962,26 @@ public class Repository {
         return commitSha1List;
     }
 
+    public void pushLocalBranchToRemoteBranch(Branch branchToPush) throws RepositoryDoesntTrackAfterOtherRepositoryException, IOException, ParseException, BranchNameIsAllreadyExistException, CommitException, RepositoryDoesnotExistException, HeadBranchDeletedExcption, BranchDoesNotExistException, BranchFileDoesNotExistInFolderException {
+        if (getRRLocation() == null) {
+            throw new RepositoryDoesntTrackAfterOtherRepositoryException("Current function available only on cloned repositories ");
+        } else{
+            Repository RR = new Repository(getRRLocation());
+            RR.LoadData();
+            Commit firstCommitOnBranch = getCommitFromMapCommit(branchToPush.getCommitSH1());
+            addAllBranchData(firstCommitOnBranch,this,RR);
+            RemoteBranch remoteBranch = createRemoteBranch(branchToPush.getName(),branchToPush.getCommitSH1(),RR.getName());
+            CreateNewRemoteTrackingBranch(branchToPush.getName(),remoteBranch);
+            DeleteBranch(branchToPush.getName());
+        }
+    }
+
+    private RemoteBranch createRemoteBranch(String BranchNameInRR,SHA1 commitSha1,String RRname) throws IOException {
+        RemoteBranch RB = new RemoteBranch(RRname+"\\"+BranchNameInRR,commitSha1);
+        RB.CreateBranchTextFile(GetLocation()+ BRANCHES_FOLDER + RRname+"\\"+BranchNameInRR +".txt");
+        m_BranchesMap.put(RB.getName(),RB);
+        return RB;
+    }
 
 
   /*  public void ResetHeadBranch(SHA1 sha1) throws CommitException, ParseException, IOException {
