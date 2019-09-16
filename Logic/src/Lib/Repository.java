@@ -134,7 +134,6 @@ public class Repository {
             String content = FileUtils.getContentFromZippedFile(m_Location + OBJECTS_FOLDER + line + ".zip");
             String[] commitDetails = content.split(",");
             Commit commit;
-            //todo:: when doing merge to manage the case with some elements in prev commits list
             if (commitDetails.length == 5) {
                 commit = new Commit(commitDetails[2]);
             } else {
@@ -494,6 +493,9 @@ public class Repository {
         if (getRRLocation() == null) {
             throw new RepositoryDoesntTrackAfterOtherRepositoryException("Current function available only on cloned repositories ");
         }
+        else if (!new File(getRRLocation()).exists()){
+            throw new FileNotFoundException("Failed to find Remote Repository in address: " + getRRLocation()+". maybe you didnt load it yet ?");
+        }
 
         Branch activeBranch = getActiveBranch();
         if (activeBranch instanceof RemoteTrackingBranch) {
@@ -666,7 +668,6 @@ public class Repository {
         }
     }
 
-    //todo:: handle case two added files with diffrent content but with same name
     private List<MergeConfilct> MergeTwoSons(List<FileDetails> ancestorFilesList, Map<String, FileStatusCompareAncestor> ourClassifiedFiles, Map<String, FileStatusCompareAncestor> theirsClassifiedFiles, List<FileDetails> ourFileDetails, List<FileDetails> theirsFileDetails) throws IOException {
         List<FileDetails> mergeList = new ArrayList<>();
         List<MergeConfilct> conflictedList = new ArrayList<>();
@@ -815,6 +816,9 @@ public class Repository {
         if (HasOpenChanges(user)) {
             throw new OpenChangesException("Can't apply this function with open Changes");
         }
+        else if (!new File(getRRLocation()).exists()){
+            throw new FileNotFoundException("Failed to find Remote Repository in address: " + getRRLocation()+". maybe you didnt load it yet ?");
+        }
         Branch activeBranch = getActiveBranch();
         if (activeBranch instanceof RemoteTrackingBranch) {
             if (!activeBranch.getCommitSH1().equals(((RemoteTrackingBranch) activeBranch).getFollowAfter().getCommitSH1())) {
@@ -853,7 +857,10 @@ public class Repository {
         }
         if (getBranchesMap().containsKey(name)) {
             throw new BranchNameIsAllreadyExistException("The name: " + name + " is already exist");
-        } else {
+        }else if(name == null || name.isEmpty()){
+            throw  new BranchNameIsAllreadyExistException("Branch name have to be contains at least one character");
+        }
+        else {
 
             Branch newBranch = new Branch(name, commitSH1ToPoint/*new SHA1(FileUtils.ReadContentFromFile(file))*/);
             newBranch.CreateBranchTextFile(GetLocation() + BRANCHES_FOLDER);
@@ -904,7 +911,11 @@ public class Repository {
     public void FetchRRNewData() throws RepositoryDoesnotExistException, RepositoryDoesntTrackAfterOtherRepositoryException, IOException, ParseException {
         if (getRRLocation() == null) {
             throw new RepositoryDoesntTrackAfterOtherRepositoryException("Current function available only on cloned repositories ");
-        } else {
+        }
+        else if (!new File(getRRLocation()).exists()){
+            throw new FileNotFoundException("Failed to find Remote Repository in address: " + getRRLocation()+". maybe you didnt load it yet ?");
+        }
+        else {
             Repository rrRepository = new Repository(getRRLocation());
             rrRepository.LoadData();
             LoadFromRRMagitFiles(rrRepository.getBlobsMap(), getBlobsMap(), GetLocation() + MAGIT_FOLDER + "blobs.txt");

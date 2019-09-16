@@ -21,7 +21,10 @@ import java.text.ParseException;
 //todo:: to notify in README that you have to click on the icons in tree view for let it work
 //todo:: make commit tree to be home page
 //todo:: repair resize of all components
-//todo:: hyperlink to repo path
+//todo:: merge between two files with same name but different name - not must !
+//todo:: update all fxml with current css
+//todo:: adding button to "push branch to RR" bonus and check it
+
 public class MainController extends Application {
 
     public static void main(String[] args){

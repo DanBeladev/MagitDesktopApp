@@ -47,7 +47,6 @@ public class Folder extends MagitFile {
         return FileType.FOLDER;
     }
 
-    //todo :: string builder
     @Override
     public String toString() {
         Collections.sort(m_InnerFiles);

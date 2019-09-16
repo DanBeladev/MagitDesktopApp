@@ -90,30 +90,8 @@ public class AppController {
         topInfoComponentController.getUserLabel().textProperty().bind(userName);
         topInfoComponentController.getReposNameLabel().textProperty().bind(repoName);
         userName.set(repositoryManager.GetUser().getName());
-
         isRepoLoadedProperty.set(false);
         isClonedRepository.set(false);
-
-        //todo::remove block
-       /*//===============================
-        String path = "C:\\try";
-        try {
-            this.setRepository(path);
-        } catch (RepositorySameToCurrentRepositoryException e) {
-            e.printStackTrace();
-        } catch (RepositoryDoesnotExistException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        repoPathProperty().set(path);
-        repoNameProperty().set(getRepositoryManager().GetCurrentRepository().getName());
-        getIsIsRepoLoadedProperty().set(true);
-        createCommitsGraphForRepository();
-
-        //==========================*/
     }
 
     public void setPrimaryStage(Stage primaryStage) {
@@ -428,7 +406,6 @@ public class AppController {
         });
     }
 
-    //todo:: show leaf content of tree view
     public void commitFilesInformation() {
         BorderPane borderPane = (BorderPane) primaryStage.getScene().lookup("#root");
         String[] commitsArray = new String[0];
@@ -500,7 +477,6 @@ public class AppController {
         return treeView;
     }
 
-    //todo:: fix icons
     public void buildTreeViewOfCommitFilesRec(Folder folder, TreeItem<ViewMagitFile> treeItem) {
         ImageView imageView = new ImageView();
         imageView.setFitHeight(20);
@@ -509,7 +485,6 @@ public class AppController {
         treeItem.setGraphic(imageView);
         List<FileDetails> list = folder.getInnerFiles();
         list.forEach(fileDetails -> {
-            System.out.println(fileDetails.getName());
             if (fileDetails.getFileType() == FileType.FOLDER) {
                 ViewMagitFile viewMagitFile = new ViewMagitFile(repositoryManager.GetCurrentRepository().GetContentOfFolder(fileDetails.getSh1()), fileDetails.getName());
                 TreeItem<ViewMagitFile> subTreeItem = new TreeItem<>(viewMagitFile);

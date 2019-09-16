@@ -26,8 +26,13 @@ public class NewBranchController {
 
     public void onCreateClick(){
         try {
-            appController.getRepositoryManager().CreateNewBranch(branchNameTxtField.getText(),new SHA1(sha1ComboBox.getSelectionModel().getSelectedItem()));
-            GUIUtils.popUpMessage(branchNameTxtField.getText() + " created successfully", Alert.AlertType.INFORMATION);
+            if(!branchNameTxtField.getText().isEmpty()) {
+                appController.getRepositoryManager().CreateNewBranch(branchNameTxtField.getText(), new SHA1(sha1ComboBox.getSelectionModel().getSelectedItem()));
+                GUIUtils.popUpMessage(branchNameTxtField.getText() + " created successfully", Alert.AlertType.INFORMATION);
+            }
+            else {
+                GUIUtils.popUpMessage("Function failed, you have to choose a name", Alert.AlertType.ERROR);
+            }
         } catch (BranchNameIsAllreadyExistException | RepositoryDoesnotExistException | CommitException | IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }

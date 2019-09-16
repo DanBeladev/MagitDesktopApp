@@ -359,8 +359,6 @@ public class RepositoryManager {
         return m_currentRepository.getMainFolderName();
     }
 
-    //todo:: check if with there is no open changes
-    //todo:: check theris diffrent from ours
     public List<MergeConfilct> MergeHeadBranchWithOtherBranch(String their) throws ParseException, IOException, OpenChangesException, BranchDoesNotExistException, FFException, CommitException, RepositoryDoesnotExistException {
         IsCurrentRepositoryInitialize();
         return m_currentRepository.MergeHeadBranchWithOtherBranch(their,m_User);
@@ -382,8 +380,6 @@ public class RepositoryManager {
         m_currentRepository.FetchRRNewData();
     }
 
-
-    //todo:: check is no changes without push
     public void Pull() throws RepositoryDoesnotExistException, RepositoryDoesntTrackAfterOtherRepositoryException, ParseException, CommitException, IOException, OpenChangesException, BranchDoesNotExistException {
         IsCurrentRepositoryInitialize();
         m_currentRepository.Pull(m_User);

@@ -240,7 +240,6 @@ public class ActionBarController {
 
     }
 
-    //todo:: to return this message
     public void createNewBranchClick() {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
@@ -256,7 +255,6 @@ public class ActionBarController {
             stageForCreate.initModality(Modality.APPLICATION_MODAL);
             stageForCreate.showAndWait();
             mainController.refresh();
-
         } catch (IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -324,7 +322,7 @@ public class ActionBarController {
             return;
         }
         try {
-            List<MergeConfilct> conflicts = null;
+            List<MergeConfilct> conflicts ;
             conflicts = repositoryManager.MergeHeadBranchWithOtherBranch(branchToMerge);
             mainController.handleConflicts(conflicts, branchToMerge);
         } catch (BranchDoesNotExistException | OpenChangesException | RepositoryDoesnotExistException | CommitException | ParseException | IOException e) {
@@ -347,6 +345,7 @@ public class ActionBarController {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
             mainController.setIsClonedRepository(true);
+            GUIUtils.popUpMessage("Clone done successfully", Alert.AlertType.INFORMATION);
         } catch (IOException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -356,6 +355,7 @@ public class ActionBarController {
     public void fetchClick() {
         try {
             mainController.getRepositoryManager().FetchRRNewData();
+            GUIUtils.popUpMessage("Fetch done successfully", Alert.AlertType.INFORMATION);
             mainController.refresh();
         } catch (RepositoryDoesnotExistException | RepositoryDoesntTrackAfterOtherRepositoryException | IOException | ParseException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
@@ -365,6 +365,7 @@ public class ActionBarController {
     public void pullClick() {
         try {
             mainController.getRepositoryManager().Pull();
+            GUIUtils.popUpMessage("Pull done successfully", Alert.AlertType.INFORMATION);
             mainController.refresh();
         } catch (BranchDoesNotExistException | RepositoryDoesnotExistException | RepositoryDoesntTrackAfterOtherRepositoryException | ParseException | CommitException | IOException | OpenChangesException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
@@ -374,9 +375,8 @@ public class ActionBarController {
     public void pushClick() {
         try {
             mainController.getRepositoryManager().Push();
-        } catch (RepositoryDoesntTrackAfterOtherRepositoryException | ParseException | CommitException | IOException | RemoteTrackingBranchException | OpenChangesException e) {
-            GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
-        } catch (RepositoryDoesnotExistException e) {
+            GUIUtils.popUpMessage("Push done successfully", Alert.AlertType.INFORMATION);
+        } catch (RepositoryDoesntTrackAfterOtherRepositoryException | ParseException | CommitException | IOException | RemoteTrackingBranchException | OpenChangesException | RepositoryDoesnotExistException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
     }
