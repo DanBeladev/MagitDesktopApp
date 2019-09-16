@@ -3,11 +3,14 @@ package controllers;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Pair;
 
+import java.awt.*;
 import java.util.List;
 
 public class CommitNodeController {
@@ -53,4 +56,10 @@ public class CommitNodeController {
         return (int)CommitCircle.getRadius();
     }
 
+    public void setRadius(int i) {
+        CommitCircle.setRadius(i);
+    }
+    public void setColor(Color color) {
+        CommitCircle.setFill(color);
+    }
 }

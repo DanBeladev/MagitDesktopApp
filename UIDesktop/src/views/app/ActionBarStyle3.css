@@ -1,0 +1,21 @@
+.button {
+    -fx-background-color: linear-gradient(#ff5400, #be1d00);
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-text-fill: white;
+}
+
+.button:hover {
+    -fx-background-color:#F08282;
+}
+.label{
+    -fx-font-family:"Lucida Bright";
+    -fx-font-size: 11px;
+}
+.titleBtns{
+    -fx-background-color: white;
+    -fx-border-width:1px ;
+}
+.root{
+    -fx-background-color: #FEBBBB;
+}

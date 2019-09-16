@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.net.URL?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
+<!--onAction="#createNewBranchClick"-->
+
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.ActionBarController">
    <children>
-      <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" text="Repository">
+      <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" styleClass="titleBtns" text="Repository">
          <font>
             <Font name="Microsoft YaHei" size="12.0" />
          </font>
@@ -18,7 +19,7 @@
       <Button fx:id="cloneBtn" mnemonicParsing="false" onAction="#cloneClick" prefHeight="29.0" prefWidth="171.0" text="Clone" />
       <Button fx:id="loadXMLBtn" mnemonicParsing="false" onAction="#loadXMLClick" prefHeight="29.0" prefWidth="171.0" text="Load XML" />
       <Button fx:id="switchUserBtn" mnemonicParsing="false" onAction="#switchUserClick" prefHeight="29.0" prefWidth="171.0" text="Switch user" />
-      <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" text="Commits">
+      <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" styleClass="titleBtns" text="Commits">
          <font>
             <Font name="Microsoft YaHei" size="12.0" />
          </font>
@@ -27,7 +28,7 @@
       <Button fx:id="showStatusBtn" mnemonicParsing="false" onAction="#showStatusClick" prefHeight="29.0" prefWidth="171.0" text="WC status" />
       <Button fx:id="commitContentBtn" mnemonicParsing="false" onAction="#commitFilesInfoClick" prefHeight="29.0" prefWidth="171.0" text="Commit content" />
       <Button fx:id="commitsTreeBtn" mnemonicParsing="false" onAction="#commitsTreeClick" prefHeight="29.0" prefWidth="171.0" text="Commits tree" />
-      <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" text="Branches">
+      <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" styleClass="titleBtns" text="Branches">
          <font>
             <Font name="Microsoft YaHei" size="12.0" />
          </font>
@@ -38,7 +39,7 @@
       <Button fx:id="checkoutBtn" mnemonicParsing="false" onAction="#checkOutBtnClick" prefHeight="29.0" prefWidth="171.0" text="Checkout " />
       <Button fx:id="resetBranchbtn" mnemonicParsing="false" onAction="#resetBranchClick" prefHeight="29.0" prefWidth="171.0" text="Reset branch" />
       <Button fx:id="mergeBtn" mnemonicParsing="false" onAction="#MergeClick" prefHeight="29.0" prefWidth="171.0" text="Merge" />
-      <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" text="Collaboration">
+      <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" styleClass="titleBtns" text="Collaboration">
          <font>
             <Font name="Microsoft YaHei" size="12.0" />
          </font>
@@ -46,9 +47,11 @@
       <Button fx:id="fetchBtn" mnemonicParsing="false" onAction="#fetchClick" prefHeight="29.0" prefWidth="171.0" text="Fetch" />
       <Button fx:id="pullBtn" mnemonicParsing="false" onAction="#pullClick" prefHeight="29.0" prefWidth="171.0" text="Pull" />
       <Button fx:id="pushBtn" mnemonicParsing="false" onAction="#pushClick" prefHeight="29.0" prefWidth="171.0" text="Push" />
+      <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" styleClass="titleBtns" text="Style">
+         <font>
+            <Font name="Microsoft YaHei" size="12.0" />
+         </font>
+      </Label>
+      <Button mnemonicParsing="false" onAction="#changeStyleClick" prefHeight="29.0" prefWidth="171.0" text="Change style" />
    </children>
-   <stylesheets>
-      <URL value="@ActionBarStyle2.css" />
-   </stylesheets>
 </VBox>
-        <!--onAction="#createNewBranchClick"-->

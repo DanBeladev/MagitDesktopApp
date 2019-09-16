@@ -10,9 +10,6 @@
 <?import javafx.scene.text.Font?>
 
 <GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="83.0" prefWidth="543.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RepoInfoController">
-    <stylesheets>
-        <URL value="@../app/repoInfoStyle.css" />
-    </stylesheets>
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" maxWidth="236.79998779296875" minWidth="10.0" prefWidth="142.40003662109376" />
         <ColumnConstraints hgrow="SOMETIMES" maxWidth="269.9999633789062" minWidth="10.0" prefWidth="269.9999633789062" />

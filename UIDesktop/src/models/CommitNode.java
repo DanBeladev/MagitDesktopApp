@@ -6,20 +6,27 @@ import MagitExceptions.*;
 import com.fxgraph.cells.AbstractCell;
 import com.fxgraph.graph.Graph;
 import com.fxgraph.graph.IEdge;
+import com.fxgraph.graph.Model;
 import controllers.ActionBarController;
 import controllers.AppController;
 import javafx.beans.binding.DoubleBinding;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import controllers.CommitNodeController;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Pair;
 import utils.GUIUtils;
 
+import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
@@ -33,6 +40,7 @@ public class CommitNode extends AbstractCell {
     private String message;
     private String sha1;
     private List<Pair<String, Boolean>> pointedBranches;
+    private List<CommitNode> prevCommits;
     private CommitNodeController commitNodeController;
     private AppController appController;
 
@@ -43,12 +51,11 @@ public class CommitNode extends AbstractCell {
         this.sha1 = sha1;
         this.appController = controller;
         this.pointedBranches = new ArrayList<>();
-
+        this.prevCommits=new ArrayList<>();
     }
 
     @Override
     public Region getGraphic(Graph graph) {
-
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
             URL url = getClass().getResource("/views/node/commitNode.fxml");
@@ -62,16 +69,27 @@ public class CommitNode extends AbstractCell {
             chainMerge(contextMenuCommitNode);
             chainDeleteBranch(contextMenuCommitNode);
             root.setOnMouseClicked((v) -> contextMenuCommitNode.getContextMenu().show(root, v.getScreenX(), v.getScreenY()));
+            root.setOnMouseEntered((event -> biggerCircle(this,12,Color.YELLOWGREEN)));
+            root.setOnMouseExited(event -> biggerCircle(this,10,Color.valueOf("087fee")));
             commitNodeController = fxmlLoader.getController();
             commitNodeController.setCommitMessage(message);
             commitNodeController.setCommitter(committer);
             commitNodeController.setCommitTimeStamp(timestamp);
             commitNodeController.setCommitSha1(sha1);
             commitNodeController.setBranchLabel(pointedBranches);
-
             return root;
         } catch (IOException e) {
             return new Label("Error when tried to create graphic node !");
+        }
+    }
+
+    private void biggerCircle(CommitNode commitNode,int raduis,Color color){
+        commitNode.getCommitNodeController().setRadius(raduis);
+        commitNode.getCommitNodeController().setColor(color);
+        if(!commitNode.prevCommits.isEmpty()){
+            for(CommitNode cn:commitNode.prevCommits) {
+                biggerCircle(cn,raduis,color);
+            }
         }
     }
 
@@ -250,5 +268,13 @@ public class CommitNode extends AbstractCell {
         return timestamp;
     }
 
+
+    public void addPrevCommit(CommitNode prevCommit) {
+        this.prevCommits.add(prevCommit);
+    }
+
+    public CommitNodeController getCommitNodeController() {
+        return commitNodeController;
+    }
 
 }

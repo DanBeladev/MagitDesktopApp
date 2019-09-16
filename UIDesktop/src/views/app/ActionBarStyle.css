@@ -5,7 +5,8 @@
     -fx-text-align: center;
     -fx-text-decoration: none;
     -fx-display: inline-block;
-    -fx-font-size: 16px;
+    -fx-font-size: 14px;
+
 }
 .button:hover{
    -fx-background-color: #0ca6ba;
@@ -15,7 +16,7 @@
     -fx-background-color: #adb0ba;
 }
 
-.label{
+.titleBtns{
     -fx-background-color: #ADD8E6;
     -fx-border-width:1px ;
 }

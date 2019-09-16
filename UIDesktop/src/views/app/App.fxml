@@ -6,7 +6,7 @@
 <?import java.net.URL?>
 <BorderPane id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="475.0" prefWidth="715.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.AppController">
     <stylesheets>
-        <URL value="@repoInfoStyle.css"></URL>
+        <URL value="@ActionBarStyle.css"></URL>
     </stylesheets>
     <left>
         <ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="392.0" prefWidth="186.0" BorderPane.alignment="CENTER">

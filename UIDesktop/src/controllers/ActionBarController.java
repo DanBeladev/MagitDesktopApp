@@ -2,13 +2,11 @@ package controllers;
 
 import Lib.*;
 import MagitExceptions.*;
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -19,14 +17,12 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import models.CssManeger;
 import models.ListViewBuilder;
-import models.PopUpWindowWithBtn;
-import sun.security.provider.SHA;
 import utils.GUIUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,10 +72,15 @@ public class ActionBarController {
 
     private Stage primaryStage;
     private AppController mainController;
+    private CssManeger cssStyles;
 
 
     @FXML
     public void initialize() {
+        cssStyles=new CssManeger();
+        cssStyles.addCssSheet("views/app/ActionBarStyle.css");
+        cssStyles.addCssSheet("views/app/ActionBarStyle2.css");
+        cssStyles.addCssSheet("views/app/ActionBarStyle3.css");
     }
 
     public void setMainController(AppController controller) {
@@ -102,6 +103,9 @@ public class ActionBarController {
             mainController.getIsIsRepoLoadedProperty().set(true);
             if (mainController.getRepositoryManager().GetCurrentRepository().getRRLocation() != null) {
                 mainController.setIsClonedRepository(true);
+            }
+            else{
+                mainController.setIsClonedRepository(false);
             }
             mainController.refresh();
         } catch
@@ -159,6 +163,9 @@ public class ActionBarController {
                                         mainController.repoPathProperty().set(currentRepo.GetLocation());
                                         if (currentRepo.getRRLocation() != null) {
                                             mainController.setIsClonedRepository(true);
+                                        }
+                                        else{
+                                            mainController.setIsClonedRepository(false);
                                         }
                                     });
                                 } catch (Exception e) {
@@ -304,7 +311,6 @@ public class ActionBarController {
         }
     }
 
-
     private void bindNodeDisabledToBoolProperty(BooleanProperty booleanProperty, Node... nodes) {
         for (Node node : nodes) {
             node.disableProperty().bind(booleanProperty.not());
@@ -374,8 +380,14 @@ public class ActionBarController {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
         }
     }
-
     public void commitFilesInfoClick() {
         mainController.commitFilesInformation();
+    }
+
+    public void changeStyleClick(){
+        cssStyles.nextCss();
+        BorderPane bp = (BorderPane) primaryStage.getScene().lookup("#root");
+        bp.getStylesheets().clear();
+        bp.getStylesheets().add(cssStyles.getCurrentCss());
     }
 }

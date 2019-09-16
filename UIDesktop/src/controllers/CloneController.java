@@ -53,6 +53,10 @@ public class CloneController {
         }
     }
 
+    public void closeClick(){
+        secondaryStage.close();
+    }
+
     public void setAppController(AppController appController) {
         this.appController = appController;
     }

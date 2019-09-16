@@ -24,7 +24,20 @@
     -fx-background-color: #adb0ba;
 }
 
-.label{
-    -fx-background-color: #ADD8E6;
+
+.root{
+    -fx-background-color: gray;
+}
+
+.label {
+    -fx-font-family: "Bell MT";
+    -fx-font-size: 14px;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow( gaussian , rgba(255,255,255,0.5) , 0,0,0,1 );
+}
+
+.titleBtns{
+    -fx-background-color: #F2E5E5;
     -fx-border-width:1px ;
+    -fx-text-fill: black;
 }

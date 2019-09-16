@@ -90,9 +90,6 @@ public class AppController {
         topInfoComponentController.getUserLabel().textProperty().bind(userName);
         topInfoComponentController.getReposNameLabel().textProperty().bind(repoName);
         userName.set(repositoryManager.GetUser().getName());
-        //commitTree.getCanvas().getProperties().addListener(new MapChangeListener<Object, Object>() {
-
-        //commitTree.getCanvas()
 
         isRepoLoadedProperty.set(false);
         isClonedRepository.set(false);
@@ -326,6 +323,7 @@ public class AppController {
             List<SHA1> prevCommits = commit.getPrevCommits();
             for (SHA1 sha1 : prevCommits) {
                 final Edge edge = new Edge(nodesMap.get(commitSha1), nodesMap.get(sha1));
+                ((CommitNode)nodesMap.get(commitSha1)).addPrevCommit((CommitNode)nodesMap.get(sha1));
                 model.addEdge(edge);
             }
         }
@@ -361,6 +359,7 @@ public class AppController {
             List<SHA1> prevCommits = commit.getPrevCommits();
             for (SHA1 sha1 : prevCommits) {
                 final Edge edge = new Edge(nodesMap.get(commit.MakeSH1()), nodesMap.get(sha1));
+                ((CommitNode)nodesMap.get(commit.MakeSH1())).addPrevCommit((CommitNode)nodesMap.get(sha1));
                 model.addEdge(edge);
             }
         }
@@ -489,7 +488,9 @@ public class AppController {
             if (node instanceof TreeCell) {
                 if (event.getClickCount() == 2 && treeView.getSelectionModel().getSelectedItem() != null && (treeView.getSelectionModel().getSelectedItem()).isLeaf()) {
                     TextArea textArea = new TextArea(treeView.getSelectionModel().getSelectedItem().getValue().getM_Content());
-                    PopUpWindowWithBtn.popUpWindow(200, 200, "O.K", (v) -> {
+                    textArea.setPrefSize(Region.USE_COMPUTED_SIZE,Region.USE_COMPUTED_SIZE);
+                    textArea.editableProperty().setValue(false);
+                    PopUpWindowWithBtn.popUpWindow(500, 400, "O.K", (v) -> {
                     }, new Object(), textArea);
                 }
             }
@@ -553,5 +554,8 @@ public class AppController {
         } catch (CommitException | ParseException | IOException | RepositoryDoesnotExistException e) {
             GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.INFORMATION);
         }
+    }
+    public Graph getCommitTree() {
+        return commitTree;
     }
 }

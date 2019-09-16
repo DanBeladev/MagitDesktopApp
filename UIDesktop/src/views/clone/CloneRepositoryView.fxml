@@ -34,6 +34,6 @@
             <Insets right="22.0" />
          </GridPane.margin>
       </Button>
-      <Button fx:id="closeBtn" mnemonicParsing="false" onAction="#onClose" prefHeight="25.0" prefWidth="74.0" text="Cancel" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+      <Button fx:id="closeBtn" mnemonicParsing="false" onAction="#closeClick" prefHeight="25.0" prefWidth="74.0" text="Cancel" GridPane.columnIndex="2" GridPane.rowIndex="3" />
    </children>
 </GridPane>
