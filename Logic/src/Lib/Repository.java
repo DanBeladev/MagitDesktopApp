@@ -1006,7 +1006,7 @@ public class Repository {
             RR.CreateNewBranch(branchToPush.getName(),firstCommitOnBranch.MakeSH1());
             RemoteBranch remoteBranch = createRemoteBranch(branchToPush.getName(),branchToPush.getCommitSH1(),RR.getName());
             CreateNewRemoteTrackingBranch(branchToPush.getName(),remoteBranch);
-            setActiveBranch(m_BranchesMap.get(branchToPush.getName()));
+           // setActiveBranch(m_BranchesMap.get(branchToPush.getName()));
         }
     }
 

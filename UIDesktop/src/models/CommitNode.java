@@ -106,7 +106,11 @@ public class CommitNode extends AbstractCell {
                 try {
                     appController.handleConflicts(currentRepo.MergeHeadBranchWithOtherBranch(branch.getName(), appController.getRepositoryManager().GetUser()), branch.getName());
                     GUIUtils.popUpMessage("Merge head branch: " + currentRepo.getActiveBranch().getName() + " with: " + branch.getName() + " done successfully", Alert.AlertType.INFORMATION);
-                } catch (ParseException | IOException | OpenChangesException | BranchDoesNotExistException | FFException | CommitException ex) {
+                }
+                catch(FFException ex) {
+                GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.INFORMATION);
+                }catch
+                (ParseException | IOException | OpenChangesException | BranchDoesNotExistException | CommitException ex) {
                     GUIUtils.popUpMessage(ex.getMessage(), Alert.AlertType.ERROR);
                 }
             });

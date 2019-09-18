@@ -404,7 +404,8 @@ public class ActionBarController {
         PopUpWindowWithBtn.popUpWindow(100,300,"Push",v->{
             try {
                 mainController.getRepositoryManager().pushLocalBranchToRemoteBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(comboBox.getSelectionModel().getSelectedItem()));
-                GUIUtils.popUpMessage("Pushing branch done successfully", Alert.AlertType.ERROR);
+                GUIUtils.popUpMessage("Pushing branch done successfully", Alert.AlertType.INFORMATION);
+                mainController.refresh();
             } catch (IOException | BranchNameIsAllreadyExistException | CommitException | BranchFileDoesNotExistInFolderException | RepositoryDoesnotExistException | RepositoryDoesntTrackAfterOtherRepositoryException | ParseException | BranchDoesNotExistException | HeadBranchDeletedExcption e) {
                 GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
             }
