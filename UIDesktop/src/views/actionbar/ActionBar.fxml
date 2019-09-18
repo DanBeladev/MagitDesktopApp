@@ -47,6 +47,7 @@
       <Button fx:id="fetchBtn" mnemonicParsing="false" onAction="#fetchClick" prefHeight="29.0" prefWidth="171.0" text="Fetch" />
       <Button fx:id="pullBtn" mnemonicParsing="false" onAction="#pullClick" prefHeight="29.0" prefWidth="171.0" text="Pull" />
       <Button fx:id="pushBtn" mnemonicParsing="false" onAction="#pushClick" prefHeight="29.0" prefWidth="171.0" text="Push" />
+      <Button fx:id="pushNewBranchBtn" mnemonicParsing="false" onAction="#pushNewBranchBtnClick" prefHeight="29.0" prefWidth="171.0" text="Push new branch" />
       <Label alignment="TOP_CENTER" contentDisplay="CENTER" prefHeight="23.0" prefWidth="171.0" styleClass="titleBtns" text="Style">
          <font>
             <Font name="Microsoft YaHei" size="12.0" />

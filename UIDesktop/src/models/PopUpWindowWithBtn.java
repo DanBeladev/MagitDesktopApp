@@ -6,6 +6,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.util.function.Consumer;
@@ -27,6 +28,7 @@ public class PopUpWindowWithBtn {
         Scene scene=new Scene(vBox);
         button.setOnAction(v->{consumer.accept(o);stage.close();});
         stage.setScene(scene);
+        stage.initModality(Modality.APPLICATION_MODAL);
         stage.showAndWait();
     }
 }

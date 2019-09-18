@@ -398,6 +398,9 @@ public class RepositoryManager {
         IsCurrentRepositoryInitialize();
         return m_currentRepository.getRRLocation();
     }
+    public void pushLocalBranchToRemoteBranch(Branch b) throws IOException, CommitException, BranchNameIsAllreadyExistException, BranchFileDoesNotExistInFolderException, RepositoryDoesnotExistException, RepositoryDoesntTrackAfterOtherRepositoryException, ParseException, BranchDoesNotExistException, HeadBranchDeletedExcption {
+        m_currentRepository.pushLocalBranchToRemoteBranch(b);
+    }
 }
 
 /*  public void ExportRepositoryToXML(String path) throws XMLException, RepositoryDoesnotExistException {

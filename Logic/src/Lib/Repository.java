@@ -2,6 +2,7 @@ package Lib;
 
 import Lib.Blob;
 import MagitExceptions.*;
+import javafx.scene.control.CheckBox;
 import puk.team.course.magit.ancestor.finder.AncestorFinder;
 
 import java.io.File;
@@ -706,16 +707,38 @@ public class Repository {
                 }
             }
         }
-        addSonAddedFiles(ourClassifiedFiles, ourFileDetails, mergeList);
-        addSonAddedFiles(theirsClassifiedFiles, theirsFileDetails, mergeList);
+        addSonAddedFiles(ourClassifiedFiles,theirsClassifiedFiles,ourFileDetails,theirsFileDetails, mergeList,conflictedList);
+        //addSonAddedFiles(theirsClassifiedFiles,ourClassifiedFiles, theirsFileDetails, mergeList,conflictedList);
         spanWCByMergeList(mergeList);
         return conflictedList;
     }
 
-    private void addSonAddedFiles(Map<String, FileStatusCompareAncestor> son, List<FileDetails> sonFilesList, List<FileDetails> mergeList) {
-        for (FileDetails fd : sonFilesList) {
-            if (son.get(fd.getName()) == FileStatusCompareAncestor.ADDED) {
-                mergeList.add(fd);
+    private void addSonAddedFiles(Map<String, FileStatusCompareAncestor> ourMap,Map<String, FileStatusCompareAncestor> thriesMap, List<FileDetails> ourFilesList,List<FileDetails> theirsFilesList, List<FileDetails> mergeList,List<MergeConfilct> confilctList) {
+        for (FileDetails fd : ourFilesList) {
+            if (ourMap.get(fd.getName()) == FileStatusCompareAncestor.ADDED) {
+                FileStatusCompareAncestor fsOfSon2=thriesMap.get(fd.getName());
+                List<FileDetails> thisFileInsSon2=theirsFilesList.stream().filter(v->v.getName().equals(fd.getName())).collect(Collectors.toList());
+                if(fsOfSon2 == FileStatusCompareAncestor.ADDED && thisFileInsSon2.get(0).getSh1()!=fd.getSh1()){
+                    MergeConfilct mc=new MergeConfilct(fd.getName(),GetContentOfBlob(fd.getSh1()),GetContentOfBlob(thisFileInsSon2.get(0).getSh1()),"");
+                    confilctList.add(mc);
+                }
+                else {
+                    mergeList.add(fd);
+                }
+                theirsFilesList.removeIf(v->v.getName().equals(fd.getName()));
+            }
+        }
+        for (FileDetails fd : theirsFilesList) {
+            if (thriesMap.get(fd.getName()) == FileStatusCompareAncestor.ADDED) {
+                FileStatusCompareAncestor fsOfSon2=ourMap.get(fd.getName());
+                List<FileDetails> thisFileInsSon2=ourFilesList.stream().filter(v->v.getName().equals(fd.getName())).collect(Collectors.toList());
+                if(fsOfSon2 == FileStatusCompareAncestor.ADDED && thisFileInsSon2.get(0).getSh1()!=fd.getSh1()){
+                    MergeConfilct mc=new MergeConfilct(fd.getName(),GetContentOfBlob(thisFileInsSon2.get(0).getSh1()),GetContentOfBlob(fd.getSh1()),"");
+                    confilctList.add(mc);
+                }
+                else {
+                    mergeList.add(fd);
+                }
             }
         }
     }
@@ -965,20 +988,31 @@ public class Repository {
     public void pushLocalBranchToRemoteBranch(Branch branchToPush) throws RepositoryDoesntTrackAfterOtherRepositoryException, IOException, ParseException, BranchNameIsAllreadyExistException, CommitException, RepositoryDoesnotExistException, HeadBranchDeletedExcption, BranchDoesNotExistException, BranchFileDoesNotExistInFolderException {
         if (getRRLocation() == null) {
             throw new RepositoryDoesntTrackAfterOtherRepositoryException("Current function available only on cloned repositories ");
-        } else{
+        }
+        else if(branchToPush instanceof RemoteBranch || branchToPush instanceof RemoteTrackingBranch) {
+            throw new BranchDoesNotExistException("Current function available only on local branches");
+        }
+        else
+        {
             Repository RR = new Repository(getRRLocation());
             RR.LoadData();
             Commit firstCommitOnBranch = getCommitFromMapCommit(branchToPush.getCommitSH1());
             addAllBranchData(firstCommitOnBranch,this,RR);
+            getBranchesMap().remove(branchToPush.getName());
+            File BranchFile = new File(GetLocation() + BRANCHES_FOLDER + branchToPush.getName() + ".txt");
+            if(!BranchFile.delete()){
+                throw new IOException("Something went wrong by trying remove branch text file");
+            }
+            RR.CreateNewBranch(branchToPush.getName(),firstCommitOnBranch.MakeSH1());
             RemoteBranch remoteBranch = createRemoteBranch(branchToPush.getName(),branchToPush.getCommitSH1(),RR.getName());
             CreateNewRemoteTrackingBranch(branchToPush.getName(),remoteBranch);
-            DeleteBranch(branchToPush.getName());
+            setActiveBranch(m_BranchesMap.get(branchToPush.getName()));
         }
     }
 
     private RemoteBranch createRemoteBranch(String BranchNameInRR,SHA1 commitSha1,String RRname) throws IOException {
         RemoteBranch RB = new RemoteBranch(RRname+"\\"+BranchNameInRR,commitSha1);
-        RB.CreateBranchTextFile(GetLocation()+ BRANCHES_FOLDER + RRname+"\\"+BranchNameInRR +".txt");
+        RB.CreateBranchTextFile(GetLocation()+ BRANCHES_FOLDER);
         m_BranchesMap.put(RB.getName(),RB);
         return RB;
     }

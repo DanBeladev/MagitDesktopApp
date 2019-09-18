@@ -8,23 +8,23 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import models.CssManeger;
 import models.ListViewBuilder;
+import models.PopUpWindowWithBtn;
 import utils.GUIUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -70,6 +70,9 @@ public class ActionBarController {
     @FXML
     private Button pushBtn;
 
+    @FXML
+    private Button pushNewBranchBtn;
+
     private Stage primaryStage;
     private AppController mainController;
     private CssManeger cssStyles;
@@ -86,7 +89,7 @@ public class ActionBarController {
     public void setMainController(AppController controller) {
         this.mainController = controller;
         bindNodeDisabledToBoolProperty(mainController.getIsIsRepoLoadedProperty(), commitBtn, branchesListBtn, commitsTreeBtn, commitContentBtn, deleteBranchBtn, newBranchBtn, mergeBtn, showStatusBtn, resetBranchbtn, checkoutBtn);
-        bindNodeDisabledToBoolProperty(mainController.isIsClonedRepository(), fetchBtn, pullBtn, pushBtn);
+        bindNodeDisabledToBoolProperty(mainController.isIsClonedRepository() ,pushNewBranchBtn, fetchBtn, pullBtn, pushBtn);
     }
 
 
@@ -389,5 +392,24 @@ public class ActionBarController {
         BorderPane bp = (BorderPane) primaryStage.getScene().lookup("#root");
         bp.getStylesheets().clear();
         bp.getStylesheets().add(cssStyles.getCurrentCss());
+    }
+
+    public void pushNewBranchBtnClick(){
+        Collection<Branch> branches=mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().values();
+        branches=branches.stream().filter(v->(!(v instanceof RemoteTrackingBranch) && !(v instanceof RemoteBranch))).collect(Collectors.toList());
+        ComboBox<String> comboBox=new ComboBox<>();
+        comboBox.setPromptText("Choose local branch to push");
+        comboBox.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        comboBox.getItems().setAll(branches.stream().map(Branch::getName).collect(Collectors.toList()));
+        PopUpWindowWithBtn.popUpWindow(100,300,"Push",v->{
+            try {
+                mainController.getRepositoryManager().pushLocalBranchToRemoteBranch(mainController.getRepositoryManager().GetCurrentRepository().getBranchesMap().get(comboBox.getSelectionModel().getSelectedItem()));
+                GUIUtils.popUpMessage("Pushing branch done successfully", Alert.AlertType.ERROR);
+            } catch (IOException | BranchNameIsAllreadyExistException | CommitException | BranchFileDoesNotExistInFolderException | RepositoryDoesnotExistException | RepositoryDoesntTrackAfterOtherRepositoryException | ParseException | BranchDoesNotExistException | HeadBranchDeletedExcption e) {
+                GUIUtils.popUpMessage(e.getMessage(), Alert.AlertType.ERROR);
+            }
+        },new Object(), new Label("Choose branch to push to RR"), comboBox);
+
+
     }
 }
