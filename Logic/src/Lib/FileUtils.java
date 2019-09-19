@@ -133,7 +133,10 @@ public class FileUtils {
                 if (files[i].isDirectory()) {
                     deleteDirectory(files[i]);
                 } else {
-                    files[i].delete();
+                    System.gc();
+                    if(!files[i].delete()){
+                        System.out.println("problem in deleting "+files[i].getName());
+                    }
                 }
             }
         }

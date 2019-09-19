@@ -39,7 +39,8 @@ public class MainController extends Application {
         Parent root=fxmlLoader.load(url.openStream());
         AppController controller=fxmlLoader.getController();
         controller.setPrimaryStage(primaryStage);
-        Scene scene=new Scene(root,1300,700);
+        Scene scene=new Scene(root,1300,650);
+        primaryStage.setTitle("M.A.Git- Distributed version control");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
