@@ -35,9 +35,9 @@ public class XMLChecker {
         errors.add(isRootFolderExistAndMarkedAsRootFolder(commits, folders));
         errors.add(isBranchPointToExistCommit(branches, commits));
         errors.add(isHeadBranchExist(branches,magitBranchesObjects));
+        errors.add(isAllRTBsTrackingAfterRB(branches));
         errors.removeIf(v->v.equals(""));
         return errors;
-       // Check(magitRepository,errors);
     }
 
     public static void isXMLFile(String xmlPath) throws XMLException {
@@ -168,6 +168,25 @@ public class XMLChecker {
         JAXBContext jc = JAXBContext.newInstance(JAXB_XML_PACKAGE_NAME);
         Unmarshaller u = jc.createUnmarshaller();
         return (MagitRepository) u.unmarshal(in);
+    }
+
+    public static String isAllRTBsTrackingAfterRB(List<MagitSingleBranch> listOfBranches){
+        String result = "";
+        for(MagitSingleBranch msb:listOfBranches){
+            if(msb.isTracking()){
+                List<MagitSingleBranch> msbRemotedList=listOfBranches.stream().filter(v->v.getName().equals(msb.getTrackingAfter())).collect(Collectors.toList());
+                if(!msbRemotedList.isEmpty()) {
+                    MagitSingleBranch msbRemoted = msbRemotedList.get(0);
+                    if (!msbRemoted.isIsRemote()){
+                        result=result.concat("Branch: "+msb.getName()+" track after: "+msbRemoted.getName()+", but "+msbRemoted.getName()+" is not remote branch");
+                    }
+                }
+                else{
+                    result=result.concat("Branch: "+msb.getName()+" is RTB but has not any branch to track after it");
+                }
+            }
+        }
+        return result;
     }
 
 
